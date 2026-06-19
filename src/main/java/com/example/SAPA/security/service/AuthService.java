@@ -14,9 +14,9 @@ import com.example.SAPA.service.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,21 +35,24 @@ public class AuthService {
 
 
     public UserDetails authenticate(AuthRequest input) {
-        Authentication authentication = authenticationManager.authenticate(
+
+        CredentialEntity credentialEntity = credentialRepository.findByEmail(input.email())
+                .orElseThrow(() -> new BadCredentialsException("Email o contraseña incorrectos"));
+
+        UserEntity userEntity = credentialEntity.getUser();
+
+        if (userEntity.getStatus() == AccountStatus.INACTIVE) {
+            throw new DisabledException("No puede iniciar sesión. Cuenta dada de baja");
+        }
+
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         input.email(),
                         input.password()
                 )
         );
 
-        CredentialEntity credential = (CredentialEntity) authentication.getPrincipal();
-        UserEntity userEntity = credential.getUser();
-
-        if (userEntity.getStatus() == AccountStatus.INACTIVE) {
-            throw new DisabledException("No puede iniciar sesión. Cuenta dada de baja.");
-        }
-
-        return credential;
+        return credentialEntity;
     }
 
     @Transactional

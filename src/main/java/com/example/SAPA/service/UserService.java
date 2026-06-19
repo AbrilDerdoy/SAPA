@@ -75,6 +75,7 @@ public class UserService {
                     .user(userConnector)
                     .firstName(request.firstName())
                     .lastName(request.lastName())
+                    .birthDate(request.birthDate())
                     .phoneNumber(request.phoneNumber())
                     .licenseNumber(request.licenseNumber())
                     .specialities((specialityRepository.findAllById(request.specialities())))

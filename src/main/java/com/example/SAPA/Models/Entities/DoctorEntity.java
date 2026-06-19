@@ -4,6 +4,7 @@ import com.example.SAPA.Models.SpecialityEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -28,6 +29,9 @@ public class DoctorEntity {
 
     @Column(nullable = false)
     private String lastName;
+
+    @Column(nullable = false)
+    private LocalDate birthDate;
 
     @Column(nullable = false, unique = true)
     private String licenseNumber;
