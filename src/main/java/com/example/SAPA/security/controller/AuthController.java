@@ -34,24 +34,20 @@ public class AuthController {
     private final TokenBlacklistService tokenBlacklistService;
     private final UserService userService;
 
-    @Operation(
-            summary = "Autenticar usuario",
-            description = "Autentica a un usuario utilizando correo electrónico y contraseña. Devuelve un token de acceso JWT y un token de refresco (refresh token)."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Autenticado exitosamente",
-                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-            @ApiResponse(responseCode = "401", description = "No autorizado - Credenciales inválidas")
-    })
     @PostMapping("/login")
+    @Operation(summary = "Iniciar sesión", description = "Autentica al usuario con email y contraseña, generando los tokens de acceso correspondientes.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Autenticación exitosa. Devuelve el token de acceso y el refresh token."),
+            @ApiResponse(responseCode = "401", description = "Credenciales inválidas o cuenta dada de baja.")
+    })
     public ResponseEntity<AuthResponse> authenticateUser(@Valid @RequestBody AuthRequest authRequest) {
-        UserDetails user = authService.authenticate(authRequest);
 
-        String token = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        UserDetails userDetails = authService.authenticate(authRequest);
 
-        CredentialEntity credential = credentialRepository.findByEmail(user.getUsername())
-                .orElseThrow(() -> new RuntimeException("Credencial no encontrada."));
+        String token = jwtService.generateToken(userDetails);
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
+
+        CredentialEntity credential = (CredentialEntity) userDetails;
 
         credential.setRefreshToken(refreshToken);
         credentialRepository.save(credential);

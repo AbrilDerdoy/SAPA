@@ -14,7 +14,9 @@ import com.example.SAPA.service.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,24 +35,21 @@ public class AuthService {
 
 
     public UserDetails authenticate(AuthRequest input) {
-
-        CredentialEntity credentialEntity = credentialRepository.findByEmail(input.email())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado")); //CAMBIAR TIPO EXCEPCION Y MENSAJE
-
-        UserEntity userEntity = credentialEntity.getUser();
-
-        if(userEntity.getStatus() == AccountStatus.INACTIVE){
-            throw new RuntimeException("No puede iniciar sesión. Cuenta dada de baja"); //CAMBIAR TIPO EXCEPCION
-        }
-
-        authenticationManager.authenticate(
+        Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         input.email(),
                         input.password()
                 )
         );
 
-        return credentialRepository.findByEmail(input.email()).orElseThrow();
+        CredentialEntity credential = (CredentialEntity) authentication.getPrincipal();
+        UserEntity userEntity = credential.getUser();
+
+        if (userEntity.getStatus() == AccountStatus.INACTIVE) {
+            throw new DisabledException("No puede iniciar sesión. Cuenta dada de baja.");
+        }
+
+        return credential;
     }
 
     @Transactional
