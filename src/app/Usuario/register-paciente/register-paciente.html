@@ -1,0 +1,27 @@
+<form novalidate (submit)="enviar($event)">
+    <label>
+        Nombre:
+        <input type="text" [formField]="formulario.firstName">
+    </label>
+    <label>
+        Apellido:
+        <input type="text" [formField]="formulario.lastName">
+    </label>
+    <label>
+        Email
+        <input type="email" [formField]="formulario.email">
+    </label>
+    <label>
+        Contraseña
+        <input type="password" [formField]="formulario.password">
+    </label>
+    <label>
+        Fecha de nacimiento
+        <input type="date" [formField]="formulario.birthDate">
+    </label>
+    <label>
+        Telefono:
+        <input type="number" [formField]="formulario.phoneNumber">
+    </label>
+    <button type="submit">Enviar</button>
+</form>
