@@ -2,26 +2,32 @@
     <label>
         Nombre:
         <input type="text" [formField]="formulario.firstName">
+        <app-form-error [state]="formulario.firstName"/>
     </label>
     <label>
         Apellido:
         <input type="text" [formField]="formulario.lastName">
+        <app-form-error [state]="formulario.lastName"/>
     </label>
     <label>
         Email
         <input type="email" [formField]="formulario.email">
+        <app-form-error [state]="formulario.email"/>
     </label>
     <label>
         Contraseña
         <input type="password" [formField]="formulario.password">
+        <app-form-error [state]="formulario.password"/>
     </label>
     <label>
         Fecha de nacimiento
         <input type="date" [formField]="formulario.birthDate">
+        <app-form-error [state]="formulario.birthDate"/>
     </label>
     <label>
         Telefono:
         <input type="number" [formField]="formulario.phoneNumber">
+        <app-form-error [state]="formulario.phoneNumber"/>   
     </label>
     
     <button type="submit">Enviar</button>

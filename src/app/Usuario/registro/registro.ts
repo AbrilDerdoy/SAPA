@@ -2,10 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { Auth } from '../service/auth';
 import { Usuario } from '../usuario';
 import { form, minLength, required, FormField } from '@angular/forms/signals';
+import { FormError } from '../../Common/form-error/form-error';
 
 @Component({
   selector: 'app-registro',
-  imports: [FormField],
+  imports: [FormField,FormError],
   templateUrl: './registro.html',
   styleUrl: './registro.css',
 })

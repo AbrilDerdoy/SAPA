@@ -16,7 +16,7 @@ export class Auth {
   }
 
   isAuthenticated(){
-    return this.usuario() === null ? true : false; 
+    return this.usuario() === null ? false : true; 
   }
 
 }

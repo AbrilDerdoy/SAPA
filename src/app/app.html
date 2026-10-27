@@ -2,14 +2,18 @@
   <nav>
     <h2>SAPA</h2>
     <ul>
-      <li><a routerLink="">Inicio</a></li>
-      <li><a routerLink=""><img src="images/foro.png"> Foros</a></li>
-      <li><a routerLink=""><img src="images/guardado.png"> Guardados</a></li>
-      <li><a><img src="images/lupa.png"> Buscar</a></li>
+      @if(auth.isAuthenticated()){
+        <li><a routerLink="">Inicio</a></li>
+        <li><a routerLink=""><img src="images/foro.png"> Foros</a></li>
+        <li><a routerLink=""><img src="images/guardado.png"> Guardados</a></li>
+        <li><a><img src="images/lupa.png"> Buscar</a></li>
+      }
     </ul>
     <div>
-      <button routerLink="">Iniciar sesion</button>
-      <button routerLink="">Registrarse</button>
+      @if(!auth.isAuthenticated()){
+        <button routerLink="">Iniciar sesion</button>
+        <button routerLink="register">Registrarse</button>
+      }
     </div>
 
 

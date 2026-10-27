@@ -1,0 +1,8 @@
+form{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: fit-content;
+    padding: 1rem;
+    background-color: #02968c;
+}
