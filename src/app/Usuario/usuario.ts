@@ -1,11 +1,11 @@
 export interface Usuario {
+    tipoUsuario:'PACIENTE' | 'MEDICO' | null,
     email:string,
     password:string,
-    role:string,
     firstName:string,
     lastName:string,
     birthDate:string,
     phoneNumber:string,
-    licenseNumber:string,
-    specialities:string[]
+    licenseNumber?:number,
+    specialities?:string[]
 }

@@ -8,11 +8,11 @@ import { HttpClient } from '@angular/common/http';
 export class Auth {
   usuario = signal<Usuario|null>(null);
 
-  private readonly BASE_URL = 'http://localhost:8080/'
+  private readonly BASE_URL = 'http://localhost:8080/api/auth'
   private readonly http = inject(HttpClient)
 
   register(usuario:Usuario){
-    return this.http.post<Usuario>(this.BASE_URL+'auth/register',usuario)
+    return this.http.post<Usuario>(this.BASE_URL+'/register',usuario)
   }
 
   isAuthenticated(){
