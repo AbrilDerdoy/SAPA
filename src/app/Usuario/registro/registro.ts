@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Auth } from '../service/auth';
-import { Usuario } from '../usuario';
-import { form, minLength, required, FormField } from '@angular/forms/signals';
+import { registerRequest } from '../registerRequest';
+import { form, minLength, required, FormField,min, applyWhen } from '@angular/forms/signals';
 import { FormError } from '../../Common/form-error/form-error';
 
 @Component({
@@ -12,14 +12,16 @@ import { FormError } from '../../Common/form-error/form-error';
 })
 export class Registro {
   private readonly auth = inject(Auth)
-  readonly modelo = signal<Usuario>({
-    tipoUsuario:null,
+  readonly modelo = signal<registerRequest>({
+    role:null,
     email:'',
     password:'',
     firstName:'',
     lastName:'',
     birthDate:'',
-    phoneNumber:''
+    phoneNumber:'',
+    licenseNumber:null,
+    speciality:null
   });
   readonly formulario = form(this.modelo,(ruta)=>{
     required(ruta.email,{message:'El email es obligatorio'}),
@@ -27,33 +29,45 @@ export class Registro {
     minLength(ruta.password,8,{message:'La contraseña debe tener al menos 8 caracteres'}),
     required(ruta.firstName,{message:'El nombre es obligatorio'}),
     required(ruta.lastName,{message:'El apellido es obligatorio'}),
-    required(ruta.birthDate,{message:'La fecha de nacimiento es obligatoria'})
+    required(ruta.birthDate,{message:'La fecha de nacimiento es obligatoria'}),
+    required(ruta.phoneNumber,{message:'El telefono es obligatorio'}),
+    min(ruta.phoneNumber,1,{message:'El telefono debe ser positivo'}),
+    applyWhen(ruta,({valueOf})=>
+      valueOf(ruta.role)==='MEDICO',
+    (ruta)=>{
+      required(ruta.licenseNumber,{message:'La matricula es obligatoria'})
+      required(ruta.speciality,{message:'La especialidad es obligatoria'})
+    })
   })
 
-  enviar(evento:Event){
+  especialidades = this.auth.specialities;
+
+  enviar(evento:Event):void{
     evento.preventDefault();
     if(this.formulario().invalid()) return;
 
     const datos = this.modelo();
 
-    let registro :Usuario;
+    let registro :registerRequest;
 
     registro = {
-        tipoUsuario:null,
+        role:null,
         firstName:datos.firstName,
         lastName:datos.lastName,
         email:datos.email,
         password:datos.password,
         phoneNumber:datos.phoneNumber,
-        birthDate:datos.birthDate
+        birthDate:datos.birthDate,
+        licenseNumber:null,
+        speciality:null
       }
 
-    if(datos.tipoUsuario==='PACIENTE'){
-      registro.tipoUsuario = 'PACIENTE'
-    } else if(datos.tipoUsuario==='MEDICO'){
-        registro.tipoUsuario = 'MEDICO',
+    if(datos.role==='PACIENTE'){
+      registro.role = 'PACIENTE'
+    } else if(datos.role==='MEDICO'){
+        registro.role = 'MEDICO',
         registro.licenseNumber = datos.licenseNumber,
-        registro.specialities = datos.specialities
+        registro.speciality = datos.speciality
       }
     this.auth.register(registro).subscribe({
       next: (res) => {
@@ -63,7 +77,13 @@ export class Registro {
         alert('Ocurrio un error');
         console.error('Error al registrarse', err);
       }
-    });;
+    });
+  }
+  cambiarPaciente(){
+    this.modelo().role = 'PACIENTE';
+  }    
+  cambiarMedico(){
+    this.modelo().role = 'MEDICO';
   }    
 }
 

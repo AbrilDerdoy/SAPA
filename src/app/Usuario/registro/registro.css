@@ -6,3 +6,5 @@ form{
     padding: 1rem;
     background-color: #02968c;
 }
+
+.error { color: red; font-size: 12px; }

@@ -1,34 +1,58 @@
 <form novalidate (submit)="enviar($event)">
+    <h2>Informacion Personal</h2>
+    <button (click)="cambiarPaciente()">Paciente</button>
+    <button (click)="cambiarMedico()">Medico</button>
     <label>
         Nombre:
         <input type="text" [formField]="formulario.firstName">
-        <app-form-error [state]="formulario.firstName"/>
+        <app-form-error [field]="formulario.firstName()"/>
     </label>
     <label>
         Apellido:
         <input type="text" [formField]="formulario.lastName">
-        <app-form-error [state]="formulario.lastName"/>
+        <app-form-error [field]="formulario.lastName()"/>
     </label>
     <label>
         Email
         <input type="email" [formField]="formulario.email">
-        <app-form-error [state]="formulario.email"/>
+        <app-form-error [field]="formulario.email()"/>
     </label>
     <label>
         Contraseña
         <input type="password" [formField]="formulario.password">
-        <app-form-error [state]="formulario.password"/>
+        <app-form-error [field]="formulario.password()"/>
     </label>
     <label>
         Fecha de nacimiento
         <input type="date" [formField]="formulario.birthDate">
-        <app-form-error [state]="formulario.birthDate"/>
+        <app-form-error [field]="formulario.birthDate()"/>
     </label>
     <label>
         Telefono:
         <input type="number" [formField]="formulario.phoneNumber">
-        <app-form-error [state]="formulario.phoneNumber"/>   
+        <app-form-error [field]="formulario.phoneNumber()"/>
     </label>
+    @if(this.modelo().role==='MEDICO'){
+        <label>
+            Matricula:
+            <input type="number" [formField]="formulario.licenseNumber">
+            <app-form-error [field]="formulario.licenseNumber()"/>
+        </label>
+        <label>
+            Especialidad:
+            <select id="speciality">
+                @if(this.especialidades.isLoading()){
+                    <p>Cargando especialidades...</p>
+                }
+                @if(this.especialidades.error()){
+                    <p class="error">Hubo un error cargando las especialidades</p>
+                }
+                @for(es of this.especialidades.value();track $index){
+                    <option [value]="es.id">{{es.name}}</option>
+                }
+            </select>
+        </label>
+    }
     
-    <button type="submit">Enviar</button>
+    <button type="submit" [disabled]="formulario().invalid()">Enviar</button>
 </form>
