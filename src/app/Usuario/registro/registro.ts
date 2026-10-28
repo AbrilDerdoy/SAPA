@@ -4,6 +4,7 @@ import { Auth } from '../service/auth';
 import { registerRequest } from '../registerRequest';
 import { form, minLength, required, FormField, min, applyWhen, validate } from '@angular/forms/signals';
 import { FormError } from '../../Common/form-error/form-error';
+import { Router } from '@angular/router';
 
 type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'> & {
   licenseNumber: string;
@@ -18,6 +19,7 @@ type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'>
 })
 export class Registro {
   private readonly auth = inject(Auth)
+  private readonly router = inject(Router)
   readonly modelo = signal<RegistroFormModel>({
     role:null,
     email:'',
@@ -95,6 +97,8 @@ export class Registro {
     this.auth.register(registro).subscribe({
       next: (res) => {
         console.log('Registro exitoso', res);
+        alert('Registro exitoso');
+        this.router.createUrlTree(['/login']);
       },
       error: (err: HttpErrorResponse) => {
         const detalle = this.mensajeError(err);
