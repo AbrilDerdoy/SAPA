@@ -15,7 +15,7 @@ export class Auth {
   usuario = signal<Usuario|null>(null);
   datosRegistro = signal<registerRequest|null>(null)
 
-  private readonly BASE_URL = 'http://localhost:8080/api/auth'
+  private readonly BASE_URL = 'http://localhost:8080/auth'
   private readonly http = inject(HttpClient)
 
   register(datos:registerRequest){

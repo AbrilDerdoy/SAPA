@@ -8,3 +8,11 @@ form{
 }
 
 .error { color: red; font-size: 12px; }
+
+.server-error {
+    padding: 0.75rem;
+    border: 1px solid #b42318;
+    border-radius: 4px;
+    background-color: #fef3f2;
+    color: #b42318;
+}
