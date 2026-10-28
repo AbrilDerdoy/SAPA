@@ -1,0 +1,5 @@
+@if(visible()){
+    @for(err of errores(); track $index){
+        <p class="error">{{err.message}}</p>
+    }
+}
