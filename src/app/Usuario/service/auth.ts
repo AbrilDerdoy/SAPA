@@ -2,6 +2,8 @@ import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Usuario } from '../usuario';
 import { registerRequest } from '../registerRequest';
+import { loginRequest } from '../loginRequest';
+import { TokenResponse } from '../token-response';
 
 export interface especialidad{
   readonly id:number,
@@ -20,6 +22,9 @@ export class Auth {
 
   register(datos:registerRequest){
     return this.http.post<registerRequest>(this.BASE_URL+'/register',datos)
+  }
+  login(datos:loginRequest){
+    return this.http.post<TokenResponse>(this.BASE_URL+'/login',datos);
   }
 
   isAuthenticated(){
