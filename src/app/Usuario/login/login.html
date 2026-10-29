@@ -1,0 +1,14 @@
+<form novalidate (submit)="enviar($event)">
+    <h2>Informacion Personal</h2>
+    <label>
+        Nombre de usuario:
+        <input type="email" [formField]="formulario.email">
+        <app-form-error [field]="formulario.email()"/>
+    </label>
+    <label>
+        Contraseña:
+        <input type="password" [formField]="formulario.password">
+        <app-form-error [field]="formulario.password()"/>
+    </label>
+    <button type="submit">Enviar</button>
+</form>

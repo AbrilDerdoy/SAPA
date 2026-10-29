@@ -15,11 +15,11 @@ type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'>
   selector: 'app-registro',
   imports: [FormField,FormError],
   templateUrl: './registro.html',
-  styleUrl: './registro.css',
+  styleUrl: '../shared/form.css',
 })
 export class Registro {
-  private readonly auth = inject(Auth)
-  private readonly router = inject(Router)
+  private readonly router = inject(Router);
+  private readonly auth = inject(Auth);
   readonly modelo = signal<RegistroFormModel>({
     role:null,
     email:'',
@@ -97,8 +97,7 @@ export class Registro {
     this.auth.register(registro).subscribe({
       next: (res) => {
         console.log('Registro exitoso', res);
-        alert('Registro exitoso');
-        this.router.createUrlTree(['/login']);
+        this.router.navigate(['/login']);
       },
       error: (err: HttpErrorResponse) => {
         const detalle = this.mensajeError(err);

@@ -1,5 +1,5 @@
 export interface Usuario {
-    readonly id:number,
-    email:string,
-    token:string
+    username:string,
+    role:string,
+    email:string
 }
