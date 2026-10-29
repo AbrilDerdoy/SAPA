@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="/css/notification.css">
+    <meta charset="UTF-8">
+    <title>Notificaciones</title>
+</head>
+
+<body>
+
+<div class="container">
+
+    <button class="back-btn" onclick="window.location.href='index.html'">
+        Volver
+    </button>
+
+    <h1>
+        Notificaciones
+        <span id="notificationCount" class="count">0</span>
+    </h1>
+
+    <div id="notificationList">
+        <p>Cargando notificaciones...</p>
+    </div>
+
+</div>
+
+<script>
+    const token = localStorage.getItem("accessToken");
+
+    const notificationList = document.getElementById("notificationList");
+    const notificationCount = document.getElementById("notificationCount");
+
+    async function cargarNotificaciones() {
+        if (!token) {
+            notificationList.innerHTML = "<p class='empty'>No hay sesión iniciada.</p>";
+            notificationCount.textContent = "0";
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:8080/notifications", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            if (!response.ok) {
+                notificationList.innerHTML = "<p class='empty'>No se pudieron cargar las notificaciones.</p>";
+                return;
+            }
+
+            const notifications = await response.json();
+
+            const unread = notifications.filter(n => !n.readed);
+            notificationCount.textContent = unread.length;
+
+            notificationList.innerHTML = "";
+
+            if (notifications.length === 0) {
+                notificationList.innerHTML = "<p class='empty'>No tenés notificaciones.</p>";
+                return;
+            }
+
+            notifications.forEach(n => {
+                const div = document.createElement("div");
+
+                div.className = n.readed ? "notification" : "notification unread";
+
+                div.innerHTML = `
+                    <p><strong>${n.title}</strong></p>
+                    <p>${n.msg}</p>
+                    <small>${new Date(n.createdAt).toLocaleString("es-AR")}</small>
+
+                    <div class="actions">
+                        ${!n.readed ? `
+                            <button class="read-btn" onclick="marcarComoLeida(${n.notificationId})">
+                                Marcar como leída
+                            </button>
+                        ` : ""}
+
+                        <button class="delete-btn" onclick="eliminarNotificacion(${n.notificationId})">
+                            Eliminar
+                        </button>
+                    </div>
+                `;
+
+                notificationList.appendChild(div);
+            });
+
+        } catch (error) {
+            notificationList.innerHTML = "<p class='empty'>Error al conectar con el servidor.</p>";
+        }
+    }
+
+    async function marcarComoLeida(id) {
+        await fetch(`http://localhost:8080/notifications/${id}/read`, {
+            method: "PATCH",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        cargarNotificaciones();
+    }
+
+    async function eliminarNotificacion(id) {
+        await fetch(`http://localhost:8080/notifications/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        cargarNotificaciones();
+    }
+
+    cargarNotificaciones();
+</script>
+</body>
+</html>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAPA - Comunidad de Salud</title>
+    <link rel="icon" type="image/jpeg" href="/img/logo.jpg">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/chat.css">
+    <link rel="stylesheet" href="/css/doctor-search.css">
+    <link rel="stylesheet" href="/css/notifications.css">
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo-container">
+        <img src="/img/logo.jpg" alt="Logo SAPA">
+        <h1>SAPA</h1>
+    </div>
+
+    <nav>
+
+        <a href="/index.html">
+            <img src="/img/foro.png" alt="">
+            Inicio
+        </a>
+
+        <a href="#">
+            <img src="/img/foro.png" alt="">
+            Foros
+        </a>
+
+        <a href="#">
+            <img src="/img/guardado.png" alt="">
+            Guardados
+        </a>
+
+        <a href="#" id="navSearchBtn">
+            <img src="/img/lupa.png" alt="">
+            Buscar
+        </a>
+
+    </nav>
+
+    <div class="auth-buttons" id="authButtons">
+
+        <button id="notifBellBtn"
+                class="notif-bell-btn"
+                title="Notificaciones"
+                style="display:none">
+
+            <img src="/img/notification.png"
+                 width="24"
+                 height="24"
+                 alt="Notificaciones">
+
+            <span id="notifBadge"
+                  class="notif-badge"
+                  style="display:none">
+        </span>
+
+        </button>
+
+        <a href="/login.html" class="btn-login">
+            Iniciar sesión
+        </a>
+
+        <a href="/registro-paciente.html" class="btn-register">
+            Registrarse
+        </a>
+
+    </div>
+
+</header>
+
+<main>
+
+    <aside class="sidebar-left">
+
+        <div class="card">
+
+            <h3>Categorías</h3>
+
+            <ul>
+                <li>Enfermedades crónicas</li>
+                <li>Salud mental</li>
+                <li>Tratamientos</li>
+                <li>Síntomas</li>
+                <li>Nutrición</li>
+                <li>Estilo de vida</li>
+            </ul>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Consejos útiles</h3>
+
+            <ul>
+                <li>Realiza controles médicos periódicos.</li>
+                <li>Mantén hábitos saludables.</li>
+                <li>Consulta siempre a profesionales.</li>
+            </ul>
+
+            <div class="empty-state">
+                No hay más consejos disponibles.
+            </div>
+
+        </div>
+
+    </aside>
+
+    <section class="contenido">
+
+        <div class="top-actions">
+
+            <button class="btn-publicar">
+                + Nueva publicación
+            </button>
+
+        </div>
+
+        <div class="cabecera">
+
+            <h2>Comparte tu experiencia</h2>
+
+            <p>
+                Un espacio seguro para pacientes y profesionales de la salud.
+            </p>
+
+        </div>
+
+        <div class="crear-post">
+
+            <h3>Nuevo foro</h3>
+
+            <input
+                    id="tituloForum"
+                    type="text"
+                    placeholder="Título de tu foro">
+
+            <textarea
+                    id="contenidoForum"
+                    placeholder="Cuéntanos tu experiencia, síntomas, tratamiento o consulta..."></textarea>
+
+            <div class="acciones-post">
+
+                <select>
+
+                    <option>
+                        Selecciona una categoría
+                    </option>
+
+                    <option>
+                        Enfermedades crónicas
+                    </option>
+
+                    <option>
+                        Salud mental
+                    </option>
+
+                    <option>
+                        Tratamientos
+                    </option>
+
+                    <option>
+                        Síntomas
+                    </option>
+
+                </select>
+
+                <div class="botones-post">
+
+                    <button class="btn-cancelar">
+                        Cancelar
+                    </button>
+
+                    <button
+                            type="button"
+                            id="btnCrearForum"
+                            class="btn-publicar-form">
+                        Publicar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- FOROS DINÁMICOS -->
+
+        <div id="forumsContainer"></div>
+
+        <div class="registro-banner" id="registroBanner">
+
+            <h3>
+                Hay más publicaciones disponibles
+            </h3>
+
+            <p>
+                Regístrate para acceder a toda la comunidad SAPA.
+            </p>
+
+            <a href="/registro-paciente.html">
+                Registrarme
+            </a>
+
+        </div>
+
+    </section>
+
+    <aside class="sidebar-right">
+
+        <div class="card">
+
+            <h3>Temas Populares</h3>
+
+            <ul>
+                <li># Artritis</li>
+                <li># Hipotiroidismo</li>
+                <li># Ansiedad</li>
+                <li># Fibromialgia</li>
+                <li># Diabetes</li>
+            </ul>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Información importante</h3>
+
+            <p>
+                El contenido compartido en SAPA no reemplaza el consejo médico profesional. Ante cualquier duda consulta a tu médico.
+            </p>
+
+        </div>
+
+    </aside>
+
+</main>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", async () => {
+
+        const token = localStorage.getItem("accessToken");
+        const authButtons = document.getElementById("authButtons");
+
+        if(token){
+
+            if(registroBanner){
+                registroBanner.style.display = "none";
+            }
+
+            const profileResponse = await fetch("/users/me", {
+                headers:{
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            const profile = await profileResponse.json();
+
+            const iniciales =
+                profile.firstName.charAt(0) +
+                profile.lastName.charAt(0);
+
+            const rol =
+                profile.role === "DOCTOR"
+                    ? "Médico"
+                    : profile.role === "ADMIN"
+                        ? "Administrador"
+                        : "Paciente";
+
+            const notifBtn = document.getElementById("notifBellBtn");
+            const notifBadge = document.getElementById("notifBadge");
+
+            authButtons.querySelector(".btn-login")?.remove();
+            authButtons.querySelector(".btn-register")?.remove();
+
+            notifBtn.style.display = "flex";
+
+// Show admin pending doctors badge
+            if (profile.role === "ADMIN") {
+                loadAdminPendingBadge();
+            }
+
+// Show doctor pending follow requests badge
+            if (profile.role === "DOCTOR") {
+                loadDoctorPendingBadge();
+            }
+
+            const adminPanelLink = profile.role === "ADMIN"
+                ? `<a href="/admin.html"><span>&#128188;</span><span>Panel Admin</span></a><hr>`
+                : "";
+
+            const doctorPanelLink = profile.role === "DOCTOR"
+                ? `<a href="/doctor-panel.html"><span>&#128188;</span><span>Solicitudes de Pacientes</span></a><hr>`
+                : "";
+
+            authButtons.insertAdjacentHTML(
+                "beforeend",
+                `
+<div class="user-menu" id="userMenu">
+
+    <div class="user-button" id="userButton">
+
+        <div class="user-avatar">
+            ${iniciales}
+        </div>
+
+        <div class="user-info">
+
+            <span class="user-name">
+                ${profile.firstName} ${profile.lastName}
+            </span>
+
+            <span class="user-role">
+                ${rol}
+            </span>
+
+        </div>
+
+        <span class="user-arrow">
+            ▼
+        </span>
+
+    </div>
+
+    <div class="user-dropdown" id="userDropdown">
+
+        ${adminPanelLink}
+        ${doctorPanelLink}
+
+        <a href="/perfil.html">
+            <span>👤</span>
+            <span>Mi perfil</span>
+        </a>
+
+        <a href="#">
+            <span>📝</span>
+            <span>Mis publicaciones</span>
+        </a>
+
+        <hr>
+
+        <button id="logoutBtn" class="logout-btn">
+            <span>🚪</span>
+            <span>Cerrar sesión</span>
+        </button>
+
+    </div>
+
+</div>
+`
+            );
+
+            const userButton =
+                document.getElementById("userButton");
+
+            const userDropdown =
+                document.getElementById("userDropdown");
+
+            userButton.addEventListener("click", () => {
+
+                userDropdown.classList.toggle("active");
+
+            });
+
+            document.addEventListener("click", (e) => {
+
+                if(!e.target.closest(".user-menu")){
+
+                    userDropdown.classList.remove("active");
+
+                }
+
+            });
+
+        }
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        if(logoutBtn){
+
+            logoutBtn.addEventListener("click", async () => {
+
+                const token = localStorage.getItem("accessToken");
+
+                try{
+
+                    await fetch("/auth/logout", {
+                        method:"POST",
+                        headers:{
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+
+                }catch(error){
+                    console.error(error);
+                }
+
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+
+                window.location.href = "/login.html";
+            });
+
+        }
+
+        console.log("TOKEN:", token);
+
+        if (!token) {
+            console.log("Usuario no autenticado");
+            return;
+        }
+
+        try {
+
+            const response = await fetch("/forums/all", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            const forums = await response.json();
+
+            console.log("FOROS:");
+            console.log(forums);
+
+            const container = document.getElementById("forumsContainer");
+
+            container.innerHTML = "";
+
+            forums.forEach(forum => {
+
+                container.innerHTML += `
+                <div class="publicacion">
+
+                    <span class="tag">
+                        Foro
+                    </span>
+
+                    <h3>
+                        ${forum.title}
+                    </h3>
+
+                    <p>
+                        ${forum.content}
+                    </p>
+
+                    <div class="publicacion-info">
+                        <span>
+                            ${forum.createdByName}
+                        </span>
+                    </div>
+
+                </div>
+            `;
+
+            });
+
+        }
+        catch(error){
+
+            console.error("ERROR:");
+            console.error(error);
+
+        }
+        const btnCrearForum = document.getElementById("btnCrearForum");
+
+        btnCrearForum.addEventListener("click", async function() {
+
+            const token = localStorage.getItem("accessToken");
+
+            if(!token){
+                alert("Debes iniciar sesión");
+                return;
+            }
+
+            const titulo = document.getElementById("tituloForum").value.trim();
+            const contenido = document.getElementById("contenidoForum").value.trim();
+
+            if(!titulo || !contenido){
+                alert("Completa todos los campos");
+                return;
+            }
+
+            try{
+
+                const response = await fetch("/forums", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title: titulo,
+                        content: contenido
+                    })
+                });
+
+                if(!response.ok){
+
+                    const mensaje = await response.text();
+
+                    console.log(mensaje);
+
+                    alert("Error al crear foro");
+
+                    return;
+                }
+
+                alert("Foro creado correctamente");
+
+                location.reload();
+
+            }
+            catch(error){
+
+                console.error(error);
+                alert("Error de conexión");
+
+            }
+
+        });
+
+        async function loadAdminPendingBadge() {
+            try {
+                const response = await fetch("/admin/pending-doctors", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const pendingDoctors = await response.json();
+                    if (pendingDoctors.length > 0) {
+                        const notifBadge = document.getElementById("notifBadge");
+                        const currentCount = notifBadge.textContent ? parseInt(notifBadge.textContent) || 0 : 0;
+                        const totalCount = currentCount + pendingDoctors.length;
+                        notifBadge.textContent = totalCount > 9 ? "9+" : String(totalCount);
+                        notifBadge.style.display = "";
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading admin pending badge:", error);
+            }
+        }
+
+        async function loadDoctorPendingBadge() {
+            try {
+                const response = await fetch("/follow-requests/pending", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const pendingRequests = await response.json();
+                    if (pendingRequests.length > 0) {
+                        const notifBadge = document.getElementById("notifBadge");
+                        const currentCount = notifBadge.textContent ? parseInt(notifBadge.textContent) || 0 : 0;
+                        const totalCount = currentCount + pendingRequests.length;
+                        notifBadge.textContent = totalCount > 9 ? "9+" : String(totalCount);
+                        notifBadge.style.display = "";
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading doctor pending badge:", error);
+            }
+        }
+
+    });
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="/js/doctor-search.js"></script>
+<script src="/js/chat.js"></script>
+<script src="/js/notifications.js"></script>
+</body>
+</html>

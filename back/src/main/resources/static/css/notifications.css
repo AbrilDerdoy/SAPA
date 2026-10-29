@@ -1,0 +1,181 @@
+/* ===== SAPA - Notificaciones ===== */
+
+.notif-bell-btn {
+    position: relative;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 50%;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notif-bell-btn:hover {
+    background: #ecf8f6;
+}
+
+.notif-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #e74c3c;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+}
+
+/* ---- Panel ---- */
+
+.notif-panel {
+    position: absolute;
+    width: 340px;
+    max-height: 420px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.2);
+    z-index: 1100;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, Helvetica, sans-serif;
+    animation: notifFadeIn 0.15s ease;
+}
+
+@keyframes notifFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.notif-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+}
+
+.notif-panel-header span {
+    font-weight: bold;
+    font-size: 15px;
+    color: #222;
+}
+
+.notif-mark-all {
+    background: none;
+    border: none;
+    color: #02968c;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+
+.notif-mark-all:hover {
+    text-decoration: underline;
+}
+
+.notif-list {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.notif-empty {
+    color: #999;
+    text-align: center;
+    padding: 30px 16px;
+    font-size: 13px;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f4f4f4;
+    cursor: pointer;
+    position: relative;
+}
+
+.notif-item:hover {
+    background: #f9fafa;
+}
+
+.notif-item.unread {
+    background: #ecf8f6;
+}
+
+.notif-item.unread:hover {
+    background: #e3f3f1;
+}
+
+.notif-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.notif-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #222;
+}
+
+.notif-msg {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.35;
+}
+
+.notif-time {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.notif-delete {
+    background: none;
+    border: none;
+    color: #bbb;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 4px;
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+
+.notif-delete:hover {
+    color: #e74c3c;
+    background: #fbeaea;
+}
+
+@media (max-width: 480px) {
+    .notif-panel {
+        width: calc(100vw - 32px);
+    }
+}
+.notif-bell-btn img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}

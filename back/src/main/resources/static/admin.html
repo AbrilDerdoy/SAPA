@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - SAPA</title>
+    <link rel="icon" type="image/jpeg" href="/img/logo.jpg">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #ecf8f6;
+            min-height: 100vh;
+        }
+
+        header {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-container img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .logo-container h1 {
+            font-size: 24px;
+            color: #02968c;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #02968c;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        h2 {
+            color: #222;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #02968c;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            color: #222;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #ecf8f6;
+            padding-bottom: 10px;
+        }
+
+        .doctor-card {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .doctor-info h4 {
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .doctor-info p {
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .doctor-info .specialities {
+            color: #02968c;
+            font-weight: 600;
+        }
+
+        .doctor-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-approve {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-approve:hover {
+            background: #218838;
+        }
+
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-reject:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .doctor-card {
+                grid-template-columns: 1fr;
+            }
+
+            .doctor-actions {
+                width: 100%;
+            }
+
+            .doctor-actions button {
+                flex: 1;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo-container">
+        <img src="/img/logo.jpg" alt="Logo SAPA">
+        <h1>SAPA Admin</h1>
+    </div>
+
+    <div class="user-info">
+        <div class="user-avatar">AD</div>
+        <span id="adminEmail">Administrador</span>
+        <button class="logout-btn" id="logoutBtn">Cerrar sesion</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <h2>Panel de Administracion</h2>
+
+    <div class="stats">
+        <div class="stat-card">
+            <h3>Medicos pendientes</h3>
+            <div class="number" id="pendingCount">0</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Solicitudes de registro de medicos</h3>
+
+        <div id="pendingDoctorsContainer">
+            <div class="loading">Cargando medicos pendientes...</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const token = localStorage.getItem("accessToken");
+
+        if (!token) {
+            window.location.href = "/login.html";
+            return;
+        }
+
+        // Verify admin role
+        try {
+            const profileRes = await fetch("/users/me", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!profileRes.ok) {
+                throw new Error("No autorizado");
+            }
+
+            const profile = await profileRes.json();
+
+            if (profile.role !== "ADMIN") {
+                showToast("No tienes permisos de administrador", "error");
+                setTimeout(() => {
+                    window.location.href = "/index.html";
+                }, 2000);
+                return;
+            }
+
+            document.getElementById("adminEmail").textContent = profile.email;
+
+        } catch (error) {
+            console.error(error);
+            window.location.href = "/login.html";
+            return;
+        }
+
+        // Logout button
+        document.getElementById("logoutBtn").addEventListener("click", async () => {
+            try {
+                await fetch("/auth/logout", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+            } catch (error) {
+                console.error(error);
+            }
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            window.location.href = "/login.html";
+        });
+
+        loadPendingDoctors();
+    });
+
+    async function loadPendingDoctors() {
+        const token = localStorage.getItem("accessToken");
+        const container = document.getElementById("pendingDoctorsContainer");
+
+        try {
+            const response = await fetch("/admin/pending-doctors", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const doctors = await response.json();
+
+            document.getElementById("pendingCount").textContent = doctors.length;
+
+            if (doctors.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span>&#10003;</span>
+                        <p>No hay medicos pendientes de aprobacion</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = doctors.map(doctor => `
+                <div class="doctor-card" data-user-id="${doctor.userId}">
+                    <div class="doctor-info">
+                        <h4>${doctor.firstName} ${doctor.lastName}</h4>
+                        <p><strong>Email:</strong> ${doctor.email}</p>
+                        <p><strong>Matricula:</strong> ${doctor.licenseNumber}</p>
+                        <p><strong>Telefono:</strong> ${doctor.phoneNumber || 'No especificado'}</p>
+                        <p><strong>Fecha de nacimiento:</strong> ${doctor.birthDate || 'No especificada'}</p>
+                        <p class="specialities"><strong>Especialidades:</strong> ${doctor.specialities && doctor.specialities.length > 0 ? doctor.specialities.join(', ') : 'No especificadas'}</p>
+                    </div>
+                    <div class="doctor-actions">
+                        <button class="btn-approve" onclick="approveDoctor(${doctor.userId}, this)">Aprobar</button>
+                        <button class="btn-reject" onclick="rejectDoctor(${doctor.userId}, this)">Rechazar</button>
+                    </div>
+                </div>
+            `).join("");
+
+        } catch (error) {
+            console.error("Error al cargar medicos pendientes:", error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <span>&#10060;</span>
+                    <p>Error al cargar los medicos pendientes</p>
+                </div>
+            `;
+        }
+    }
+
+    async function approveDoctor(userId, button) {
+        const token = localStorage.getItem("accessToken");
+        const card = button.closest(".doctor-card");
+
+        button.disabled = true;
+        button.textContent = "Aprobando...";
+
+        try {
+            const response = await fetch(`/admin/approve-doctor/${userId}`, {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            showToast("Medico aprobado exitosamente", "success");
+            card.remove();
+
+            const count = parseInt(document.getElementById("pendingCount").textContent);
+            document.getElementById("pendingCount").textContent = count - 1;
+
+            // Check if no more pending doctors
+            const container = document.getElementById("pendingDoctorsContainer");
+            if (!container.querySelector(".doctor-card")) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span>&#10003;</span>
+                        <p>No hay medicos pendientes de aprobacion</p>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error("Error al aprobar medico:", error);
+            showToast("Error al aprobar el medico", "error");
+            button.disabled = false;
+            button.textContent = "Aprobar";
+        }
+    }
+
+    async function rejectDoctor(userId, button) {
+        const token = localStorage.getItem("accessToken");
+        const card = button.closest(".doctor-card");
+
+        if (!confirm("¿Estas seguro de que deseas rechazar a este medico?")) {
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Rechazando...";
+
+        try {
+            const response = await fetch(`/admin/reject-doctor/${userId}`, {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            showToast("Medico rechazado", "success");
+            card.remove();
+
+            const count = parseInt(document.getElementById("pendingCount").textContent);
+            document.getElementById("pendingCount").textContent = count - 1;
+
+            // Check if no more pending doctors
+            const container = document.getElementById("pendingDoctorsContainer");
+            if (!container.querySelector(".doctor-card")) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span>&#10003;</span>
+                        <p>No hay medicos pendientes de aprobacion</p>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            console.error("Error al rechazar medico:", error);
+            showToast("Error al rechazar el medico", "error");
+            button.disabled = false;
+            button.textContent = "Rechazar";
+        }
+    }
+
+    function showToast(message, type) {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+</script>
+
+</body>
+
+</html>

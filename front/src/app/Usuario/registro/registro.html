@@ -1,0 +1,67 @@
+<form novalidate (submit)="enviar($event)">
+    <h2>Informacion Personal</h2>
+    <button type="button" (click)="cambiarPaciente()">Paciente</button>
+    <button type="button" (click)="cambiarMedico()">Medico</button>
+    @if (errorRegistro()) {
+        <p class="server-error" role="alert">{{errorRegistro()}}</p>
+    }
+    <label>
+        Nombre:
+        <input type="text" [formField]="formulario.firstName">
+        <app-form-error [field]="formulario.firstName()"/>
+    </label>
+    <label>
+        Apellido:
+        <input type="text" [formField]="formulario.lastName">
+        <app-form-error [field]="formulario.lastName()"/>
+    </label>
+    <label>
+        Email
+        <input type="email" [formField]="formulario.email">
+        <app-form-error [field]="formulario.email()"/>
+    </label>
+    <label>
+        Contraseña
+        <input type="password" [formField]="formulario.password">
+        <app-form-error [field]="formulario.password()"/>
+    </label>
+    <label>
+        Fecha de nacimiento
+        <input type="date" [formField]="formulario.birthDate">
+        <app-form-error [field]="formulario.birthDate()"/>
+    </label>
+    <label>
+        Telefono:
+        <input type="tel" [formField]="formulario.phoneNumber">
+        <app-form-error [field]="formulario.phoneNumber()"/>
+    </label>
+    @if(modelo().role === 'ROLE_DOCTOR'){
+        <label>
+            Matricula:
+            <input type="text" [formField]="formulario.licenseNumber">
+            <app-form-error [field]="formulario.licenseNumber()"/>
+        </label>
+        <label>
+            Especialidad:
+            @if(especialidades.isLoading()){
+                <p>Cargando especialidades...</p>
+            }
+            @if(especialidades.error()){
+                <p class="error">Hubo un error cargando las especialidades</p>
+            }
+            <select
+                id="speciality"
+                [value]="modelo().speciality ?? ''"
+                (change)="seleccionarEspecialidad($event)"
+            >
+                <option value="">Selecciona una especialidad</option>
+                @for(es of especialidades.value(); track es.id){
+                    <option [value]="es.id">{{es.name}}</option>
+                }
+            </select>
+            <app-form-error [field]="formulario.speciality()"/>
+        </label>
+    }
+    
+    <button type="submit">Enviar</button>
+</form>
