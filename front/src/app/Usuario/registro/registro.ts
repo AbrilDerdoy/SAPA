@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Auth } from '../service/auth';
-import { registerRequest } from '../registerRequest';
+import { registerRequest } from '../interfaces/registerRequest';
 import { form, minLength, required, FormField, min, applyWhen, validate } from '@angular/forms/signals';
 import { FormError } from '../../Common/form-error/form-error';
 import { Router } from '@angular/router';
@@ -97,7 +97,9 @@ export class Registro {
     this.auth.register(registro).subscribe({
       next: (res) => {
         console.log('Registro exitoso', res);
-        this.router.navigate(['/login']);
+        localStorage.setItem('jwt',JSON.stringify(res));  
+        this.auth.guardarDatosUsuario()              
+        this.router.navigate(['/home']);
       },
       error: (err: HttpErrorResponse) => {
         const detalle = this.mensajeError(err);
