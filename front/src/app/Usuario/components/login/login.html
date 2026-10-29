@@ -9,6 +9,7 @@
         Contraseña:
         <input type="password" [formField]="formulario.password">
         <app-form-error [field]="formulario.password()"/>
+        <p><a [routerLink]="['/forgotPassword']">¿Olvidaste tu contraseña?</a></p>
     </label>
     <button type="submit">Enviar</button>
 </form>

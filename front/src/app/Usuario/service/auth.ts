@@ -10,6 +10,11 @@ export interface especialidad{
   name:string
 }
 
+export interface datosPassword{
+  token:string,
+  newPassword:string
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -50,6 +55,13 @@ export class Auth {
   isAuthenticated(){
     const token:TokenResponse = JSON.parse(localStorage.getItem('jwt')??'{"AccessToken":"","RefreshToken":""}');
     return token.AccessToken === "" || token.RefreshToken === "" ? false : true; 
+  }
+
+  forgotPassword(mail:string){
+    return this.http.post(this.BASE_URL+'/forgot-password',{email:mail});
+  }
+  resetPassword(datos:datosPassword){
+    return this.http.post<string>(this.BASE_URL+'/reset-password',datos);
   }
 
   readonly specialities = httpResource<especialidad[]>(()=>'http://localhost:8080/specialities')

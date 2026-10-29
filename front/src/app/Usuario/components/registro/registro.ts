@@ -1,9 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Auth } from '../service/auth';
-import { registerRequest } from '../interfaces/registerRequest';
+import { Auth } from '../../service/auth';
+import { registerRequest } from '../../interfaces/registerRequest';
 import { form, minLength, required, FormField, min, applyWhen, validate } from '@angular/forms/signals';
-import { FormError } from '../../Common/form-error/form-error';
+import { FormError } from '../../../Common/form-error/form-error';
 import { Router } from '@angular/router';
 
 type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'> & {
@@ -15,7 +15,7 @@ type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'>
   selector: 'app-registro',
   imports: [FormField,FormError],
   templateUrl: './registro.html',
-  styleUrl: '../shared/form.css',
+  styleUrl: '../../shared/form.css',
 })
 export class Registro {
   private readonly router = inject(Router);

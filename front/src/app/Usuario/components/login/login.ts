@@ -1,15 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
-import { Auth } from '../service/auth';
-import { loginRequest } from '../interfaces/loginRequest';
+import { Auth } from '../../service/auth';
+import { loginRequest } from '../../interfaces/loginRequest';
 import { form, minLength, required, FormField, email } from '@angular/forms/signals';
-import { FormError } from '../../Common/form-error/form-error';
-import { Router } from '@angular/router';
+import { FormError } from '../../../Common/form-error/form-error';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
-  imports: [FormField,FormError],
+  imports: [FormField, FormError, RouterLink],
   templateUrl: './login.html',
-  styleUrl: '../shared/form.css',
+  styleUrl: '../../shared/form.css',
 })
 export class Login {
   private readonly auth = inject(Auth);
