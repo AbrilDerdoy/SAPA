@@ -7,12 +7,13 @@
         <li><a routerLink=""><img src="images/foro.png"> Foros</a></li>
         <li><a routerLink=""><img src="images/guardado.png"> Guardados</a></li>
         <li><a><img src="images/lupa.png"> Buscar</a></li>
+        <button (click)="auth.logout()">Cerrar Sesion</button>
       }
     </ul>
     <div>
       @if(!auth.isAuthenticated()){
-        <button routerLink="login">Iniciar sesion</button>
-        <button routerLink="register">Registrarse</button>
+        <button routerLink="/login">Iniciar sesion</button>
+        <button routerLink="/register">Registrarse</button>
       }
     </div>
 
