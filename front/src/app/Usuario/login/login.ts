@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Auth } from '../service/auth';
-import { loginRequest } from '../loginRequest';
+import { loginRequest } from '../interfaces/loginRequest';
 import { form, minLength, required, FormField, email } from '@angular/forms/signals';
 import { FormError } from '../../Common/form-error/form-error';
 import { Router } from '@angular/router';
@@ -30,6 +30,7 @@ export class Login {
       next:(token)=>{
         alert('Sesion Iniciada')
         localStorage.setItem('jwt',JSON.stringify(token));
+        this.auth.guardarDatosUsuario()
         this.router.navigate(['/home']);
        },
       error:(err)=>{
