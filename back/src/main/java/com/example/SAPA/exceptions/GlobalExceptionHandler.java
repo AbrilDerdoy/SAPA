@@ -1,8 +1,11 @@
 package com.example.SAPA.exceptions;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +17,8 @@ import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, WebRequest request) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -75,6 +80,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ErrorResponse> handleDisabledException(DisabledException ex, WebRequest request) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MailAuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleMailAuthenticationException(
+            MailAuthenticationException ex,
+            WebRequest request
+    ) {
+        logger.error("No se pudo autenticar con el servidor SMTP configurado.", ex);
+        return buildResponse(
+                HttpStatus.BAD_GATEWAY,
+                "No se pudo autenticar el servicio de correo. Revisá las credenciales SMTP del backend.",
+                request
+        );
     }
 
     @ExceptionHandler(Exception.class)
