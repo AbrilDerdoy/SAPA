@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 public interface ForumMapper {
 
     @Mapping(source = "forum.id", target = "forumId")
+    @Mapping(source = "forum.createdBy.id", target = "createdById")
     @Mapping(source = "createdByName", target = "createdByName")
     @Mapping(source = "forum.title", target = "title")
     @Mapping(source = "forum.description", target = "content")

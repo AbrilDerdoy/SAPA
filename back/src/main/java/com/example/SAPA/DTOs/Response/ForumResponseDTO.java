@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record ForumResponseDTO(
         Long forumId,
+        Long createdById,
         String createdByName,
         String title,
         String content,
