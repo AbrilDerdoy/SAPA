@@ -5,6 +5,8 @@ import { ForumRequest } from '../../forum-DTOs/forum-request';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { form, minLength, required, FormField } from '@angular/forms/signals';
+import { Auth } from '../../../Usuario/service/auth';
+import { Usuario } from '../../../Usuario/interfaces/usuario';
 
 @Component({
   selector: 'app-forum',
@@ -14,7 +16,17 @@ import { form, minLength, required, FormField } from '@angular/forms/signals';
 })
 export class Forum implements OnInit {
   private forumService = inject(ForumService)
+  private authService = inject(Auth)
   error = signal<string>('')
+
+  get usuarioId(): number | null{
+    const usuario = localStorage.getItem('usuario')
+    return usuario ? (JSON.parse(usuario) as Usuario).id : null
+  }
+
+  esPropietario(forum: ForumResponse): boolean{
+    return this.usuarioId === forum.createdById
+  }
 
   // Listas.
   forums = signal<ForumResponse[]>([])
