@@ -71,6 +71,14 @@ export class Profile{
         lastName:this.modelo().lastName,
         email:this.modelo().email,
         birthDate:this.modelo().birthDate,
-        phoneNumber:this.modelo().phoneNumber});
+        phoneNumber:this.modelo().phoneNumber}).subscribe({
+          next:()=>{
+            alert('Cambios registrados');
+          },
+          error:(err)=>{
+            alert('Ocurrio un error');
+            console.error('Error: ',err);
+          }
+        });
   }
 }
