@@ -19,11 +19,18 @@ export class Forum implements OnInit {
   private authService = inject(Auth)
   error = signal<string>('')
 
+  // Verificar la sesión para poder acceder a ABM de foros.
+  get sesionIniciada(): boolean{
+    return this.authService.isAuthenticated()
+  }
+  
+  // Obtener el usuario para la verificación de id y poder acceder a BM de foros. 
   get usuarioId(): number | null{
     const usuario = localStorage.getItem('usuario')
     return usuario ? (JSON.parse(usuario) as Usuario).id : null
   }
-
+  
+  // Verificación de si el usuario autenticado es propietario del foro.
   esPropietario(forum: ForumResponse): boolean{
     return this.usuarioId === forum.createdById
   }
