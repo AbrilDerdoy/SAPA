@@ -1,0 +1,282 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #e4eeec;
+  box-shadow: 0 3px 15px rgba(0, 80, 73, 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.navbar {
+  max-width: 1250px;
+  min-height: 78px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #02776f;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  text-decoration: none;
+}
+
+.icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  color: var(--primary);
+}
+
+.forum-icon {
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  width: 19px;
+  height: 15px;
+}
+
+.forum-icon::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 3px;
+  width: 6px;
+  height: 6px;
+  border-left: 2px solid var(--primary);
+  transform: skew(-25deg);
+}
+
+.forum-icon span::before {
+  content: "•••";
+  position: absolute;
+  top: -3px;
+  left: 3px;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.saved-icon {
+  width: 14px;
+  height: 19px;
+  border: 2px solid var(--primary);
+  border-radius: 3px 3px 1px 1px;
+}
+
+.saved-icon::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 2px;
+  width: 7px;
+  height: 7px;
+  background: var(--background);
+  border-top: 2px solid var(--primary);
+  border-left: 2px solid var(--primary);
+  transform: rotate(45deg) translate(2px, 2px);
+}
+
+.search-icon {
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+}
+
+.search-icon::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  background: var(--primary);
+  right: -6px;
+  bottom: -3px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.links li a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  color: #526563;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.links li a:hover,
+.links li a.active {
+  background: #ecf8f6;
+  color: #02776f;
+}
+
+.links img {
+  width: 19px;
+  height: 19px;
+  object-fit: contain;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.actions button {
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login {
+  background: white;
+  color: #02776f;
+  border: 1px solid #02968c;
+}
+
+.login:hover {
+  background: #ecf8f6;
+}
+
+.register {
+  background: #02968c;
+  color: white;
+}
+
+.register:hover {
+  background: #02776f;
+}
+
+.logout {
+  background: #fff0ef;
+  color: #c34c48;
+}
+
+.logout:hover {
+  background: #fbdcda;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+}
+
+.main-footer {
+  background: #ffffff;
+  border-top: 1px solid #e4eeec;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 30px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #02776f;
+  font-size: 20px;
+}
+
+.footer-brand .brand-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 21px;
+}
+
+.footer-content p {
+  color: #687574;
+  font-size: 13px;
+  margin: 0;
+}
+
+.footer-copy {
+  color: #929f9d;
+  font-size: 12px;
+}
+
+@media (max-width: 850px) {
+  .navbar {
+    padding: 16px 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .nav-links {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .nav-actions {
+    margin-left: auto;
+  }
+
+  .footer-content {
+    padding: 25px 20px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 14px;
+  }
+
+  .nav-actions button {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  .nav-links {
+    gap: 2px;
+  }
+
+  .nav-links li a {
+    padding: 9px;
+    font-size: 12px;
+  }
+}

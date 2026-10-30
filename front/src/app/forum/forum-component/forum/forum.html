@@ -15,7 +15,10 @@
     <div class="actions">
         <button type="button" (click)="loadActiveForums()">Activos</button>
         <button type="button" (click)="loadInactiveForums()">Inactivos</button>
-        <button type="button" (click)="newForum()">Crear foro</button>
+        
+        @if(sesionIniciada){
+            <button type="button" (click)="newForum()">Crear foro</button>
+        }
     </div>
 
     <div class="forum-list">
@@ -24,8 +27,8 @@
             <h2>{{ forum.title }}</h2>
             <p>{{ forum.content }}</p>
             @if(esPropietario(forum)){
-                <button (click)="editForum(forum)">Editar</button>
-                <button (click)="deleteForum(forum.forumId)">Eliminar</button>
+                <button type="button" (click)="editForum(forum)">Editar</button>
+                <button type="button" (click)="deleteForum(forum.forumId)">Eliminar</button>
             }
         </article>
         } @empty {
