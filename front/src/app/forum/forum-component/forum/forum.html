@@ -23,11 +23,10 @@
         <article class="forum-card">
             <h2>{{ forum.title }}</h2>
             <p>{{ forum.content }}</p>
-
-            <!-- @if (usuarioId === forum.createdById) { -->
+            @if(esPropietario(forum)){
                 <button (click)="editForum(forum)">Editar</button>
                 <button (click)="deleteForum(forum.forumId)">Eliminar</button>
-            <!-- } -->
+            }
         </article>
         } @empty {
         <p>No hay foros para mostrar.</p>

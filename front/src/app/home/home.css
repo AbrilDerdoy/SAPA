@@ -1,0 +1,82 @@
+.home {
+  width: min(1100px, 92%);
+  margin: 40px auto;
+}
+
+.welcome {
+  padding: 40px;
+  background: var(--primary-light);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.welcome h1 {
+  margin-top: 0;
+  color: var(--primary-dark);
+  font-size: 2.2rem;
+}
+
+.welcome p {
+  max-width: 650px;
+  margin: 0 auto;
+  color: var(--text-muted);
+}
+
+.home-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.home-card {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--primary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card-icon {
+  font-size: 2.5rem;
+}
+
+.home-card h2 {
+  color: var(--primary-dark);
+}
+
+.home-card p {
+  margin-bottom: 24px;
+  color: var(--text-muted);
+}
+
+.card-button {
+  display: inline-block;
+  padding: 10px 18px;
+  background: var(--primary);
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.card-button:hover {
+  background: var(--primary-dark);
+}
+
+@media (max-width: 600px) {
+  .home {
+    margin: 20px auto;
+  }
+
+  .welcome {
+    padding: 25px 18px;
+  }
+
+  .welcome h1 {
+    font-size: 1.8rem;
+  }
+}
