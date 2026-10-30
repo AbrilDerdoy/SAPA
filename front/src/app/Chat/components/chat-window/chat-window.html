@@ -1,0 +1,170 @@
+
+@if (conversation) {
+
+  <section class="chat-container">
+
+    <header class="chat-header">
+
+      <div class="participant-avatar">
+        {{ conversation.otherParticipantName.charAt(0).toUpperCase() }}
+      </div>
+
+      <div class="participant-info">
+        <h2>{{ conversation.otherParticipantName }}</h2>
+
+        <span class="connection-status">
+          <span
+            class="status-dot"
+            [class.connected]="isConnected">
+          </span>
+
+          {{ isConnected ? 'Conectado' : 'Conectando...' }}
+        </span>
+      </div>
+
+      <div class="header-label">
+        Mensajería SAPA
+      </div>
+
+    </header>
+
+    <div class="messages-container">
+
+      @if (loading) {
+        <div class="messages-feedback">
+          <span class="loader"></span>
+          <p>Cargando mensajes...</p>
+        </div>
+      } @else if (messages.length === 0) {
+        <div class="messages-feedback">
+          <span class="empty-icon">✉</span>
+          <h3>Todavía no hay mensajes</h3>
+          <p>¡Podés iniciar la conversación!</p>
+        </div>
+      } @else {
+
+        @for (message of messages; track message.messageId) {
+
+          <div
+            class="message-row"
+            [class.own-message]="isOwnMessage(message)">
+
+            <div class="message-bubble">
+
+              @if (!isOwnMessage(message)) {
+                <span class="sender-name">
+                  {{ message.senderName }}
+                </span>
+              }
+
+              @if (message.type === 'FILE') {
+
+                @for (attachment of message.attachments; track attachment.attachmentId) {
+
+                  @if (attachment.type === 'IMAGE') {
+                    <a
+                      class="image-attachment"
+                      [href]="getAttachmentUrl(attachment.fileUrl)"
+                      target="_blank"
+                      rel="noopener noreferrer">
+
+                      <img
+                        class="message-image"
+                        [src]="getAttachmentUrl(attachment.fileUrl)"
+                        [alt]="attachment.fileName">
+                    </a>
+                  } @else {
+                    <a
+                      class="message-file"
+                      [href]="getAttachmentUrl(attachment.fileUrl)"
+                      target="_blank"
+                      rel="noopener noreferrer">
+
+                      <span class="file-icon">PDF</span>
+
+                      <span class="file-name">
+                        {{ attachment.fileName }}
+                      </span>
+                    </a>
+                  }
+
+                }
+
+              } @else {
+                <p>{{ message.content }}</p>
+              }
+
+              <span class="message-time">
+                {{ message.sentAt | date:'shortTime' }}
+              </span>
+
+            </div>
+
+          </div>
+
+        }
+
+      }
+
+    </div>
+
+    @if (errorMessage) {
+      <p class="error-message">{{ errorMessage }}</p>
+    }
+
+    <form class="message-form" (ngSubmit)="sendMessage()">
+
+      <label class="attachment-button" title="Adjuntar imagen o PDF">
+        <span>📎</span>
+
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          (change)="onFileSelected($event)"
+          hidden>
+      </label>
+
+      <textarea
+        name="newMessage"
+        [(ngModel)]="newMessage"
+        placeholder="Escribí tu mensaje..."
+        rows="1"
+        maxlength="2000"
+        [disabled]="!isConnected">
+      </textarea>
+
+      <button
+        type="submit"
+        [disabled]="!isConnected || !newMessage.trim()">
+        Enviar
+        <span>➤</span>
+      </button>
+
+    </form>
+
+  </section>
+
+} @else {
+
+  <section class="welcome-chat">
+
+    <div class="welcome-decoration">
+      <div class="welcome-icon">
+        <span>✉</span>
+      </div>
+    </div>
+
+    <h2>Bienvenido al chat de SAPA</h2>
+
+    <p>
+      Seleccioná una conversación para comenzar a intercambiar
+      mensajes y mantenerte en contacto.
+    </p>
+
+    <span class="welcome-caption">
+      Mensajería para la comunidad SAPA
+    </span>
+
+  </section>
+
+}
