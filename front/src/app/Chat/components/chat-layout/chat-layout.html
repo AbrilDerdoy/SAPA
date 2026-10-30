@@ -1,0 +1,42 @@
+<main class="chat-page">
+
+  <section class="chat-container">
+
+    <header class="chat-header">
+
+      <div class="header-brand">
+        <div class="brand-icon">
+          <span>S</span>
+        </div>
+
+        <div class="brand-info">
+          <h1>SAPA</h1>
+          <p>Mensajería</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <span class="header-label">Chat</span>
+      </div>
+
+    </header>
+
+    <div class="chat-content">
+
+      <aside class="chat-sidebar">
+        <app-conversation-list
+          (conversationSelected)="onConversationSelected($event)"
+        />
+      </aside>
+
+      <section class="chat-main">
+        <app-chat-window
+          [conversation]="selectedConversation"
+        />
+      </section>
+
+    </div>
+
+  </section>
+
+</main>
