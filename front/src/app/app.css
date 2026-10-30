@@ -1,0 +1,40 @@
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+
+nav h2 {
+    margin: 0;
+}
+
+nav ul {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+}
+
+nav li {
+    list-style: none;
+}
+
+nav li a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+nav li img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+nav app-user-menu,
+nav > div {
+    margin-left: auto;
+}

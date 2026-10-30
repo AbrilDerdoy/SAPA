@@ -1,0 +1,19 @@
+@if(auth.isAuthenticated()){
+    @if(profile.isLoading()){
+        <p>Cargando datos...</p>
+    }
+    @if(profile.error()){
+        <p>Ocurrio un error</p>
+    }
+    @if(profile.hasValue()){
+        <p>Nombre: {{profile.value().firstName}}</p>
+        <p>Apellido: {{profile.value().lastName}}</p>
+        <p>Fecha de nacimiento: {{profile.value().birthDate | date}}</p>
+        <p>Telefono: {{profile.value().phoneNumber}}</p>
+        <p>Email: {{profile.value().email}}</p>
+        <p>Rol: {{profile.value().role}}</p>
+        <p>Matricula: {{profile.value().licenseNumber ?? 'No posee'}}</p>
+        <button><a routerLink="/home">Volver al Inicio</a></button>
+        <button>Editar datos</button>
+    }
+}

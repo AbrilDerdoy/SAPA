@@ -5,6 +5,7 @@ import { Registro } from './Usuario/components/registro/registro';
 import { Login } from './Usuario/components/login/login';
 import { ForgotPassword } from './Usuario/components/forgot-password/forgot-password';
 import { ResetPassword } from './Usuario/components/reset-password/reset-password';
+import { Profile } from './Usuario/components/profile/profile';
 
 export const routes: Routes = [
     {path:'',redirectTo:'home',pathMatch:'full'},
@@ -13,5 +14,6 @@ export const routes: Routes = [
     {path:'home',component:Home},
     {path:'forums', component: Forum},
     {path:'forgotPassword',component:ForgotPassword},
-    {path:'resetPassword',component:ResetPassword}
+    {path:'resetPassword',component:ResetPassword},
+    {path:'profile',component:Profile}
 ];
