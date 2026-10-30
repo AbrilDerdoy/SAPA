@@ -1,4 +1,5 @@
 @if(auth.isAuthenticated()){
+    <button><a [routerLink]="['/home']">Volver al Inicio</a></button>
     @if(profile.isLoading()){
         <p>Cargando datos...</p>
     }
@@ -6,14 +7,34 @@
         <p>Ocurrio un error</p>
     }
     @if(profile.hasValue()){
-        <p>Nombre: {{profile.value().firstName}}</p>
-        <p>Apellido: {{profile.value().lastName}}</p>
-        <p>Fecha de nacimiento: {{profile.value().birthDate | date}}</p>
-        <p>Telefono: {{profile.value().phoneNumber}}</p>
-        <p>Email: {{profile.value().email}}</p>
-        <p>Rol: {{profile.value().role}}</p>
-        <p>Matricula: {{profile.value().licenseNumber ?? 'No posee'}}</p>
-        <button><a routerLink="/home">Volver al Inicio</a></button>
-        <button>Editar datos</button>
+        <form novalidate (submit)="enviar($event)">
+            <label>
+                Nombre:
+                <input type="text" [formField]="formulario.firstName">
+                <app-form-error [field]="formulario.firstName()"/>
+            </label>
+            <label>
+                Apellido:
+                <input type="text" [formField]="formulario.lastName">
+                <app-form-error [field]="formulario.lastName()"/>
+            </label>
+            <label>
+                Email:
+                <input type="email" [formField]="formulario.email">
+                <app-form-error [field]="formulario.email()"/>
+            </label>
+            <label>
+                Fecha de nacimiento:
+                <input type="date" [formField]="formulario.birthDate">
+                <app-form-error [field]="formulario.birthDate()"/>
+            </label>
+            <label>
+                Telefono:
+                <input type="number" [formField]="formulario.phoneNumber">
+                <app-form-error [field]="formulario.phoneNumber()"/>
+            </label>
+            <button (click)="toggleFormulario()">Editar datos</button>
+            <button class="btn-enviar" type="submit" [disabled]="toggleBotonEnviar()">Confirmar</button>    
+        </form>
     }
 }
