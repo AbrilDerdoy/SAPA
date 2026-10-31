@@ -3,14 +3,15 @@ import { ForumService } from '../../forum-service/forum-service';
 import { ForumResponse } from '../../forum-DTOs/forum-response';
 import { ForumRequest } from '../../forum-DTOs/forum-request';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { form, minLength, required, FormField } from '@angular/forms/signals';
 import { Auth } from '../../../Usuario/service/auth';
 import { Usuario } from '../../../Usuario/interfaces/usuario';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-forum',
-  imports: [CommonModule, FormsModule, FormField],
+  imports: [CommonModule, FormsModule, FormField, RouterLink],
   templateUrl: './forum.html',
   styleUrl: './forum.css',
 })
@@ -56,36 +57,29 @@ export class Forum implements OnInit {
     required(ruta.title, {
       message: 'El título es obligatorio'
     });
-
     minLength(ruta.title, 3, {
       message: 'El título debe tener al menos 3 caracteres'
     });
-
     required(ruta.content, {
       message: 'El contenido es obligatorio'
     });
-
     minLength(ruta.content, 10, {
       message: 'El contenido debe tener al menos 10 caracteres'
     });
   });
 
-  // Obtener foros activos.
+  // Obtener todos los foros.
   loadForums(): void {
-    console.log('Se ejecutó wachin')
     this.forumService.getAllForums().subscribe({
       next: (datos) => {
         this.forums.set(datos)
         this.filteredForums.set(datos)
       },
-
       error: () => this.error.set('Error al cargar los foros.')
     })
   }
 
-  ngOnInit(): void {
-    this.loadForums()
-  }
+  ngOnInit(): void {this.loadForums()}
 
   // Obtener foros activos.
   loadActiveForums(): void {

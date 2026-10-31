@@ -15,9 +15,9 @@
     <div class="actions">
         <button type="button" (click)="loadActiveForums()">Activos</button>
         <button type="button" (click)="loadInactiveForums()">Inactivos</button>
-        
+
         @if(sesionIniciada){
-            <button type="button" (click)="newForum()">Crear foro</button>
+        <button type="button" (click)="newForum()">Crear foro</button>
         }
     </div>
 
@@ -26,9 +26,11 @@
         <article class="forum-card">
             <h2>{{ forum.title }}</h2>
             <p>{{ forum.content }}</p>
+            <button type="button" [routerLink]="['/forums', forum.title]">Ver publicaciones</button>
+
             @if(esPropietario(forum)){
-                <button type="button" (click)="editForum(forum)">Editar</button>
-                <button type="button" (click)="deleteForum(forum.forumId)">Eliminar</button>
+            <button type="button" (click)="editForum(forum)">Editar</button>
+            <button type="button" (click)="deleteForum(forum.forumId)">Eliminar</button>
             }
         </article>
         } @empty {
