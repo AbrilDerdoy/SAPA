@@ -26,6 +26,15 @@
             <span class="search-icon"></span>  
             Buscar
           </a></li>
+        <li>
+          @if (role === 'DOCTOR') {
+            <a routerLink="/solicitudes">Solicitudes de seguimiento</a>
+          }
+
+          @if (role === 'PATIENT') {
+            <a routerLink="/mis-solicitudes">Mis solicitudes</a>
+          }
+        </li>
       }
     </ul>
     <div class="actions">
