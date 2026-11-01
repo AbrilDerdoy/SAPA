@@ -1,0 +1,89 @@
+<section class="posts-container">
+  @if (forum(); as f) {
+  <section class="forum-info">
+    <h1>{{ f.title }}</h1>
+    <p>{{ f.content }}</p>
+  </section>
+  }
+  <header class="posts-header">
+    <div>
+      <h2>Publicaciones</h2>
+      <p>Compartí tus experiencias y conocimientos con la comunidad.</p>
+    </div>
+
+    @if (sesionIniciada) {
+    <button type="button" (click)="newPost()">Nueva publicación</button>
+    }
+  </header>
+
+  @if (error()) {
+  <p class="error-message">{{ error() }}</p>
+  }
+
+  <section class="posts-filter">
+    <input type="search" placeholder="Buscar por título..." aria-label="Filtrar publicaciones por título"
+      [value]="titleFilter" (input)="titleFilter = $any($event.target).value; filterPosts()" />
+  </section>
+
+  @if (formVisible()) {
+  <form class="post-form" (submit)="$event.preventDefault(); savePost()">
+    <h3> {{ postId !== null ? 'Editar publicación' : 'Nueva publicación' }} </h3>
+
+    <label for="title">Título</label>
+    <input id="title" type="text" placeholder="Título de la publicación" [formField]="formulario.title" />
+
+    @if (formulario.title().invalid() && formulario.title().touched()) {
+    @for (error of formulario.title().errors(); track $index) {
+    <p class="error-message">{{ error.message }}</p>
+    }
+    }
+
+    <label for="content">Contenido</label>
+    <textarea id="content" rows="5" [formField]="formulario.content"></textarea>
+
+    @if (formulario.content().invalid() && formulario.content().touched()) {
+    @for (error of formulario.content().errors(); track $index) {
+    <p class="error-message">{{ error.message }}</p>
+    }
+    }
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="formulario().invalid()">{{ postId !== null ? 'Guardar cambios' : 'Publicar'
+        }}</button>
+      <button type="button" (click)="closeForm()">Cancelar</button>
+    </div>
+  </form>
+  }
+
+  <section class="posts-list">
+    @for (post of filteredPosts(); track post.postId) {
+    <article class="post-card">
+      <div class="post-card-header">
+        <h3>{{ post.title }}</h3>
+
+        @if (sesionIniciada && esPropietario(post)) {
+        <div class="post-actions">
+          <button type="button" (click)="editPost(post.postId, post)">Editar</button>
+          <button type="button" (click)="deletePost(post.postId)">Eliminar</button>
+        </div>
+        }
+      </div>
+
+      <p class="post-content">{{ post.content }}</p>
+
+      <footer class="post-meta">
+        <span>Publicado por {{ post.authorName }}</span>
+        <time [attr.datetime]="post.createdAt">{{ post.createdAt | date:'dd/MM/yyyy HH:mm' }}</time>
+      </footer>
+    </article>
+    } @empty {
+    <div class="empty-state">
+      @if (titleFilter.trim()) {
+      <p>No se encontraron publicaciones con ese título.</p>
+      } @else {
+      <p>Todavía no hay publicaciones en este foro.</p>
+      }
+    </div>
+    }
+  </section>
+</section>

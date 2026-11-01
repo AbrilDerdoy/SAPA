@@ -7,6 +7,7 @@ import { Registro } from './Usuario/components/registro/registro';
 import { Login } from './Usuario/components/login/login';
 import { ForgotPassword } from './Usuario/components/forgot-password/forgot-password';
 import { ResetPassword } from './Usuario/components/reset-password/reset-password';
+import { Post } from './post/post-component/post/post';
 
 export const routes: Routes = [
   {path: '',redirectTo: 'home',pathMatch: 'full'},

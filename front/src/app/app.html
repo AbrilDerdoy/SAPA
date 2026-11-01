@@ -30,7 +30,7 @@
     </ul>
     <div class="actions">
       @if (auth.isAuthenticated()) {
-        <button class="logout" (click)="auth.logout">Cerrar Sesión</button>
+        <button class="logout" (click)="auth.logout()">Cerrar Sesión</button>
       }@else {
         <button class="login" routerLink="/login">Iniciar Sesión</button>
         <button class="resgister" routerLink="/register">Registrarse</button>
