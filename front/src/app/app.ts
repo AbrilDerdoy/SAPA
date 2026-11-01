@@ -11,4 +11,13 @@ import { Auth } from './Usuario/service/auth';
 export class App {
   protected readonly title = signal('SAPA-FRONT');
   readonly auth = inject(Auth)
+
+    readonly role = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('usuario') ?? '{}');
+      return String(u.role ?? '').toUpperCase().replace('ROLE_', '');
+    } catch {
+      return '';
+    }
+  })();
 }

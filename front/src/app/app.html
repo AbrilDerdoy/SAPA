@@ -59,7 +59,15 @@
              ? 'images/magnifying-glass-t.png'
              : 'images/magnifying-glass.png'">
             Buscar
-          </a>
+          </a></li>
+        <li>
+          @if (role === 'DOCTOR') {
+            <a routerLink="/solicitudes">Solicitudes de seguimiento</a>
+          }
+
+          @if (role === 'PATIENT') {
+            <a routerLink="/mis-solicitudes">Mis solicitudes</a>
+          }
         </li>
       }
     </ul>
