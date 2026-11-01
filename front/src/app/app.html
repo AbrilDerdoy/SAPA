@@ -1,29 +1,63 @@
 <header class="main-header">
   <nav class="navbar">
     <a class="brand" routerLink="/home">
-      <span class="icon">+</span>
+      <img src="images\logo.png" alt="Logo SAPA" class="header-logo">
       <span>SAPA</span>
     </a>
     <ul class="links">
       @if(auth.isAuthenticated()){
+
         <li>
-          <a routerLink="/home" routerLinkActive="active">
-            <span class="home-icon">⌂</span>
+          <a 
+            routerLink="/home"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+            #inicio="routerLinkActive">
+            
+            <img 
+              [src]="inicio.isActive 
+              ? 'images/home-filled.png'
+              : 'images/home-custom.png'">
             Inicio
-          </a></li>
+          </a>
+        </li>
+
         <li>
-          <a routerLink="/forums" routerLinkActive="active">
-            <span class="forum-icon"></span>
+          <a 
+          routerLink="/forums"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          #foros="routerLinkActive">
+            <img [src]="foros.isActive
+            ? 'images/signpost-t.png'
+            : 'images/signpost.png'">
             Foros
-          </a></li>
+          </a>
+        </li>
+        
         <li>
-          <a routerLink="">
-            <span class="saved-icon"></span>
+          <a
+          routerLink="/saved"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          #guardados="routerLinkActive">
+            <img [src]="guardados.isActive
+            ? 'images/bookmark-fill-t.png'
+            : 'images/bookmark.png'" >
             Guardados
-          </a></li>
+          </a>
+        </li>
+
         <li>
-          <a>
-            <span class="search-icon"></span>  
+          <a routerLink="/medicamentos">Medicamentos</a></li>
+        <li>
+          <a
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          #buscar="routerLinkActive">
+             <img [src]="buscar.isActive
+             ? 'images/magnifying-glass-t.png'
+             : 'images/magnifying-glass.png'">
             Buscar
           </a></li>
         <li>
@@ -37,6 +71,7 @@
         </li>
       }
     </ul>
+    
     <div class="actions">
       @if (auth.isAuthenticated()) {
         <button class="logout" (click)="auth.logout()">Cerrar Sesión</button>
@@ -54,7 +89,7 @@
 <footer class="main-footer">
   <div class="footer-content">
     <div class="footer-brand">
-      <span class="brand-icon">+</span>
+      <img src="/images/logo.png" alt="Logo SAPA" class="footer-logo">
       <strong>SAPA</strong>
     </div>
     <p>Conectando pacientes y profesionales de la salud.</p>
