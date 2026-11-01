@@ -1,15 +1,24 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLinkWithHref } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth } from './Usuario/service/auth';
 import { UserMenu } from './Usuario/components/user-menu/user-menu';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLinkWithHref,UserMenu],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive,RouterLinkWithHref,UserMenu],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
   protected readonly title = signal('SAPA-FRONT');
   readonly auth = inject(Auth)
+
+    readonly role = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('usuario') ?? '{}');
+      return String(u.role ?? '').toUpperCase().replace('ROLE_', '');
+    } catch {
+      return '';
+    }
+  })();
 }

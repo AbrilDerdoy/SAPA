@@ -1,0 +1,110 @@
+<section class="conversation-panel">
+
+  <div class="panel-heading">
+    <div>
+      <h2>Conversaciones</h2>
+      <p>Tus mensajes y contactos</p>
+    </div>
+
+    <span class="conversation-count">
+      {{ conversations.length }}
+    </span>
+  </div>
+
+  <div class="search-container">
+    <span class="search-icon">⌕</span>
+
+    <input
+      type="text"
+      [(ngModel)]="searchText"
+      (ngModelChange)="filterConversations()"
+      placeholder="Buscar conversación..."
+      aria-label="Buscar conversación"
+    />
+
+    @if (searchText) {
+      <button
+        class="clear-search"
+        type="button"
+        (click)="searchText = ''; filterConversations()"
+        aria-label="Limpiar búsqueda">
+        ×
+      </button>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="state-message">
+      <div class="loader"></div>
+      <h3>Cargando conversaciones</h3>
+      <p>Estamos preparando tus mensajes...</p>
+    </div>
+  }
+
+  @if (!loading && errorMessage) {
+    <div class="state-message error-state">
+      <div class="empty-icon">!</div>
+      <h3>No pudimos cargar los mensajes</h3>
+      <p>{{ errorMessage }}</p>
+
+      <button type="button" (click)="retry()">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (!loading && !errorMessage && conversations.length === 0) {
+    <div class="state-message">
+      <div class="empty-icon">✉</div>
+      <h3>Sin conversaciones</h3>
+      <p>
+        Cuando tengas conversaciones disponibles,
+        aparecerán aquí.
+      </p>
+    </div>
+  }
+
+  @if (!loading && !errorMessage && conversations.length > 0) {
+    <div class="conversation-items">
+
+      @for (conversation of filteredConversations; track conversation.conversationId) {
+        <button
+          type="button"
+          class="conversation-item"
+          [class.selected]="selectedConversationId === conversation.conversationId"
+          (click)="selectConversation(conversation)">
+
+          <div class="avatar">
+            {{ conversation.otherParticipantName.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="conversation-info">
+
+            <div class="conversation-top">
+              <h3>{{ conversation.otherParticipantName }}</h3>
+
+              <span class="conversation-date">
+                {{ formatDate(conversation.lastMessageAt) }}
+              </span>
+            </div>
+
+            <p class="last-message">
+              {{ conversation.lastMessage || 'Sin mensajes aún' }}
+            </p>
+
+          </div>
+        </button>
+      }
+
+      @if (filteredConversations.length === 0) {
+        <div class="state-message search-empty">
+          <div class="empty-icon">⌕</div>
+          <h3>Sin resultados</h3>
+          <p>No encontramos conversaciones con ese nombre.</p>
+        </div>
+      }
+
+    </div>
+  }
+
+</section>

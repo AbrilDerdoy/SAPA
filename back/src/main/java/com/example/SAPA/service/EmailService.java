@@ -37,8 +37,6 @@ public class EmailService {
 
     public void sendResetPasswordEmail(String toEmail, String token) {
 
-        // Reemplazá esta URL por la ruta real de recuperación
-        // de contraseña de tu frontend Angular.
         String url = "http://localhost:4200/resetPassword?token="
                 + token;
 

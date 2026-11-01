@@ -1,0 +1,41 @@
+<section class="update-forum">
+  @if (cargando()) {
+    <p>Cargando foro...</p>
+  } @else if (forum()) {
+    <h1>Editar foro</h1>
+
+    @if (error()) { <p class="error">{{ error() }}</p> }
+
+    <form (submit)="guardar(); $event.preventDefault()">
+      <div class="form-group">
+        <label for="title">Título</label>
+        <input id="title" type="text" [formField]="formulario.title" placeholder="Ingresá el título del foro" />
+
+        @if (formulario.title().touched() && formulario.title().invalid()) {
+          @for (error of formulario.title().errors(); track error) {
+            <p class="error">{{ error.message }}</p>
+          }
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="content">Contenido</label>
+        <textarea id="content" [formField]="formulario.content" placeholder="Ingresá el contenido del foro" rows="5"></textarea>
+
+        @if (formulario.content().touched() && formulario.content().invalid()) {
+          @for (error of formulario.content().errors(); track error) {
+            <p class="error">{{ error.message }}</p>
+          }
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="submit">Guardar cambios</button>
+        <button type="button" (click)="cancelar()">Cancelar</button>
+      </div>
+
+    </form>
+  } @else {
+    <p class="error">{{ error() }}</p>
+  }
+</section>

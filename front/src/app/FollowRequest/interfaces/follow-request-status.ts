@@ -1,0 +1,1 @@
+export type FollowRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISOLVED';
