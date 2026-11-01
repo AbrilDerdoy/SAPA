@@ -6,6 +6,7 @@
     </a>
     <ul class="links">
       @if(auth.isAuthenticated()){
+
         <li>
           <a 
             routerLink="/home"
@@ -46,7 +47,9 @@
             Guardados
           </a>
         </li>
-        
+
+        <li>
+          <a routerLink="/medicamentos">Medicamentos</a></li>
         <li>
           <a
           routerLinkActive="active"

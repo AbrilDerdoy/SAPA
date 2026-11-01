@@ -7,6 +7,7 @@ import { Registro } from './Usuario/components/registro/registro';
 import { Login } from './Usuario/components/login/login';
 import { ForgotPassword } from './Usuario/components/forgot-password/forgot-password';
 import { ResetPassword } from './Usuario/components/reset-password/reset-password';
+import { MedicationSearch } from './Medication/components/medication-search/medication-search';
 import { Post } from './post/post-component/post/post';
 import { UpdateForum } from './forum/forum-component/update-forum/update-forum';
 import { CreateForum } from './forum/forum-component/create-forum/create-forum';
@@ -22,5 +23,7 @@ export const routes: Routes = [
   {path: 'forums/:titleForum', component: Post},
   {path: 'forgotPassword',component: ForgotPassword},
   {path: 'resetPassword',component: ResetPassword},
-  {path: 'chat',loadChildren: () =>import('./Chat/chat.routes').then(m => m.chatRoutes)}
+  {path: 'chat',loadChildren: () =>import('./Chat/chat.routes').then(m => m.chatRoutes)},
+  {path: 'medicamentos', loadComponent: () => import('./Medication/components/medication-search/medication-search').then(
+    (m) => m.MedicationSearch)},
 ];
