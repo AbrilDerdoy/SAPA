@@ -12,6 +12,7 @@ import { MedicationSearch } from './Medication/components/medication-search/medi
 import { Post } from './post/post-component/post/post';
 import { UpdateForum } from './forum/forum-component/update-forum/update-forum';
 import { CreateForum } from './forum/forum-component/create-forum/create-forum';
+import { Profile } from './Usuario/components/profile/profile';
 
 export const routes: Routes = [
   {path: '',redirectTo: 'home',pathMatch: 'full'},
@@ -24,6 +25,7 @@ export const routes: Routes = [
   {path: 'forums/:titleForum', component: Post},
   {path: 'forgotPassword',component: ForgotPassword},
   {path: 'resetPassword',component: ResetPassword},
+  {path: 'profile',component:Profile},
   {path: 'chat',loadChildren: () =>import('./Chat/chat.routes').then(m => m.chatRoutes)},
   {path: 'solicitudes', canActivate: [roleGuard(['DOCTOR'])], data: { mode: 'doctor' },
     loadComponent: () => import('./FollowRequest/components/follow-requests/follow-requests').then((m) => m.FollowRequests)},

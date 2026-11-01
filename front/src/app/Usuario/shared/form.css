@@ -16,3 +16,41 @@ form{
     background-color: #fef3f2;
     color: #b42318;
 }
+
+input:disabled {
+    background-color: #f1f3f5; 
+    color: #adb5bd;            
+    border: 1px solid #dee2e6; 
+    cursor: not-allowed;       
+    box-shadow: none;          
+    opacity: 0.8;              
+  }
+  
+  input:disabled::placeholder {
+    color: #ced4da;
+  }
+
+  .btn-enviar {
+    background-color: #02968c; /* Tu color primario (ej. Azul) */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+  }
+  
+  /* Efecto hover normal */
+  .btn-enviar:not(:disabled):hover {
+    background-color: #02776f;
+  }
+  
+  /* --- ESTILO CUANDO ESTÁ DESHABILITADO --- */
+  .btn-enviar:disabled {
+    background-color: #6c757d; /* Cambia a gris */
+    color: #e9ecef;            /* Texto gris muy claro */
+    opacity: 0.55;             /* Se vuelve semi-transparente */
+    cursor: not-allowed;       /* Cursor de "prohibido" */
+    box-shadow: none;          /* Evita efectos visuales activos */
+    transform: none;           /* Evita animaciones de click o escala */
+  }

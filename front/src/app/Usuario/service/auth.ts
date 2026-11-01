@@ -4,6 +4,7 @@ import { Usuario } from '../interfaces/usuario';
 import { registerRequest } from '../interfaces/registerRequest';
 import { loginRequest } from '../interfaces/loginRequest';
 import { TokenResponse } from '../interfaces/token-response';
+import { UserResponse } from '../DTOs/user-response';
 
 export interface especialidad{
   readonly id:number,
@@ -13,6 +14,16 @@ export interface especialidad{
 export interface datosPassword{
   token:string,
   newPassword:string
+}
+
+export interface datosUsuario{
+  firstName:string,
+  lastName:string,
+  email:string,
+  role:string,
+  birthDate:Date,
+  phoneNumber:number,
+  licenseNumber:number|null
 }
 
 @Injectable({
@@ -66,4 +77,12 @@ export class Auth {
 
   readonly specialities = httpResource<especialidad[]>(()=>'http://localhost:8080/specialities')
 
+  getMyProfile(){
+    return httpResource<datosUsuario>(()=>'http://localhost:8080/users/me')
+  }
+
+  modifyData(datos:Partial<Omit<datosUsuario,'role'>>){
+    //no existe el endpoint, queda pendiente codearlo
+    return this.http.put('http://localhost:8080/users/modify',datos) 
+  }
 }
