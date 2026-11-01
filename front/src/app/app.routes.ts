@@ -7,6 +7,7 @@ import { Registro } from './Usuario/components/registro/registro';
 import { Login } from './Usuario/components/login/login';
 import { ForgotPassword } from './Usuario/components/forgot-password/forgot-password';
 import { ResetPassword } from './Usuario/components/reset-password/reset-password';
+import { MedicationSearch } from './Medication/components/medication-search/medication-search';
 
 export const routes: Routes = [
   {path: '',redirectTo: 'home',pathMatch: 'full'},
@@ -16,5 +17,7 @@ export const routes: Routes = [
   {path: 'forums',component: Forum},
   {path: 'forgotPassword',component: ForgotPassword},
   {path: 'resetPassword',component: ResetPassword},
-  {path: 'chat',loadChildren: () =>import('./Chat/chat.routes').then(m => m.chatRoutes)}
+  {path: 'chat',loadChildren: () =>import('./Chat/chat.routes').then(m => m.chatRoutes)},
+  {path: 'medicamentos', loadComponent: () => import('./Medication/components/medication-search/medication-search').then(
+    (m) => m.MedicationSearch)},
 ];

@@ -1,0 +1,366 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:host {
+    --lime: #02968c;
+    --lime-soft: #e6f6f5;
+    --line: #dcebe9;
+    --ink: #0f2422;
+    --muted: #587571;
+    --danger: #c2410c;
+    --danger-soft: #fff4ec;
+    display: block;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.med {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+    background-image: radial-gradient(var(--line) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.med__header {
+    margin-bottom: 2rem;
+}
+
+.med__title {
+    margin: 0.9rem 0 0.5rem;
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.med__lead {
+    margin: 0;
+    max-width: 52ch;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.55;
+}
+
+.search__label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.search__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.4rem 0.4rem 1rem;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.search__bar:focus-within {
+    border-color: var(--lime);
+}
+
+.search__bar--error {
+    border-color: var(--danger);
+}
+
+.search__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 1.05rem;
+    color: var(--ink);
+}
+
+.search__input::placeholder {
+    color: #9aa690;
+}
+
+.search__clear {
+    background: transparent;
+    border: 0;
+    padding: 0 0.4rem;
+    color: var(--muted);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.search__btn {
+    padding: 0.7rem 1.5rem;
+    border: 0;
+    border-radius: 6px;
+    background: var(--lime);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.search__btn:hover:not(:disabled) {
+    background: var(--lime-dark);
+}
+
+.search__btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.search__errors {
+    margin: 0.8rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--danger);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.search__hint {
+    margin: 0.8rem 0 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.results {
+    margin-top: 2.25rem;
+}
+
+.skeleton {
+    display: grid;
+    gap: 0.8rem;
+    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+}
+
+.skeleton__line {
+    height: 14px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--line) 25%, var(--lime-soft) 50%, var(--line) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.3s infinite linear;
+}
+
+.skeleton__line--title {
+    height: 26px;
+    width: 55%;
+}
+
+.skeleton__line--short {
+    width: 70%;
+}
+
+@keyframes shimmer {
+    to {
+        background-position: -200% 0;
+    }
+}
+
+.notice {
+    padding: 1.1rem 1.3rem;
+    background: var(--lime-soft);
+    border-left: 6px solid var(--lime);
+    border-radius: 12px;
+}
+
+.notice p {
+    margin: 0.3rem 0 0;
+    color: var(--muted);
+}
+
+.notice--error {
+    background: var(--danger-soft);
+    border-left-color: var(--danger);
+}
+
+.leaflet {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 36, 34, 0.08);
+    overflow: hidden;
+    animation: rise 0.35s ease both;
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
+.leaflet__head {
+    padding: 0.9rem 1.25rem;
+    background: var(--lime);
+    color: #fff;
+    border-bottom: 0;
+}
+
+.leaflet__tag {
+    display: inline-block;
+    padding: 0.12rem 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transform: none;
+}
+
+.leaflet__name {
+    margin: 0.45rem 0 0.15rem;
+    font-size: clamp(1.2rem, 4vw, 1.5rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+}
+
+.leaflet__generic {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 400;
+    text-transform: capitalize;
+    opacity: 0.92;
+}
+
+.leaflet__generic span {
+    display: inline;
+    margin-right: 0.4rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.75;
+}
+
+.leaflet__body {
+    padding: 0.5rem 1.5rem;
+}
+
+.leaflet__empty {
+    color: var(--muted);
+}
+
+.item {
+    border-bottom: 1px solid var(--line);
+}
+
+.item:last-child {
+    border-bottom: 0;
+}
+
+.item__summary {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 0;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 700;
+}
+
+.item__summary::-webkit-details-marker {
+    display: none;
+}
+
+.item__num {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--lime-soft);
+    border: 1.5px solid var(--lime);
+    font-size: 0.8rem;
+    color: var(--lime-dark);
+}
+
+.item__title {
+    flex: 1;
+}
+
+.item__chevron {
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.item[open] .item__chevron {
+    transform: rotate(-135deg);
+}
+
+.item__content {
+    padding: 0 0 1.1rem 2.35rem;
+    color: #33402c;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    max-height: 340px;
+    overflow-y: auto;
+}
+
+.item__content p {
+    margin: 0 0 0.7rem;
+}
+
+.item--warn .item__num {
+    background: var(--danger-soft);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.leaflet__foot {
+    padding: 0.9rem 1.5rem;
+    background: var(--lime-soft);
+    border-top: 1px solid var(--line);
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+@media (max-width: 520px) {
+    .med {
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .search__bar {
+        padding-left: 0.8rem;
+        gap: 0.4rem;
+    }
+
+    .search__btn {
+        padding: 0.65rem 1.1rem;
+    }
+
+    .item__content {
+        padding-left: 0;
+    }
+
+    .leaflet__body,
+    .leaflet__head,
+    .leaflet__foot {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
