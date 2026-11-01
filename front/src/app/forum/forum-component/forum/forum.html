@@ -1,9 +1,7 @@
 <section class="forum">
     <h1 class="foros">Foros</h1>
 
-    @if (error()) {
-    <p class="error">{{ error() }}</p>
-    }
+    @if (error()) {<p class="error">{{ error() }}</p>}
 
     <div class="filter">
         <input type="text" placeholder="Buscar por título" [(ngModel)]="titleFilter" (keyup.enter)="filterForums()">
@@ -15,7 +13,8 @@
     <div class="actions">
         <button type="button" (click)="loadActiveForums()">Activos</button>
         <button type="button" (click)="loadInactiveForums()">Inactivos</button>
-        <button type="button" (click)="newForum()">Crear foro</button>
+
+        @if(sesionIniciada){ <button type="button" [routerLink]="['/forums/create']">Crear foro</button> }
     </div>
 
     <div class="forum-list">
@@ -23,47 +22,16 @@
         <article class="forum-card">
             <h2>{{ forum.title }}</h2>
             <p>{{ forum.content }}</p>
+            <button type="button" class="view" [routerLink]="['/forums', forum.title]">Ver publicaciones</button>
+
             @if(esPropietario(forum)){
-                <button (click)="editForum(forum)">Editar</button>
-                <button (click)="deleteForum(forum.forumId)">Eliminar</button>
+                <button type="button" class="edit" [routerLink]="['/forums/update', forum.title]">Editar</button>
+                <button type="button" class="delete" (click)="deleteForum(forum.forumId)">Eliminar</button>
             }
         </article>
         } @empty {
-        <p>No hay foros para mostrar.</p>
+            <p>No hay foros para mostrar.</p>
         }
     </div>
 
-    @if (formVisible()) {
-    <form (submit)="$event.preventDefault(); saveForum()">
-        <h2>{{ forumId !== null ? 'Editar foro' : 'Crear foro' }}</h2>
-
-        <div class="form-field">
-            <label for="title">Título</label>
-
-            <input id="title" type="text" [formField]="formulario.title">
-
-            @if (formulario.title().touched() && formulario.title().invalid()) {
-            @for (error of formulario.title().errors(); track error.kind) {
-            <p class="error">{{ error.message }}</p>
-            }
-            }
-        </div>
-
-        <div class="form-field">
-            <label for="content">Contenido</label>
-
-            <textarea id="content" [formField]="formulario.content"></textarea>
-
-            @if (formulario.content().touched() &&
-            formulario.content().invalid()) {
-            @for (error of formulario.content().errors(); track error.kind) {
-            <p class="error">{{ error.message }}</p>
-            }
-            }
-        </div>
-
-        <button type="submit">Guardar</button>
-        <button type="button" (click)="closeForm()">Cancelar</button>
-    </form>
-    }
 </section>

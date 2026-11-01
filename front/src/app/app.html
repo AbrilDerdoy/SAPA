@@ -1,29 +1,90 @@
-<header>
-  <nav>
-    <h2>SAPA</h2>
-    <ul>
+<header class="main-header">
+  <nav class="navbar">
+    <a class="brand" routerLink="/home">
+      <img src="images\logo.png" alt="Logo SAPA" class="header-logo">
+      <span>SAPA</span>
+    </a>
+    <ul class="links">
       @if(auth.isAuthenticated()){
-        <li><a routerLink="/home">Inicio</a></li>
-        <li><a routerLink=""><img src="images/foro.png"> Foros</a></li>
-        <li><a routerLink=""><img src="images/guardado.png"> Guardados</a></li>
-        <li><a><img src="images/lupa.png"> Buscar</a></li>
-        <li><a routerLink="/medicamentos">Medicamentos</a></li>
-        <button (click)="auth.logout()">Cerrar Sesion</button>
+
+        <li>
+          <a 
+            routerLink="/home"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+            #inicio="routerLinkActive">
+            
+            <img 
+              [src]="inicio.isActive 
+              ? 'images/home-filled.png'
+              : 'images/home-custom.png'">
+            Inicio
+          </a>
+        </li>
+
+        <li>
+          <a 
+          routerLink="/forums"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          #foros="routerLinkActive">
+            <img [src]="foros.isActive
+            ? 'images/signpost-t.png'
+            : 'images/signpost.png'">
+            Foros
+          </a>
+        </li>
+        
+        <li>
+          <a
+          routerLink="/saved"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          #guardados="routerLinkActive">
+            <img [src]="guardados.isActive
+            ? 'images/bookmark-fill-t.png'
+            : 'images/bookmark.png'" >
+            Guardados
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/medicamentos">Medicamentos</a></li>
+        <li>
+          <a
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          #buscar="routerLinkActive">
+             <img [src]="buscar.isActive
+             ? 'images/magnifying-glass-t.png'
+             : 'images/magnifying-glass.png'">
+            Buscar
+          </a>
+        </li>
       }
     </ul>
-    <div>
-      @if(!auth.isAuthenticated()){
-        <button routerLink="/login">Iniciar sesion</button>
-        <button routerLink="/register">Registrarse</button>
+    
+    <div class="actions">
+      @if (auth.isAuthenticated()) {
+        <button class="logout" (click)="auth.logout()">Cerrar Sesión</button>
+      }@else {
+        <button class="login" routerLink="/login">Iniciar Sesión</button>
+        <button class="resgister" routerLink="/register">Registrarse</button>
       }
     </div>
-
-
   </nav>
 </header>
+<main class="main-content">
+  <router-outlet/>
+</main>
 
-<router-outlet/>
-
-<footer>
-
+<footer class="main-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <img src="/images/logo.png" alt="Logo SAPA" class="footer-logo">
+      <strong>SAPA</strong>
+    </div>
+    <p>Conectando pacientes y profesionales de la salud.</p>
+    <span class="footer-copy">© 2026 SAPA · Comunidad de Salud</span>
+  </div>
 </footer>
