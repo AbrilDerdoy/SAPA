@@ -1,28 +1,54 @@
-<header>
-  <nav>
-    <h2>SAPA</h2>
-    <ul>
+<header class="main-header">
+  <nav class="navbar">
+    <a class="brand" routerLink="/home">
+      <span class="icon">+</span>
+      <span>SAPA</span>
+    </a>
+    <ul class="links">
       @if(auth.isAuthenticated()){
-        <li><a routerLink="/home">Inicio</a></li>
-        <li><a routerLink=""><img src="images/foro.png"> Foros</a></li>
-        <li><a routerLink=""><img src="images/guardado.png"> Guardados</a></li>
-        <li><a><img src="images/lupa.png"> Buscar</a></li>
-        <button (click)="auth.logout()">Cerrar Sesion</button>
+        <li>
+          <a routerLink="/home" routerLinkActive="active">
+            <span class="home-icon">⌂</span>
+            Inicio
+          </a></li>
+        <li>
+          <a routerLink="/forums" routerLinkActive="active">
+            <span class="forum-icon"></span>
+            Foros
+          </a></li>
+        <li>
+          <a routerLink="">
+            <span class="saved-icon"></span>
+            Guardados
+          </a></li>
+        <li>
+          <a>
+            <span class="search-icon"></span>  
+            Buscar
+          </a></li>
       }
     </ul>
-    <div>
-      @if(!auth.isAuthenticated()){
-        <button routerLink="/login">Iniciar sesion</button>
-        <button routerLink="/register">Registrarse</button>
+    <div class="actions">
+      @if (auth.isAuthenticated()) {
+        <button class="logout" (click)="auth.logout">Cerrar Sesión</button>
+      }@else {
+        <button class="login" routerLink="/login">Iniciar Sesión</button>
+        <button class="resgister" routerLink="/register">Registrarse</button>
       }
     </div>
-
-
   </nav>
 </header>
+<main class="main-content">
+  <router-outlet/>
+</main>
 
-<router-outlet/>
-
-<footer>
-
+<footer class="main-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <span class="brand-icon">+</span>
+      <strong>SAPA</strong>
+    </div>
+    <p>Conectando pacientes y profesionales de la salud.</p>
+    <span class="footer-copy">© 2026 SAPA · Comunidad de Salud</span>
+  </div>
 </footer>
