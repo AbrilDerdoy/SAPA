@@ -2,10 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, RouterLinkWithHref } from '@angular/router';
 import { Auth } from './Usuario/service/auth';
 import { UserMenu } from './Usuario/components/user-menu/user-menu';
+import { NotificationMenu } from './notifications/components/notification-menu/notification-menu';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive,RouterLinkWithHref,UserMenu],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive,RouterLinkWithHref,UserMenu,NotificationMenu],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

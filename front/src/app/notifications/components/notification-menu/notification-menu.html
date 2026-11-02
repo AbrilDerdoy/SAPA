@@ -1,0 +1,60 @@
+<div class="notification-menu">
+  <button
+    type="button"
+    class="notification-trigger"
+    (click)="toggleMenu()"
+    [attr.aria-expanded]="menuAbierto()"
+    aria-controls="notification-dropdown"
+    aria-label="Notificaciones">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+      <path d="M10 21h4" />
+    </svg>
+    @if (unreadCount() > 0) {
+      <span class="unread-badge" aria-label="{{ unreadCount() }} sin leer">
+        {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+      </span>
+    }
+  </button>
+
+  @if (menuAbierto()) {
+    <section class="notification-dropdown" id="notification-dropdown" aria-label="Notificaciones">
+      <h2>Notificaciones</h2>
+
+      @if (errorMessage()) {
+        <div class="notification-error" role="alert">
+          <span>{{ errorMessage() }}</span>
+          <button type="button" class="retry-button" (click)="loadNotifications()">Reintentar</button>
+        </div>
+      }
+
+      @if (loading()) {
+        <p class="notification-status" role="status">Cargando notificaciones...</p>
+      } @else if (notifications().length === 0 && !errorMessage()) {
+        <p class="notification-status">No tenés notificaciones.</p>
+      } @else {
+        <ul>
+          @for (notification of notifications(); track notification.notificationId) {
+            <li>
+              <button
+                type="button"
+                class="notification-item"
+                [class.unread]="!notification.readed"
+                [disabled]="notification.readed || processingIds().has(notification.notificationId)"
+                (click)="markAsRead(notification)">
+                <span class="notification-copy">
+                  <strong>{{ notification.title }}</strong>
+                  <span>{{ notification.msg }}</span>
+                  <time>{{ notification.createdAt | date: 'short' }}</time>
+                </span>
+                @if (!notification.readed) {
+                  <span class="unread-indicator" aria-label="Sin leer"></span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>
