@@ -5,6 +5,7 @@ import { registerRequest } from '../interfaces/registerRequest';
 import { loginRequest } from '../interfaces/loginRequest';
 import { TokenResponse } from '../interfaces/token-response';
 import { UserResponse } from '../DTOs/user-response';
+import { tap } from 'rxjs';
 
 export interface especialidad{
   readonly id:number,
@@ -84,4 +85,13 @@ export class Auth {
   modifyData(datos:Partial<Omit<datosUsuario,'role'>>){
     return this.http.put<TokenResponse>('http://localhost:8080/users/modify',datos)
   }
+   refreshToken() {
+     const tokens = JSON.parse(localStorage.getItem('jwt') || '{}');
+     const refreshToken = tokens.RefreshToken;
+
+     return this.http.post<TokenResponse>(`${this.BASE_URL}/refresh`, { refreshToken })
+       .pipe(tap((newTokens) => {
+         localStorage.setItem('jwt', JSON.stringify(newTokens));
+       }));
+   }
 }
