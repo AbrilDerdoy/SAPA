@@ -1,8 +1,10 @@
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.Request.DeleteAccountRequest;
+import com.example.SAPA.DTOs.Request.UpdateUserProfileRequestDTO;
 import com.example.SAPA.DTOs.Response.UserResponseDTO;
 import com.example.SAPA.DTOs.Response.fda.ProfileResponseDTO;
+import com.example.SAPA.security.DTO.AuthResponse;
 import com.example.SAPA.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -123,5 +126,24 @@ public class UserController {
                         authentication.getName()
                 )
         );
+    }
+
+    @Operation(
+            summary = "Modificar mi perfil",
+            description = "Actualiza los datos personales del usuario autenticado y renueva sus tokens si cambia el email."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado correctamente.",
+                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Los datos enviados no son válidos.", content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autorizado - Token JWT inválido o ausente.", content = @Content),
+            @ApiResponse(responseCode = "404", description = "No se encontró el perfil del usuario autenticado.", content = @Content),
+            @ApiResponse(responseCode = "409", description = "El email ya está registrado por otro usuario.", content = @Content)
+    })
+    @PutMapping("/modify")
+    public ResponseEntity<AuthResponse> modifyProfile(
+            @Valid @RequestBody UpdateUserProfileRequestDTO request,
+            Authentication authentication) {
+        return ResponseEntity.ok(userService.modifyProfile(authentication.getName(), request));
     }
 }

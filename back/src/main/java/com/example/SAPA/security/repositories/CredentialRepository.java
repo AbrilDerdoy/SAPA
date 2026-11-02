@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface CredentialRepository extends JpaRepository<CredentialEntity, Long> {
     Optional<CredentialEntity> findByEmail(String email);
     Optional<CredentialEntity> findByResetPasswordToken(String token);
+    boolean existsByEmail(String email);
     void deleteByUserId(Long userId);
 }

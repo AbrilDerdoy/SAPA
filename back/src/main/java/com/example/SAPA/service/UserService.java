@@ -1,6 +1,7 @@
 package com.example.SAPA.service;
 
 import com.example.SAPA.DTOs.Request.RegisterRequest;
+import com.example.SAPA.DTOs.Request.UpdateUserProfileRequestDTO;
 import com.example.SAPA.DTOs.Response.UserResponseDTO;
 import com.example.SAPA.DTOs.Response.fda.ProfileResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
@@ -13,6 +14,7 @@ import com.example.SAPA.Repositories.UserRepository;
 import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.NotificationType;
 import com.example.SAPA.enums.UserCategory;
+import com.example.SAPA.exceptions.ResourceAlreadyExistsException;
 import com.example.SAPA.mappers.UserMapper;
 import com.example.SAPA.security.DTO.AuthResponse;
 import com.example.SAPA.security.entities.CredentialEntity;
@@ -139,6 +141,59 @@ public class UserService {
         return userMapper.toUserResponseDTO(user);
     }
 
+    @Transactional
+    public AuthResponse modifyProfile(String currentEmail, UpdateUserProfileRequestDTO request) {
+        UserEntity user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        CredentialEntity credential = credentialRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Credenciales del usuario no encontradas"));
+
+        if (!user.getEmail().equals(request.email())
+                && (userRepository.existsByEmail(request.email())
+                || credentialRepository.existsByEmail(request.email()))) {
+            throw new ResourceAlreadyExistsException("El email ya está registrado.");
+        }
+
+        switch (user.getRole()) {
+            case PATIENT -> {
+                PatientEntity patient = patientRepository.findByUser(user)
+                        .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
+                if (!patient.getPhoneNumber().equals(request.phoneNumber())
+                        && patientRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), patient.getId())) {
+                    throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
+                }
+                patient.setFirstName(request.firstName());
+                patient.setLastName(request.lastName());
+                patient.setBirthDate(request.birthDate());
+                patient.setPhoneNumber(request.phoneNumber());
+            }
+            case DOCTOR -> {
+                DoctorEntity doctor = doctorRepository.findByUser(user)
+                        .orElseThrow(() -> new EntityNotFoundException("Médico no encontrado"));
+                if (!doctor.getPhoneNumber().equals(request.phoneNumber())
+                        && doctorRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), doctor.getId())) {
+                    throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
+                }
+                doctor.setFirstName(request.firstName());
+                doctor.setLastName(request.lastName());
+                doctor.setBirthDate(request.birthDate());
+                doctor.setPhoneNumber(request.phoneNumber());
+            }
+            case ADMIN -> throw new IllegalStateException("El perfil de administrador no se puede modificar desde este endpoint.");
+        }
+
+        user.setEmail(request.email());
+        credential.setEmail(request.email());
+        userRepository.save(user);
+
+        String accessToken = jwtService.generateToken(credential);
+        String refreshToken = jwtService.generateRefreshToken(credential);
+        credential.setRefreshToken(refreshToken);
+        credentialRepository.save(credential);
+
+        return new AuthResponse(accessToken, refreshToken);
+    }
+
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getAllUsers(){
         return userRepository.findAll()
@@ -230,7 +285,7 @@ public class UserService {
                 doctor.getLastName(),
                 user.getEmail(),
                 user.getRole().name(),
-                null,
+                doctor.getBirthDate(),
                 doctor.getPhoneNumber(),
                 null,
                 doctor.getLicenseNumber()

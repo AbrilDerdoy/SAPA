@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface DoctorRepository extends JpaRepository<DoctorEntity, Long>{
     Optional<DoctorEntity> findByUser(UserEntity user);
     Optional<DoctorEntity> findByUserId(Long userId);
+    boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
     List<DoctorEntity> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
             String firstName, String lastName);
 }
