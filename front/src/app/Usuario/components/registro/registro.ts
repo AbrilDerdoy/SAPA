@@ -21,7 +21,7 @@ export class Registro {
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
   readonly modelo = signal<RegistroFormModel>({
-    role:null,
+    role:'ROLE_PATIENT',
     email:'',
     password:'',
     firstName:'',
