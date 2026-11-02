@@ -6,11 +6,10 @@ import { FormsModule } from '@angular/forms';
 import { Auth } from '../../../Usuario/service/auth';
 import { Usuario } from '../../../Usuario/interfaces/usuario';
 import { RouterLink } from '@angular/router';
-import { UpdateForum } from '../update-forum/update-forum';
 
 @Component({
   selector: 'app-forum',
-  imports: [CommonModule, FormsModule, RouterLink, UpdateForum],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './forum.html',
   styleUrl: './forum.css',
 })

@@ -1,1 +1,41 @@
-<p>saved-post works!</p>
+<section class="saved-posts">
+  <header class="saved-posts-header">
+    <div>
+      <h1>Publicaciones guardadas</h1>
+      <p>Encontrá las publicaciones que guardaste para consultar más tarde.</p>
+    </div>
+  </header>
+
+  @if (error()) { <p class="error">{{ error() }}</p> }
+
+  <div class="saved-posts-list">
+    @for (saved of savedPosts(); track saved.savedPostId) {
+      <p>
+  ID del registro: {{ saved.savedPostId }}
+  | ID de publicación: {{ saved.post.postId }}
+</p>
+      <article class="saved-post-card">
+        <div class="saved-post-content">
+          <h2>{{ saved.post.title }}</h2>
+          <p>{{ saved.post.content }}</p>
+
+          <div class="saved-post-info">
+            <span>Publicado por {{ saved.post.authorName }}</span>
+            <span>Guardado el {{ saved.savedAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+
+        <div class="saved-post-actions">
+          <button type="button" class="view" (click)="viewPost(saved.post)"> Ver publicación </button>
+
+          <button type="button" class="delete" (click)="unsavePost(saved.post.postId)"> Quitar de guardados </button>
+        </div>
+      </article>
+    } @empty {
+      <div class="empty-message">
+        <h2>Todavía no guardaste publicaciones</h2>
+        <p>Cuando guardes una publicación, aparecerá acá.</p>
+      </div>
+    }
+  </div>
+</section>

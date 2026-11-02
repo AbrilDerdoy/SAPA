@@ -13,6 +13,7 @@ import { Post } from './post/post-component/post/post';
 import { UpdateForum } from './forum/forum-component/update-forum/update-forum';
 import { CreateForum } from './forum/forum-component/create-forum/create-forum';
 import { Profile } from './Usuario/components/profile/profile';
+import { SavedPost } from './saved-post/saved-post-component/saved-post/saved-post';
 
 export const routes: Routes = [
   {path: '',redirectTo: 'home',pathMatch: 'full'},
@@ -23,6 +24,7 @@ export const routes: Routes = [
   {path: 'forums/create', component: CreateForum},
   {path: 'forums/update/:titleForum', component: UpdateForum},
   {path: 'forums/:titleForum', component: Post},
+  {path: 'saved', component: SavedPost},
   {path: 'forgotPassword',component: ForgotPassword},
   {path: 'resetPassword',component: ResetPassword},
   {path: 'profile',component:Profile},
