@@ -8,6 +8,7 @@ import { form, FormField, minLength, required } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { ForumResponse } from '../../../forum/forum-DTOs/forum-response';
 import { ForumService } from '../../../forum/forum-service/forum-service';
+import { SavedPostService } from '../../../saved-post/saved-post-service/saved-post-service';
 
 @Component({
   selector: 'app-post',
@@ -19,7 +20,11 @@ export class Post {
   private postService = inject(PostService)
   private forumService = inject(ForumService)
   private authService = inject(Auth)
+  private savedPostService = inject(SavedPostService)
   error = signal<string>('')
+
+    // Infromación de publicaciones guardadas.
+  savedPostsId = signal<Set<number>>(new Set())
 
     // Información de foros relacionados con publicaciones.
   forum = signal<ForumResponse | null>(null);
@@ -91,6 +96,7 @@ export class Post {
     effect(() => {
       this.loadForum()
     })
+    this.loadSavedPosts()
   }
 
     // Obtener publicaciones activas.
@@ -181,4 +187,48 @@ export class Post {
       error: () => this.error.set('Error al eliminar la publicación.')
     })
   }
+
+  // Cargar las publicaciones guardadas.
+loadSavedPosts(): void{
+  if(!this.sesionIniciada) return
+
+  this.savedPostService.getSavedPosts().subscribe({
+    next: (datos) => {
+      this.savedPostsId.set(
+        new Set(datos.map(saved => saved.post.postId))
+      )
+    },
+    error: () => {
+      this.error.set('Error al cargar las publicaciones guardadas.')
+    }
+  })
+}
+
+// Verificar si una publicación está guardada.
+estaGuardada(postId: number): boolean {
+  return this.savedPostsId().has(postId)
+}
+
+// Guardar o quitar una publicación de guardados.
+toggleSavedPost(postId: number): void {
+  if (this.estaGuardada(postId)) {
+    this.savedPostService.unsavePost(postId).subscribe({
+      next: () => {
+        this.savedPostsId.update(ids => {
+          const nuevosIds = new Set(ids)
+          nuevosIds.delete(postId)
+          return nuevosIds
+        })
+      },
+      error: () => this.error.set('Error al quitar la publicación de guardados.')
+    })
+  } else {
+    this.savedPostService.savePost(postId).subscribe({
+      next: () => {
+        this.savedPostsId.update(ids => new Set([...ids, postId]))
+      },
+      error: () => this.error.set('Error al guardar la publicación.')
+    })
+  }
+}
 }

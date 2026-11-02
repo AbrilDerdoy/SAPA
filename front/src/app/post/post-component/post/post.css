@@ -205,6 +205,23 @@ button:disabled {
   outline: 3px solid rgba(2, 150, 140, 0.3);
   outline-offset: 3px;
 }
+.save {
+  border: none;
+  background: transparent;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.save img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.save:hover img {
+  transform: scale(1.15);
+}
 
 @media (max-width: 600px) {
   .posts-container {
