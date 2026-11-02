@@ -1,10 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Post } from '../post-component/post/post';
 import { ForumRequest } from '../../forum/forum-DTOs/forum-request';
 import { PostResponse } from '../post-DTOs/post-response';
-import { popScheduler } from 'rxjs/internal/util/args';
 
 @Injectable({
   providedIn: 'root',
