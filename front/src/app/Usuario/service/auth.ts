@@ -82,7 +82,6 @@ export class Auth {
   }
 
   modifyData(datos:Partial<Omit<datosUsuario,'role'>>){
-    //no existe el endpoint, queda pendiente codearlo
-    return this.http.put('http://localhost:8080/users/modify',datos) 
+    return this.http.put<TokenResponse>('http://localhost:8080/users/modify',datos)
   }
 }

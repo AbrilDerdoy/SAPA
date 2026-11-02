@@ -52,7 +52,7 @@ export class Profile{
   }
 
   toggleBotonEnviar(){
-    if(this.modificarDatos()&&this.modelo()!==this.profile.value()){
+    if(this.modelo()!==this.profile.value()){
       return false;
     } 
     else{
@@ -72,7 +72,10 @@ export class Profile{
         email:this.modelo().email,
         birthDate:this.modelo().birthDate,
         phoneNumber:this.modelo().phoneNumber}).subscribe({
-          next:()=>{
+          next:(tokens)=>{
+            localStorage.setItem('jwt',JSON.stringify(tokens));
+            this.modificarDatos.set(false);
+            this.profile.reload();
             alert('Cambios registrados');
           },
           error:(err)=>{

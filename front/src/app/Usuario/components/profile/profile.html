@@ -33,7 +33,7 @@
                 <input type="number" [formField]="formulario.phoneNumber">
                 <app-form-error [field]="formulario.phoneNumber()"/>
             </label>
-            <button (click)="toggleFormulario()">Editar datos</button>
+            <button type="button" (click)="toggleFormulario()">Editar datos</button>
             <button class="btn-enviar" type="submit" [disabled]="toggleBotonEnviar()">Confirmar</button>    
         </form>
     }
