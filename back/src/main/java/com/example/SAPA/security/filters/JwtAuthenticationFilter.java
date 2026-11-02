@@ -3,6 +3,7 @@ package com.example.SAPA.security.filters;
 import com.example.SAPA.security.service.JWTService;
 import com.example.SAPA.security.service.TokenBlacklistService;
 import com.example.SAPA.security.service.UserDetailsService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +31,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getServletPath().startsWith("/auth/");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     @NotNull HttpServletResponse response,
                                     @NotNull FilterChain filterChain) throws ServletException, IOException {
@@ -42,37 +48,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        final String username = jwtService.extractUsername(jwt);
+        final String username;
+        try {
+            username = jwtService.extractUsername(jwt);
 
-        if (tokenBlacklistService.isBlackListed(jwt)) {
+            if (tokenBlacklistService.isBlackListed(jwt)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token revocado. Por favor, inicie sesión nuevamente.");
+                return;
+            }
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                var userDetails = userDetailsService.loadUserByUsername(username);
+
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+
+                    var roles = jwtService.extractRoles(jwt);
+
+                    var authorities = roles.stream()
+                            .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    authorities
+                            );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (JwtException e) {
+            SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token revocado. Por favor, inicie sesión nuevamente.");
+            response.getWriter().write("Token inválido o expirado. Por favor, inicie sesión nuevamente.");
             return;
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            var userDetails = userDetailsService.loadUserByUsername(username);
-
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-
-                var roles = jwtService.extractRoles(jwt);
-
-                var authorities = roles.stream()
-                        .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                authorities
-                        );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
-        }
         filterChain.doFilter(request, response);
     }
 }
-

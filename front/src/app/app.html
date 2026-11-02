@@ -73,6 +73,7 @@
     
     <div class="actions">
       @if (auth.isAuthenticated()) {
+        <app-notification-menu/>
         <app-user-menu/>
       }@else {
         <button class="login" routerLink="/login">Iniciar Sesión</button>

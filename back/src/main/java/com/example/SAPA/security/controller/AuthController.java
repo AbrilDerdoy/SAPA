@@ -66,7 +66,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = AuthResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autorizado - Token de refresco inválido o expirado", content = @Content)
     })
-    @PostMapping("/refresh")
+    @PostMapping({"/refresh", "/refresh-token"})
     public ResponseEntity<AuthResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
         AuthResponse response = authService.refreshAccessToken(request.getRefreshToken());
         return ResponseEntity.ok(response);
@@ -165,4 +165,3 @@ public class AuthController {
         }
     }
 }
-

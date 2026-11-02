@@ -1,6 +1,7 @@
 package com.example.SAPA.exceptions;
 
 import jakarta.persistence.EntityNotFoundException;
+import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -88,6 +89,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwtException(JwtException ex, WebRequest request) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, "El token es inválido o expiró. Iniciá sesión nuevamente.", request);
     }
 
     @ExceptionHandler(DisabledException.class)

@@ -15,13 +15,13 @@ type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'>
   selector: 'app-registro',
   imports: [FormField,FormError],
   templateUrl: './registro.html',
-  styleUrl: '../../shared/form.css',
+  styleUrls: ['./registro.css','../../shared/form.css']
 })
 export class Registro {
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
   readonly modelo = signal<RegistroFormModel>({
-    role:null,
+    role:'ROLE_PATIENT',
     email:'',
     password:'',
     firstName:'',
@@ -97,9 +97,13 @@ export class Registro {
     this.auth.register(registro).subscribe({
       next: (res) => {
         console.log('Registro exitoso', res);
-        localStorage.setItem('jwt',JSON.stringify(res));  
-        this.auth.guardarDatosUsuario()              
-        this.router.navigate(['/home']);
+        if(this.modelo().role === 'ROLE_DOCTOR'){
+          window.alert('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión.');
+        } else {
+          localStorage.setItem('jwt',JSON.stringify(res));  
+          this.auth.guardarDatosUsuario()
+        }
+          this.router.navigate(['/home'])
       },
       error: (err: HttpErrorResponse) => {
         const detalle = this.mensajeError(err);

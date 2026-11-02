@@ -1,5 +1,5 @@
 export interface registerRequest {
-    role:'ROLE_PATIENT' | 'ROLE_DOCTOR' | null,
+    role:'ROLE_PATIENT' | 'ROLE_DOCTOR',
     email:string,
     password:string,
     firstName:string,

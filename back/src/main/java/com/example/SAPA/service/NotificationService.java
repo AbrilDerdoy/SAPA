@@ -7,10 +7,13 @@ import com.example.SAPA.Repositories.NotificationRepository;
 import com.example.SAPA.enums.NotificationType;
 import com.example.SAPA.mappers.NotificationMapper;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +25,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
     private final UserContextService userContext;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public void createNotification(UserEntity user, String title, String msg, NotificationType type) {
@@ -34,7 +38,8 @@ public class NotificationService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        notificationRepository.save(notification);
+        NotificationEntity savedNotification = notificationRepository.save(notification);
+        publishAfterCommit(user, notificationMapper.toResponse(savedNotification));
     }
 
 
@@ -72,7 +77,10 @@ public class NotificationService {
         }
 
         notification.setReaded(true);
-        return notificationMapper.toResponse(notificationRepository.save(notification));
+        NotificationEntity savedNotification = notificationRepository.save(notification);
+        NotificationResponseDTO response = notificationMapper.toResponse(savedNotification);
+        publishAfterCommit(user, response);
+        return response;
     }
 
 
@@ -88,5 +96,24 @@ public class NotificationService {
         }
 
         notificationRepository.delete(notification);
+    }
+
+    private void publishAfterCommit(UserEntity user, NotificationResponseDTO notification) {
+        Runnable publish = () -> messagingTemplate.convertAndSendToUser(
+                user.getEmail(),
+                "/queue/notifications",
+                notification
+        );
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    publish.run();
+                }
+            });
+        } else {
+            publish.run();
+        }
     }
 }
