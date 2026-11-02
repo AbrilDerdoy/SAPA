@@ -1,7 +1,7 @@
 <header class="main-header">
   <nav class="navbar">
     <a class="brand" routerLink="/home">
-      <img src="images\logo.png" alt="Logo SAPA" class="header-logo">
+      <img src="/images/logo.png" alt="Logo SAPA" class="header-logo">
       <span>SAPA</span>
     </a>
     <ul class="links">
@@ -15,8 +15,8 @@
             
             <img 
               [src]="inicio.isActive 
-              ? 'images/home-filled.png'
-              : 'images/home-custom.png'">
+              ? '/images/home-filled.png'
+              : '/images/home-custom.png'">
             Inicio
           </a>
         </li>
@@ -28,8 +28,8 @@
           [routerLinkActiveOptions]="{exact: true}"
           #foros="routerLinkActive">
             <img [src]="foros.isActive
-            ? 'images/signpost-t.png'
-            : 'images/signpost.png'">
+            ? '/images/signpost-t.png'
+            : '/images/signpost.png'">
             Foros
           </a>
         </li>
@@ -41,8 +41,8 @@
           [routerLinkActiveOptions]="{exact: true}"
           #guardados="routerLinkActive">
             <img [src]="guardados.isActive
-            ? 'images/bookmark-fill-t.png'
-            : 'images/bookmark.png'" >
+            ? '/images/bookmark-fill-t.png'
+            : '/images/bookmark.png'" >
             Guardados
           </a>
         </li>
@@ -55,8 +55,8 @@
           [routerLinkActiveOptions]="{exact: true}"
           #buscar="routerLinkActive">
              <img [src]="buscar.isActive
-             ? 'images/magnifying-glass-t.png'
-             : 'images/magnifying-glass.png'">
+             ? '/images/magnifying-glass-t.png'
+             : '/images/magnifying-glass.png'">
             Buscar
           </a></li>
         <li>
