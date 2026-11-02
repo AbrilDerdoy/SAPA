@@ -1,15 +1,29 @@
-<form novalidate (submit)="enviar($event)">
-    <h2>Informacion Personal</h2>
-    <label>
-        Email:
-        <input type="email" [formField]="formulario.email">
-        <app-form-error [field]="formulario.email()"/>
-    </label>
-    <label>
-        Contraseña:
-        <input type="password" [formField]="formulario.password">
-        <app-form-error [field]="formulario.password()"/>
-        <p><a [routerLink]="['/forgotPassword']">¿Olvidaste tu contraseña?</a></p>
-    </label>
-    <button type="submit">Enviar</button>
-</form>
+<div class="container">
+    <aside class="left">
+        <img src="../../../images/logo.jpg" alt="Logo SAPA">
+    </aside>
+    
+    <form class="right" novalidate (submit)="enviar($event)">
+        <h2>Informacion Personal</h2>
+        @if (aviso(); as mensaje) {
+            <p
+                [class.server-info]="mensaje.tipo === 'info'"
+                [class.server-error]="mensaje.tipo === 'error'"
+                [attr.role]="mensaje.tipo === 'error' ? 'alert' : 'status'">
+                {{ mensaje.texto }}
+            </p>
+        }
+        <label>
+            Email:
+            <input type="email" [formField]="formulario.email">
+            <app-form-error [field]="formulario.email()"/>
+        </label>
+        <label>
+            Contraseña:
+            <input type="password" [formField]="formulario.password">
+            <app-form-error [field]="formulario.password()"/>
+            <p><a [routerLink]="['/forgotPassword']">¿Olvidaste tu contraseña?</a></p>
+        </label>
+        <button class="btn-enviar" type="submit">Enviar</button>
+    </form>
+</div>

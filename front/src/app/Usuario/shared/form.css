@@ -1,56 +1,115 @@
-form{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: fit-content;
-    padding: 1rem;
-    background-color: #02968c;
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #ecf8f6;
+  min-height: 100vh;
+
+  display: flex;
+  padding: 30px;
 }
 
-.error { color: red; font-size: 12px; }
+.container {
+  justify-self: center;
+  width: 100%;
+  max-width: 1200px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  overflow: hidden;
+}
+#forgot-password-container{
+  padding: 50px;
+}
+
+.left {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 50px;
+  background: #fafafa;
+}
+
+.left img {
+  width: 100%;
+  max-width: 420px;
+}
+
+.right {
+  padding: 60px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.error {
+  color: red;
+  font-size: 12px;
+}
 
 .server-error {
-    padding: 0.75rem;
-    border: 1px solid #b42318;
-    border-radius: 4px;
-    background-color: #fef3f2;
-    color: #b42318;
+  padding: 0.75rem;
+  border: 1px solid #b42318;
+  border-radius: 4px;
+  background-color: #fef3f2;
+  color: #b42318;
+}
+
+.server-info {
+  padding: 0.75rem;
+  border: 1px solid #175cd3;
+  border-radius: 4px;
+  background-color: #eff8ff;
+  color: #175cd3;
 }
 
 input:disabled {
-    background-color: #f1f3f5; 
-    color: #adb5bd;            
-    border: 1px solid #dee2e6; 
-    cursor: not-allowed;       
-    box-shadow: none;          
-    opacity: 0.8;              
-  }
-  
-  input:disabled::placeholder {
-    color: #ced4da;
-  }
+  background-color: #f1f3f5;
+  color: #adb5bd;
+  border: 1px solid #dee2e6;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.8;
+}
 
-  .btn-enviar {
-    background-color: #02968c; /* Tu color primario (ej. Azul) */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
-  }
-  
-  /* Efecto hover normal */
-  .btn-enviar:not(:disabled):hover {
-    background-color: #02776f;
-  }
-  
-  /* --- ESTILO CUANDO ESTÁ DESHABILITADO --- */
-  .btn-enviar:disabled {
-    background-color: #6c757d; /* Cambia a gris */
-    color: #e9ecef;            /* Texto gris muy claro */
-    opacity: 0.55;             /* Se vuelve semi-transparente */
-    cursor: not-allowed;       /* Cursor de "prohibido" */
-    box-shadow: none;          /* Evita efectos visuales activos */
-    transform: none;           /* Evita animaciones de click o escala */
-  }
+input:disabled::placeholder {
+  color: #ced4da;
+}
+
+.btn-enviar {
+  background-color: #02968c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Efecto hover normal */
+.btn-enviar:not(:disabled):hover {
+  background-color: #02776f;
+}
+
+/* --- ESTILO CUANDO ESTÁ DESHABILITADO --- */
+.btn-enviar:disabled {
+  background-color: #6c757d;
+  /* Cambia a gris */
+  color: #e9ecef;
+  /* Texto gris muy claro */
+  opacity: 0.55;
+  /* Se vuelve semi-transparente */
+  cursor: not-allowed;
+  /* Cursor de "prohibido" */
+  box-shadow: none;
+  /* Evita efectos visuales activos */
+  transform: none;
+  /* Evita animaciones de click o escala */
+}

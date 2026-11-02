@@ -65,8 +65,12 @@ export class Auth {
   }
 
   isAuthenticated(){
-    const token:TokenResponse = JSON.parse(localStorage.getItem('jwt')??'{"AccessToken":"","RefreshToken":""}');
-    return token.AccessToken === "" || token.RefreshToken === "" ? false : true; 
+    try {
+      const token: Partial<TokenResponse> = JSON.parse(localStorage.getItem('jwt') ?? '{}');
+      return !!token.AccessToken && !!token.RefreshToken;
+    } catch {
+      return false;
+    }
   }
 
   forgotPassword(mail:string){
