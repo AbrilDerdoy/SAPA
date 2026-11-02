@@ -30,7 +30,7 @@ export const routes: Routes = [
   {path: 'solicitudes', canActivate: [roleGuard(['DOCTOR'])], data: { mode: 'doctor' },
     loadComponent: () => import('./FollowRequest/components/follow-requests/follow-requests').then((m) => m.FollowRequests)},
   {path: 'mis-solicitudes', canActivate: [roleGuard(['PATIENT'])], data: { mode: 'patient' },
-    loadComponent: () => import('./FollowRequest/components/follow-requests/follow-requests').then((m) => m.FollowRequests)}
+    loadComponent: () => import('./FollowRequest/components/follow-requests/follow-requests').then((m) => m.FollowRequests)},
   {path: 'medicamentos', loadComponent: () => import('./Medication/components/medication-search/medication-search').then(
     (m) => m.MedicationSearch)},
 ];
