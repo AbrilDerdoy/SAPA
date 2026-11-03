@@ -1,5 +1,6 @@
 package com.example.SAPA.service;
 
+import com.example.SAPA.DTOs.Request.SpecialityDTO;
 import com.example.SAPA.Models.SpecialityEntity;
 import com.example.SAPA.Repositories.SpecialityRepository;
 import jakarta.persistence.EntityExistsException;
@@ -21,11 +22,10 @@ public class SpecialityService {
     }
 
     @Transactional
-    public String crear(String name){
-        boolean exists = specialityRepository.existsByName(name);
+    public void crear(SpecialityDTO dto){
+        boolean exists = specialityRepository.existsByName(dto.name());
         if(exists) throw new EntityExistsException("La especialidad ya estaba registrada en el sistema");
-        specialityRepository.save(new SpecialityEntity(0L,name));
-        return "Se creo la especialidad";
+        specialityRepository.save(new SpecialityEntity(0L,dto.name()));
     }
 
     @Transactional

@@ -1,9 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
+import { form, FormField, required } from '@angular/forms/signals';
+import { FormError } from '../../../Common/form-error/form-error';
+import { SpecialityDTO } from '../../models/SpecialityDTO';
 
 @Component({
   selector: 'app-panel-admin',
-  imports: [],
+  imports: [FormField,FormError],
   templateUrl: './panel-admin.html',
   styleUrl: './panel-admin.css',
 })
@@ -11,6 +14,7 @@ export class PanelAdmin {
   private readonly userService = inject(UsuarioService);
 
   pendingDoctors = this.userService.pendingDoctors;
+  specialities = this.userService.specialities;
 
   cantidadPendientes = computed(()=> this.pendingDoctors.hasValue() ? this.pendingDoctors.value().length : 0);
   readonly accionError = signal<string | null>(null);
@@ -64,5 +68,44 @@ export class PanelAdmin {
         console.error(`Error al ${accion} la solicitud del usuario ${userId}`, error);
       }
     });
+  }
+
+  readonly modelo = signal<SpecialityDTO>({ name: '' });
+  readonly formulario = form(this.modelo, (especialidad) => {
+    required(especialidad.name, { message: 'La especialidad es requerida' });
+  });
+
+  agregarEspecialidad(evento:Event):void{
+    evento.preventDefault();
+    if(this.formulario().invalid()) return;
+
+    console.log('Agregando especialidad:', this.modelo().name);
+
+    const especialidad: SpecialityDTO = { name: this.modelo().name };
+
+    this.userService.agregarEspecialidad(especialidad).subscribe({
+      next:()=>{
+        this.accionMensaje.set('Especialidad agregada correctamente');
+        this.modelo.set({ name: '' });
+        this.specialities.reload();
+      },
+      error:(error)=>{
+        this.accionError.set('No se pudo agregar la especialidad. Intenta nuevamente.');
+        console.error('Error al agregar especialidad', error);
+      }
+    })
+  }
+  eliminarEspecialidad(especialidad:string):void{
+    const especialidadObj:SpecialityDTO = { name: especialidad };
+    this.userService.eliminarEspecialidad(especialidadObj).subscribe({
+      next:()=>{
+        this.accionMensaje.set('Especialidad eliminada correctamente');
+        this.specialities.reload();
+      },
+      error:(error)=>{
+        this.accionError.set('No se pudo eliminar la especialidad. Intenta nuevamente.');
+        console.error('Error al eliminar especialidad', error);
+      }
+    })
   }
 }

@@ -1,9 +1,10 @@
-.solicitudes{
+.lista{
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    margin-left: 0;
 }
-.solicitud{
+.item{
     display: flex;
     flex-direction: row;
     justify-content: space-between;  
@@ -16,7 +17,7 @@
     padding: 10px;
 }
 
-.solicitud-info{
+.item-info{
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;

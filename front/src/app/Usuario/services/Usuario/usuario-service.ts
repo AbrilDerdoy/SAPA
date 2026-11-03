@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Auth, especialidad } from '../Auth/auth';
 import { TokenResponse } from '../../models/token-response';
 import { PendingDoctorResponse } from '../../models/pending-doctor-response';
+import { SpecialityDTO } from '../../models/SpecialityDTO';
 
 export interface datosUsuario{
   firstName:string,
@@ -23,7 +24,7 @@ export class UsuarioService {
 
   readonly specialities = httpResource<especialidad[]>(()=>`${this.BASE_URL}/specialities`)
 
-  pendingDoctors = httpResource<PendingDoctorResponse[]>(()=>`${this.BASE_URL}/admin/pending-doctors`)
+  readonly pendingDoctors = httpResource<PendingDoctorResponse[]>(()=>`${this.BASE_URL}/admin/pending-doctors`)
 
   getMyProfile(){
     return httpResource<datosUsuario>(()=>`${this.BASE_URL}/users/me`)
@@ -39,5 +40,11 @@ export class UsuarioService {
 
   rechazarSolicitud(userId: number) {
     return this.http.put<{ message: string }>(`${this.BASE_URL}/admin/reject-doctor/${userId}`, {});
+  }
+  agregarEspecialidad(especialidad: SpecialityDTO) {
+    return this.http.post<{ message: string }>(`${this.BASE_URL}/specialities/crear`, especialidad);
+  }
+  eliminarEspecialidad(especialidad: SpecialityDTO) {
+    return this.http.delete<{ message: string }>(`${this.BASE_URL}/specialities/eliminar/${especialidad.name}`);
   }
 }

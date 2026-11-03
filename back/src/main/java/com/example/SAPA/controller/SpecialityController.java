@@ -1,5 +1,6 @@
 package com.example.SAPA.controller;
 
+import com.example.SAPA.DTOs.Request.SpecialityDTO;
 import com.example.SAPA.Models.SpecialityEntity;
 import com.example.SAPA.service.SpecialityService;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -23,8 +24,9 @@ public class SpecialityController {
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<String> crear(@RequestBody String name){
-        return ResponseEntity.ok(specialityService.crear(name));
+    public ResponseEntity<Void> crear(@RequestBody SpecialityDTO name){
+        specialityService.crear(name);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/modificar/{name}")
@@ -32,7 +34,7 @@ public class SpecialityController {
         return ResponseEntity.ok(specialityService.modificar(oldName,newName));
     }
 
-    @DeleteMapping("/eliminar/{id}")
+    @DeleteMapping("/eliminar/{name}")
     public ResponseEntity<Void> eliminar(@PathVariable String name){
         specialityService.eliminar(name);
         return ResponseEntity.noContent().build();
