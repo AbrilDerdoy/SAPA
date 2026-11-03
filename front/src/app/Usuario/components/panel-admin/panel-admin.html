@@ -1,0 +1,31 @@
+<h2>Panel de administracion</h2>
+<p>Doctores pendientes: {{cantidadPendientes()}}</p>
+<h3>Solicitudes de registro</h3>
+@if (accionError()) {
+    <p role="alert">{{accionError()}}</p>
+}
+@if (accionMensaje()) {
+    <p role="status">{{accionMensaje()}}</p>
+}
+@if(this.pendingDoctors.isLoading()) {
+    <p>Cargando solicitudes...</p>
+}
+@if(this.pendingDoctors.error()) {
+    <p>Error al cargar solicitudes</p>
+}
+@if(this.pendingDoctors.hasValue()){
+    <div class="solicitudes">
+    @for(solicitud of this.pendingDoctors.value();track solicitud.userId) {
+        <div class="solicitud">
+            <div class="solicitud-info">
+                <p>Solicitud de {{solicitud.firstName}} {{solicitud.lastName}}</p>
+                <p>Matricula: {{solicitud.licenseNumber}}</p>
+            </div>
+            <div class="botones">
+                <button class="btn btn-success" [disabled]="solicitudesEnProceso().has(solicitud.userId)" (click)="aceptarSolicitud(solicitud.userId)">Aceptar</button>
+                <button class="btn btn-danger" [disabled]="solicitudesEnProceso().has(solicitud.userId)" (click)="rechazarSolicitud(solicitud.userId)">Rechazar</button>
+            </div>
+        </div>
+    }
+    </div>
+}

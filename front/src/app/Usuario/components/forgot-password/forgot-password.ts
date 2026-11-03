@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { email } from '@angular/forms/signals';
-import { Auth } from '../../service/auth';
+import { Auth } from '../../services/Auth/auth';
 import { FormError } from '../../../Common/form-error/form-error';
 
 @Component({

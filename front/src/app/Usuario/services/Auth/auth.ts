@@ -1,11 +1,11 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, httpResource } from '@angular/common/http';
-import { Usuario } from '../interfaces/usuario';
-import { registerRequest } from '../interfaces/registerRequest';
-import { loginRequest } from '../interfaces/loginRequest';
-import { TokenResponse } from '../interfaces/token-response';
-import { UserResponse } from '../DTOs/user-response';
+import { Usuario } from '../../models/usuario';
+import { registerRequest } from '../../models/registerRequest';
+import { loginRequest } from '../../models/loginRequest';
+import { TokenResponse } from '../../models/token-response';
 import { tap } from 'rxjs';
+import { Router } from '@angular/router';
 
 export interface especialidad{
   readonly id:number,
@@ -17,15 +17,7 @@ export interface datosPassword{
   newPassword:string
 }
 
-export interface datosUsuario{
-  firstName:string,
-  lastName:string,
-  email:string,
-  role:string,
-  birthDate:Date,
-  phoneNumber:number,
-  licenseNumber:number|null
-}
+
 
 @Injectable({
   providedIn: 'root',
@@ -33,6 +25,7 @@ export interface datosUsuario{
 export class Auth {
   private readonly BASE_URL = 'http://localhost:8080/auth'
   private readonly http = inject(HttpClient)
+  private readonly router = inject(Router);
 
   register(datos:registerRequest){
     return this.http.post<TokenResponse>(this.BASE_URL+'/register',datos)
@@ -41,15 +34,17 @@ export class Auth {
     return this.http.post<TokenResponse>(this.BASE_URL+'/login',datos);
   }
   logout(){
-    if(this.isAuthenticated()){
-      const jwt = localStorage.getItem('jwt');
-      this.http.post(this.BASE_URL+"/logout",jwt);
-      localStorage.clear();
-      console.clear();
-      alert('Sesion cerrada')
-    } else {
-      console.error('No hay token de autenticacion')
+    if (this.isAuthenticated()) {
+      this.http.post(`${this.BASE_URL}/logout`, null).subscribe({
+        error: (error) => console.error('No se pudo cerrar la sesión en el servidor', error)
+      });
     }
+
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('usuario');
+    this.router.navigate(['/home']);
+
+    
   }
   guardarDatosUsuario(){
     this.http.get<Usuario>("http://localhost:8080/users/me").subscribe({
@@ -72,6 +67,20 @@ export class Auth {
       return false;
     }
   }
+  isAdmin(){
+    try {
+      const usuario: unknown = JSON.parse(localStorage.getItem('usuario') ?? '{}');
+      if (!usuario || typeof usuario !== 'object') {
+        return false;
+      }
+
+      const role: unknown = Reflect.get(usuario, 'role');
+      return typeof role === 'string'
+        && role.trim().toUpperCase().replace(/^ROLE_/, '') === 'ADMIN';
+    } catch {
+      return false;
+    }
+  }
 
   forgotPassword(mail:string){
     return this.http.post(this.BASE_URL+'/forgot-password',{email:mail});
@@ -79,17 +88,8 @@ export class Auth {
   resetPassword(datos:datosPassword){
     return this.http.post<string>(this.BASE_URL+'/reset-password',datos);
   }
-
-  readonly specialities = httpResource<especialidad[]>(()=>'http://localhost:8080/specialities')
-
-  getMyProfile(){
-    return httpResource<datosUsuario>(()=>'http://localhost:8080/users/me')
-  }
-
-  modifyData(datos:Partial<Omit<datosUsuario,'role'>>){
-    return this.http.put<TokenResponse>('http://localhost:8080/users/modify',datos)
-  }
-   refreshToken() {
+  
+  refreshToken() {
      const tokens = JSON.parse(localStorage.getItem('jwt') || '{}');
      const refreshToken = tokens.RefreshToken;
 

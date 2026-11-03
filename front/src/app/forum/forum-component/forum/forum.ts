@@ -3,8 +3,8 @@ import { ForumService } from '../../forum-service/forum-service';
 import { ForumResponse } from '../../forum-DTOs/forum-response';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Auth } from '../../../Usuario/service/auth';
-import { Usuario } from '../../../Usuario/interfaces/usuario';
+import { Auth } from '../../../Usuario/services/Auth/auth';
+import { Usuario } from '../../../Usuario/models/usuario';
 import { RouterLink } from '@angular/router';
 
 @Component({
