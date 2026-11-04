@@ -11,6 +11,7 @@ export class AlertaService {
   mostrarError(mensaje: string, titulo: string = 'Ocurrió un error') {
     this.dialog.open(Alerta, {
       width: '400px',
+      panelClass: 'alerta-dialog',
       data: { titulo, mensaje, tipo: 'error' }
     });
   }
@@ -18,6 +19,7 @@ export class AlertaService {
   mostrarInfo(mensaje: string, titulo: string = 'Información') {
     this.dialog.open(Alerta, {
       width: '400px',
+      panelClass: 'alerta-dialog',
       data: { titulo, mensaje, tipo: 'info' }
     });
   }
