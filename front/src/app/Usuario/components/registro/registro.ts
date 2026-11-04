@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Auth } from '../../service/auth';
-import { registerRequest } from '../../interfaces/registerRequest';
+import { Auth } from '../../services/Auth/auth';
+import { registerRequest } from '../../models/registerRequest';
 import { form, minLength, required, FormField, min, applyWhen, validate } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
 import { Router } from '@angular/router';
+import { UsuarioService } from '../../services/Usuario/usuario-service';
 
 type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'> & {
   licenseNumber: string;
@@ -20,6 +21,7 @@ type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'>
 export class Registro {
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
+  private readonly userService = inject(UsuarioService);
   readonly modelo = signal<RegistroFormModel>({
     role:'ROLE_PATIENT',
     email:'',
@@ -60,7 +62,7 @@ export class Registro {
     })
   })
 
-  especialidades = this.auth.specialities;
+  especialidades = this.userService.specialities;
 
   enviar(evento: Event): void {
     evento.preventDefault();

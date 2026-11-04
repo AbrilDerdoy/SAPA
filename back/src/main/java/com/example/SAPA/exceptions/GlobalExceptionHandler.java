@@ -1,9 +1,11 @@
 package com.example.SAPA.exceptions;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailAuthenticationException;
@@ -37,6 +39,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEntityExistsException(EntityExistsException ex, WebRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException ex,
+            WebRequest request
+    ) {
+        logger.error("No se pudo completar la operación por una restricción de la base de datos.", ex);
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                "No se pudo completar la operación porque el registro está en uso.",
+                request
+        );
     }
 
     @ExceptionHandler(CredentialsNotFoundException.class)

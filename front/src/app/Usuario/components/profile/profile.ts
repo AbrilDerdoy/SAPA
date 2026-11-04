@@ -1,10 +1,9 @@
 import { Component, inject, linkedSignal, OnInit, signal } from '@angular/core';
-import { Auth } from '../../service/auth';
-import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { applyWhen, form, required, validate, FormField, disabled } from '@angular/forms/signals';
-import { UserResponse } from '../../DTOs/user-response';
 import { FormError } from '../../../Common/form-error/form-error';
+import { UsuarioService } from '../../services/Usuario/usuario-service';
+import { Auth } from '../../services/Auth/auth';
 
 export interface datosUsuario{
   firstName:string,
@@ -22,8 +21,9 @@ export interface datosUsuario{
 })
 export class Profile{
   readonly auth = inject(Auth);
+  private readonly userService = inject(UsuarioService);
 
-  profile = this.auth.getMyProfile();
+  profile = this.userService.getMyProfile();
 
   modificarDatos = signal<boolean>(false);
 
@@ -66,7 +66,7 @@ export class Profile{
 
     console.log('Se ejecuto')
 
-    this.auth.modifyData(
+    this.userService.modifyData(
       {firstName:this.modelo().firstName,
         lastName:this.modelo().lastName,
         email:this.modelo().email,

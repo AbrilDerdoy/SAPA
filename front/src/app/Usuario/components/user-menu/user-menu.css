@@ -20,6 +20,21 @@
   transition: background 0.2s ease;
 }
 
+.user-menu > button .menu-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* Solo si vas por la opción B */
+.user-menu > button.menu-trigger {
+  width: 42px;
+  height: 42px;
+  padding: 9px;
+  border-radius: 50%;
+  justify-content: center;
+}
+
 .user-menu > button:hover {
   background: #f1f5f9;
 }

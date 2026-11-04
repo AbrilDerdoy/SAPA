@@ -1,5 +1,5 @@
 import { CanActivateFn, Router } from '@angular/router';
-import { Auth } from '../../Usuario/service/auth';
+import { Auth } from '../../Usuario/services/Auth/auth';
 import { inject } from '@angular/core';
 
 function getRole(): string {

@@ -2,7 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, finalize, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
-import { Auth } from '../service/auth';
+import { Auth } from '../services/Auth/auth';
 
 let refreshRequest: ReturnType<Auth['refreshToken']> | null = null;
 let sessionExpiredNoticeShown = false;

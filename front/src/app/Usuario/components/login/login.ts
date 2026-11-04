@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Auth } from '../../service/auth';
-import { loginRequest } from '../../interfaces/loginRequest';
+import { Auth } from '../../services/Auth/auth';
+import { loginRequest } from '../../models/loginRequest';
 import { form, minLength, required, FormField, email } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
 import { Router, RouterLink } from '@angular/router';
@@ -26,7 +26,11 @@ export class Login {
 
   enviar(evento:Event):void{
     evento.preventDefault();
-    if(this.formulario().invalid())return;
+    if(this.formulario().invalid()){
+      this.formulario.email().markAsTouched();
+      this.formulario.password().markAsTouched();
+      return;
+    }
 
     this.aviso.set(null);
 

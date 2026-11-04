@@ -1,7 +1,7 @@
 import { Component, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { PostService } from '../../post-service/post-service';
-import { Auth } from '../../../Usuario/service/auth';
-import { Usuario } from '../../../Usuario/interfaces/usuario';
+import { Auth } from '../../../Usuario/services/Auth/auth';
+import { Usuario } from '../../../Usuario/models/usuario';
 import { PostResponse } from '../../post-DTOs/post-response';
 import { ForumRequest } from '../../../forum/forum-DTOs/forum-request';
 import { form, FormField, minLength, required } from '@angular/forms/signals';

@@ -5,7 +5,7 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { authInterceptor } from './auth-interceptor';
-import { Auth } from '../service/auth';
+import { Auth } from '../services/Auth/auth';
 
 describe('authInterceptor', () => {
   const auth = { refreshToken: vi.fn() };

@@ -26,16 +26,6 @@
   transform: none;
 }
 
-.notification-trigger svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
 .unread-badge {
   position: absolute;
   top: 0;
@@ -177,4 +167,9 @@
 
 .retry-button:hover {
   background: #d8f0ed;
+}
+.notification-trigger .notification-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
 }

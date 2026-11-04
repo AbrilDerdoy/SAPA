@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, RouterLinkWithHref } from '@angular/router';
-import { Auth } from './Usuario/service/auth';
+import { Auth } from './Usuario/services/Auth/auth';
 import { UserMenu } from './Usuario/components/user-menu/user-menu';
 import { NotificationMenu } from './notifications/components/notification-menu/notification-menu';
 
