@@ -13,13 +13,13 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: #526563;
+  color: var(--text-muted);
 }
 
 .notification-trigger:hover,
 .notification-trigger:focus-visible {
-  background: #ecf8f6;
-  color: #02776f;
+  background: var(--primary-light);
+  color: var(--primary-dark);
 }
 
 .notification-trigger:active {
@@ -35,10 +35,10 @@
   height: 18px;
   place-items: center;
   padding: 0 4px;
-  border: 2px solid white;
+  border: 2px solid var(--surface);
   border-radius: 10px;
-  background: #d9534f;
-  color: white;
+  background: var(--danger);
+  color: var(--on-primary);
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
@@ -53,16 +53,16 @@
   max-height: min(480px, calc(100vh - 110px));
   overflow: auto;
   padding: 14px;
-  border: 1px solid #e4eeec;
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: white;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .notification-dropdown h2 {
   margin: 0;
   padding: 2px 4px 10px;
-  color: #263b39;
+  color: var(--text);
   font-size: 17px;
 }
 
@@ -73,7 +73,7 @@
 }
 
 .notification-dropdown li + li {
-  border-top: 1px solid #edf1f0;
+  border-top: 1px solid var(--border);
 }
 
 .notification-item {
@@ -85,7 +85,7 @@
   padding: 12px 8px;
   border-radius: 8px;
   background: transparent;
-  color: #526563;
+  color: var(--text-muted);
   text-align: left;
 }
 
@@ -95,7 +95,7 @@
 }
 
 .notification-item:hover:not(:disabled) {
-  background: #f3faf9;
+  background: var(--surface-hover);
 }
 
 .notification-item:active {
@@ -103,7 +103,7 @@
 }
 
 .notification-item.unread strong {
-  color: #02776f;
+  color: var(--primary-dark);
 }
 
 .notification-copy {
@@ -114,13 +114,13 @@
 }
 
 .notification-copy strong {
-  color: #263b39;
+  color: var(--text);
   font-size: 14px;
 }
 
 .notification-copy > span {
   overflow-wrap: anywhere;
-  color: #526563;
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
@@ -128,8 +128,9 @@
 
 .notification-copy time {
   margin-top: 3px;
-  color: #859290;
+  color: var(--text-muted);
   font-size: 11px;
+  opacity: 0.85;
 }
 
 .unread-indicator {
@@ -138,14 +139,14 @@
   height: 8px;
   margin-top: 6px;
   border-radius: 50%;
-  background: #02968c;
+  background: var(--primary);
 }
 
 .notification-status,
 .notification-error {
   margin: 0;
   padding: 12px 4px;
-  color: #687574;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -154,19 +155,19 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  color: #b63834;
+  color: var(--danger-strong);
 }
 
 .retry-button {
   padding: 6px 10px;
   border-radius: 7px;
-  background: #ecf8f6;
-  color: #02776f;
+  background: var(--primary-light);
+  color: var(--primary-dark);
   font-size: 12px;
 }
 
 .retry-button:hover {
-  background: #d8f0ed;
+  background: var(--tone-teal-bg);
 }
 .notification-trigger .notification-icon {
   display: block;

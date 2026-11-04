@@ -16,7 +16,8 @@
     box-sizing: border-box;
     width: 100%;
     min-height: 80px;
-    border: 1px solid black;
+    border: 1px solid var(--border);
+    background: var(--surface);
     border-radius: 10px;
     margin: 10px;
     padding: 10px;
@@ -61,7 +62,7 @@
     flex: 1;
     min-width: 0;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     border-radius: 5px;
 }
 

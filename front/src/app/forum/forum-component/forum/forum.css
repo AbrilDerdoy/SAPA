@@ -44,11 +44,11 @@
 .actions button {
   background: var(--primary-light);
   color: var(--primary-dark);
-  border: 1px solid #c6e9e4;
+  border: 1px solid var(--border);
 }
 
 .actions button:hover {
-  background: #d8f1ed;
+  background: var(--tone-teal-bg);
 }
 
 .forum-list {
@@ -63,11 +63,11 @@
   flex-direction: column;
   align-items: flex-start;
   padding: 22px;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-top: 4px solid var(--primary);
   border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(0, 80, 73, 0.04);
+  box-shadow: var(--shadow);
   overflow-wrap: anywhere;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -98,37 +98,37 @@
 }
 
 .forum-card .view {
-  background: #d5f0ec;
-  color: #02776f;
+  background: var(--tone-teal-bg);
+  color: var(--tone-teal-text);
 }
 
 .forum-card .view:hover {
-  background: #bce5df;
+  background: var(--tone-teal-hover);
 }
 
 .forum-card .edit {
-    background: #e1ebf8;
-    color: #35649b;
+    background: var(--tone-blue-bg);
+    color: var(--tone-blue-text);
 }
 
 .forum-card .edit:hover {
-  background: #cbdcf1;
+  background: var(--tone-blue-hover);
 }
 
 .forum-card .delete {
-  background: #fbe3e1;
-  color: #b94440;
+  background: var(--tone-red-bg);
+  color: var(--tone-red-text);
 }
 
 .forum-card .delete:hover {
-  background: #f5cecb;
+  background: var(--tone-red-hover);
 }
 
 .error {
   padding: 10px 14px;
-  color: #a72f2b;
+  color: var(--danger);
   background: var(--danger-light);
-  border: 1px solid #f2c5c2;
+  border: 1px solid var(--danger-border);
   border-radius: 8px;
 }
 

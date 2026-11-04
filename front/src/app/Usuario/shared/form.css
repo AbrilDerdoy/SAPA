@@ -1,6 +1,6 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background: #ecf8f6;
+  background: var(--background);
   min-height: 100vh;
 
   display: flex;
@@ -12,11 +12,11 @@ body {
   width: 100%;
   max-width: 1200px;
 
-  background: white;
+  background: var(--surface);
 
   border-radius: 20px;
 
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+  box-shadow: var(--shadow);
 
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -33,7 +33,7 @@ body {
   align-items: center;
 
   padding: 50px;
-  background: #fafafa;
+  background: var(--surface-alt);
 }
 
 .left img {
@@ -50,42 +50,42 @@ body {
 }
 
 .error {
-  color: red;
+  color: var(--danger);
   font-size: 12px;
 }
 
 .server-error {
   padding: 0.75rem;
-  border: 1px solid #b42318;
+  border: 1px solid var(--danger-strong);
   border-radius: 4px;
-  background-color: #fef3f2;
-  color: #b42318;
+  background-color: var(--danger-light);
+  color: var(--danger-strong);
 }
 
 .server-info {
   padding: 0.75rem;
-  border: 1px solid #175cd3;
+  border: 1px solid var(--info-border);
   border-radius: 4px;
-  background-color: #eff8ff;
-  color: #175cd3;
+  background-color: var(--info-bg);
+  color: var(--info-text);
 }
 
 input:disabled {
-  background-color: #f1f3f5;
-  color: #adb5bd;
-  border: 1px solid #dee2e6;
+  background-color: var(--disabled-bg);
+  color: var(--disabled-text);
+  border: 1px solid var(--disabled-border);
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.8;
 }
 
 input:disabled::placeholder {
-  color: #ced4da;
+  color: var(--disabled-text);
 }
 
 .btn-enviar {
-  background-color: #02968c;
-  color: white;
+  background-color: var(--primary);
+  color: var(--on-primary);
   border: none;
   padding: 10px 20px;
   border-radius: 4px;
@@ -95,21 +95,15 @@ input:disabled::placeholder {
 
 /* Efecto hover normal */
 .btn-enviar:not(:disabled):hover {
-  background-color: #02776f;
+  background-color: var(--primary-dark);
 }
 
 /* --- ESTILO CUANDO ESTÁ DESHABILITADO --- */
 .btn-enviar:disabled {
-  background-color: #6c757d;
-  /* Cambia a gris */
-  color: #e9ecef;
-  /* Texto gris muy claro */
+  background-color: var(--disabled-bg);
+  color: var(--disabled-text);
   opacity: 0.55;
-  /* Se vuelve semi-transparente */
   cursor: not-allowed;
-  /* Cursor de "prohibido" */
   box-shadow: none;
-  /* Evita efectos visuales activos */
   transform: none;
-  /* Evita animaciones de click o escala */
 }

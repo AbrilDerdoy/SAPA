@@ -60,12 +60,12 @@
 }
 
 .update-forum .form-actions button:last-child {
-    background: #e8eeee;
-    color: var(--text);
+    background: var(--neutral-bg);
+    color: var(--neutral-text);
 }
 
 .update-forum .form-actions button:last-child:hover {
-    background: #dce7e5;
+    background: var(--neutral-hover);
 }
 
 @media (max-width: 600px) {
