@@ -44,7 +44,10 @@ export class UsuarioService {
   agregarEspecialidad(especialidad: SpecialityDTO) {
     return this.http.post<{ message: string }>(`${this.BASE_URL}/specialities/crear`, especialidad);
   }
-  eliminarEspecialidad(especialidad: SpecialityDTO) {
-    return this.http.delete<{ message: string }>(`${this.BASE_URL}/specialities/eliminar/${especialidad.name}`);
+  eliminarEspecialidad(name: string) {
+    return this.http.delete<{ message: string }>(`${this.BASE_URL}/specialities/eliminar/${encodeURIComponent(name)}`);
+  }
+  modificarEspecialidad(id:number,name:string){
+    return this.http.put<{ message: string }>(`${this.BASE_URL}/specialities/modificar/${id}`, { name });
   }
 }

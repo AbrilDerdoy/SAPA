@@ -4,8 +4,8 @@ import com.example.SAPA.DTOs.Request.SpecialityDTO;
 import com.example.SAPA.Models.SpecialityEntity;
 import com.example.SAPA.Repositories.SpecialityRepository;
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,29 +22,42 @@ public class SpecialityService {
     }
 
     @Transactional
-    public void crear(SpecialityDTO dto){
-        boolean exists = specialityRepository.existsByName(dto.name());
-        if(exists) throw new EntityExistsException("La especialidad ya estaba registrada en el sistema");
-        specialityRepository.save(new SpecialityEntity(0L,dto.name()));
+    public void crear(SpecialityDTO dto) {
+        String name = normalizarNombre(dto.name());
+        if (specialityRepository.existsByNameIgnoreCase(name))
+            throw new EntityExistsException("La especialidad ya estaba registrada en el sistema");
+        specialityRepository.save(new SpecialityEntity(null, name));
     }
 
     @Transactional
-    @Modifying
-    public String modificar(String oldName,String newName){
-        if(specialityRepository.existsByName(oldName)){
-            SpecialityEntity aux = specialityRepository.findByName(oldName);
-            aux.setName(newName);
-            specialityRepository.save(aux);
-            return "Se cambio el nombre de la especialidad";
-        } else {
-            return "No se pudo encontrar la especialidad";
-        }
+    public String modificar(Long id, String newName) {
+        SpecialityEntity aux = specialityRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No se pudo encontrar la especialidad"));
+
+        String name = normalizarNombre(newName);
+        if (!name.equalsIgnoreCase(aux.getName()) && specialityRepository.existsByNameIgnoreCase(name))
+            throw new EntityExistsException("Ya existe una especialidad con ese nombre");
+
+        aux.setName(name);
+        specialityRepository.save(aux);
+        return "Se cambio el nombre de la especialidad";
     }
 
     @Transactional
-    public void eliminar(String name){
-        if(specialityRepository.existsByName(name))
-            specialityRepository.deleteByName(name);
-        else throw new EntityExistsException("No existe esa especialidad");
+    public void eliminar(String name) {
+        SpecialityEntity especialidad = specialityRepository.findByName(name);
+        if (especialidad == null)
+            throw new EntityNotFoundException("No existe esa especialidad");
+
+        // Una especialidad puede estar asignada a varios medicos: se elimina la
+        // relacion antes de borrarla para no violar la clave foranea.
+        specialityRepository.deleteDoctorRelations(especialidad.getId());
+        specialityRepository.delete(especialidad);
+    }
+
+    private String normalizarNombre(String name) {
+        if (name == null || name.isBlank())
+            throw new IllegalArgumentException("El nombre de la especialidad es obligatorio");
+        return name.trim();
     }
 }

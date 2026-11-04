@@ -1,15 +1,15 @@
 <h2>Panel de administracion</h2>
+@if (accionError()) {
+    <p role="alert">{{accionError()}}</p>
+}
+@if (accionMensaje()) {
+    <p role="status">{{accionMensaje()}}</p>
+}
 @if(cantidadPendientes() === 0) {
     <p>No hay solicitudes pendientes</p>
 } @else {
     <p>Doctores pendientes: {{cantidadPendientes()}}</p>
     <h3>Solicitudes de registro</h3>
-    @if (accionError()) {
-        <p role="alert">{{accionError()}}</p>
-    }
-    @if (accionMensaje()) {
-       <p role="status">{{accionMensaje()}}</p>
-    }
     @if(this.pendingDoctors.isLoading()) {
         <p>Cargando solicitudes...</p>
     }
@@ -43,19 +43,32 @@
     <p>Error al cargar especialidades</p>
 }
 @if(this.specialities.hasValue()){
+    <form novalidate (submit)="agregarEspecialidad($event)">
+        <input type="text" placeholder="Nueva especialidad" [formField]="formulario.name">
+        <app-form-error [field]="formulario.name()"/>
+        <button type="submit" [disabled]="procesandoEspecialidad()">
+            {{ procesandoEspecialidad() ? 'Agregando...' : 'Agregar' }}
+        </button>
+    </form>
     <ul class="lista">
-        <form novalidate (submit)="agregarEspecialidad($event)">
-            <input type="text" placeholder="Nueva especialidad" [formField]="formulario.name">
-            <app-form-error [field]="formulario.name()"/>
-            <button type="submit">Agregar</button>
-        </form>
         @for(especialidad of this.specialities.value(); track especialidad.id) {
             <li class="item">
-                {{especialidad.name}}
-                <div class="botones">
-                    <button class="btn btn-success">Editar</button>
-                    <button class="btn btn-danger" (click)="eliminarEspecialidad(especialidad.name)">Eliminar</button>
-                </div>
+                @if(especialidadEnEdicion()?.id === especialidad.id) {
+                    <form class="edicion" novalidate (submit)="guardarEdicion($event)">
+                        <input type="text" [formField]="formularioEdicion.name">
+                        <app-form-error [field]="formularioEdicion.name()"/>
+                        <div class="botones">
+                            <button class="btn btn-success" type="submit" [disabled]="guardandoEdicion()">{{guardandoEdicion() ? 'Guardando...' : 'Guardar'}}</button>
+                            <button class="btn btn-secondary" (click)="cancelarEdicion()" type="button" [disabled]="guardandoEdicion()">Cancelar</button>
+                        </div>
+                    </form>
+                } @else {
+                    <span class="item-nombre">{{especialidad.name}}</span>
+                    <div class="botones">
+                        <button class="btn btn-success" (click)="editarEspecialidad(especialidad)">Editar</button>
+                        <button class="btn btn-danger" (click)="eliminarEspecialidad(especialidad.name)">Eliminar</button>
+                    </div>
+                }
             </li>
         }
     </ul>

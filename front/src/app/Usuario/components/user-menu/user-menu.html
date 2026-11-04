@@ -1,8 +1,13 @@
 <div class="user-menu">
 
-  <button (click)="toggleMenu()">
-    <span>Mi cuenta</span>
-    <i class="bi bi-chevron-down"></i>
+  <button
+    type="button"
+    class="menu-trigger"
+    (click)="toggleMenu()"
+    [attr.aria-expanded]="menuAbierto()"
+    aria-controls="user-dropdown"
+    aria-label="Menú de usuario">
+    <img class="menu-icon" src="/images/menu.svg" alt="" aria-hidden="true">
   </button>
 
   @if (menuAbierto()) {

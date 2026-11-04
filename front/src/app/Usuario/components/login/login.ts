@@ -26,7 +26,11 @@ export class Login {
 
   enviar(evento:Event):void{
     evento.preventDefault();
-    if(this.formulario().invalid())return;
+    if(this.formulario().invalid()){
+      this.formulario.email().markAsTouched();
+      this.formulario.password().markAsTouched();
+      return;
+    }
 
     this.aviso.set(null);
 

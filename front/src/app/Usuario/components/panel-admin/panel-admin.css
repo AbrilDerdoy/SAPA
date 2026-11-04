@@ -3,14 +3,19 @@
     flex-direction: row;
     flex-wrap: wrap;
     margin-left: 0;
+    padding: 0;
+    list-style: none;
 }
+
 .item{
     display: flex;
     flex-direction: row;
-    justify-content: space-between;  
+    justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+    box-sizing: border-box;
     width: 100%;
-    height: 100px;
+    min-height: 80px;
     border: 1px solid black;
     border-radius: 10px;
     margin: 10px;
@@ -20,35 +25,79 @@
 .item-info{
     display: flex;
     flex-direction: row;
-    justify-content: space-evenly;
-    align-items: flex-start;
-    width: 70%;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.item-nombre{
+    flex: 1;
+    min-width: 0;
+    font-size: 1.1rem;
+    overflow-wrap: anywhere;
 }
 
 .botones{
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    width: 30%;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.edicion{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.edicion input{
+    flex: 1;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
 .btn{
     color: white;
     border: none;
-    width: 20rem;
+    width: auto;
+    min-width: 7rem;
     border-radius: 5px;
     padding: 10px;
     cursor: pointer;
+    white-space: nowrap;
 }
-.btn-success{    
+
+.btn:disabled{
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-success{
     background-color: green;
 }
-.btn-success:hover{
+.btn-success:hover:not(:disabled){
     background-color: darkgreen;
 }
+
 .btn-danger{
     background-color: red;
- }
-.btn-danger:hover{
+}
+.btn-danger:hover:not(:disabled){
     background-color: darkred;
+}
+
+.btn-secondary{
+    background-color: #6c757d;
+}
+.btn-secondary:hover:not(:disabled){
+    background-color: #565e64;
 }
