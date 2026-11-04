@@ -10,19 +10,19 @@
 
 /* Colores dinámicos del título */
 .titulo-error { 
-  color: #d32f2f; 
+  color: var(--danger);
 }
 .titulo-info { 
-  color: #0288d1; 
+  color: var(--info-text);
 }
 .titulo-exito { 
-  color: #2e7d32; 
+  color: var(--tone-teal-text);
 }
 
 /* Contenido del mensaje */
 mat-dialog-content {
   padding: 8px 24px 24px 24px !important;
-  color: #4a4a4a;
+  color: var(--text);
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -30,14 +30,16 @@ mat-dialog-content {
 /* Contenedor de los botones */
 mat-dialog-actions {
   padding: 12px 24px !important;
-  background-color: #f9f9f9; /* Fondo sutil para la barra de botones */
-  border-top: 1px solid #eaeaea;
+  background-color: var(--surface-alt);
+  border-top: 1px solid var(--border);
 }
 
 /* Botón de aceptar */
-button[mat-raised-button] {
+button.mat-mdc-raised-button {
   border-radius: 6px;
   padding: 0 20px;
   font-weight: 500;
-  box-shadow: none; /* Quita la sombra exagerada por defecto */
+  background-color: var(--primary);
+  color: var(--on-primary);
+  box-shadow: none;
 }

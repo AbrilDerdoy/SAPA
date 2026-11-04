@@ -35,17 +35,17 @@ export class Auth {
   }
   logout(){
     if (this.isAuthenticated()) {
-      this.http.post(`${this.BASE_URL}/logout`, null).subscribe({
+      this.http.post(`${this.BASE_URL}/logout`, null, { responseType: 'text' }).subscribe({
+        next:()=>{console.log('Sesion cerrada exitosamente');},
         error: (error) => console.error('No se pudo cerrar la sesión en el servidor', error)
       });
     }
 
     localStorage.removeItem('jwt');
     localStorage.removeItem('usuario');
-    this.router.navigate(['/home']);
-
-    
+    this.router.navigate(['/home']);  
   }
+
   guardarDatosUsuario(){
     this.http.get<Usuario>("http://localhost:8080/users/me").subscribe({
       next:(user)=>{

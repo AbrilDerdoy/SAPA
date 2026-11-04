@@ -118,6 +118,16 @@
   opacity: 0.85;
 }
 
+.alerta-dialog .mat-mdc-dialog-surface {
+    background-color: var(--surface);
+    color: var(--text);
+}
+
+.alerta-dialog .mat-mdc-dialog-content,
+.alerta-dialog .mat-mdc-dialog-content p {
+    color: var(--text);
+}
+
 * {
     box-sizing: border-box;
 }

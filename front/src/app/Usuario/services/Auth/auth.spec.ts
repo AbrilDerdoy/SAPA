@@ -44,6 +44,7 @@ describe('Auth', () => {
   it('clears the session, calls the logout endpoint, and returns home', () => {
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     localStorage.setItem('jwt', JSON.stringify({ AccessToken: 'access', RefreshToken: 'refresh' }));
     localStorage.setItem('usuario', JSON.stringify({ role: 'ROLE_ADMIN' }));
     localStorage.setItem('other-data', 'keep');
@@ -53,12 +54,15 @@ describe('Auth', () => {
     const request = httpTestingController.expectOne('http://localhost:8080/auth/logout');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toBeNull();
+    expect(request.request.responseType).toBe('text');
     expect(localStorage.getItem('jwt')).toBeNull();
     expect(localStorage.getItem('usuario')).toBeNull();
     expect(localStorage.getItem('other-data')).toBe('keep');
     expect(navigateSpy).toHaveBeenCalledWith(['/home']);
     request.flush('Sesión cerrada');
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
 
     navigateSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });
