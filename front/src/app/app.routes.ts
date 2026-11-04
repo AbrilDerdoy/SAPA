@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './FollowRequest/guards/role-guard';
+import { doctorGuard, patientGuard } from './Doctor/guards/role-doctor-guard';
 
 import { Home } from './home/home';
 import { Forum } from './forum/forum-component/forum/forum';
@@ -36,5 +37,9 @@ export const routes: Routes = [
     loadComponent: () => import('./FollowRequest/components/follow-requests/follow-requests').then((m) => m.FollowRequests)},
   {path: 'medicamentos', loadComponent: () => import('./Medication/components/medication-search/medication-search').then(
     (m) => m.MedicationSearch)},
-  {path: 'admin', canActivate: [adminGuard],component:PanelAdmin}
+  {path: 'admin', canActivate: [adminGuard],component:PanelAdmin},
+  {path: 'perfil-medico', canActivate: [doctorGuard],loadComponent: () =>
+    import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)},
+  {path: 'medicos', canActivate: [patientGuard], loadComponent: () =>
+    import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)}
 ];

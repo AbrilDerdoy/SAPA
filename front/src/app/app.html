@@ -84,6 +84,15 @@
         </li>
 
         <li>
+          @if (role === 'DOCTOR') {
+            <a routerLink="/perfil-medico">Mi perfil profesional</a>
+          }
+          @if (role === 'PATIENT') {
+            <a routerLink="/medicos">Buscar médicos</a>
+          }
+        </li>
+
+        <li>
 
           @if (role === 'DOCTOR') {
             <a routerLink="/solicitudes">
