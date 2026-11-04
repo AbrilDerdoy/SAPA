@@ -6,6 +6,7 @@ import { form, minLength, required, FormField, min, applyWhen, validate } from '
 import { FormError } from '../../../Common/form-error/form-error';
 import { Router } from '@angular/router';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
+import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'> & {
   licenseNumber: string;
@@ -22,6 +23,7 @@ export class Registro {
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
   private readonly userService = inject(UsuarioService);
+  private readonly alerta = inject(AlertaService);
   readonly modelo = signal<RegistroFormModel>({
     role:'ROLE_PATIENT',
     email:'',
@@ -100,7 +102,7 @@ export class Registro {
       next: (res) => {
         console.log('Registro exitoso', res);
         if(this.modelo().role === 'ROLE_DOCTOR'){
-          window.alert('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión.');
+          this.alerta.mostrarInfo('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión','Espere la aprobacion de un administrador')
         } else {
           localStorage.setItem('jwt',JSON.stringify(res));  
           this.auth.guardarDatosUsuario()

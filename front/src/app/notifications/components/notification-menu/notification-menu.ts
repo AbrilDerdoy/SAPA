@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, HostListener, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationResponse } from '../../models/notification-response';
 import { NotificationRealtimeService } from '../../services/notification-realtime.service';
@@ -15,6 +15,7 @@ export class NotificationMenu implements OnDestroy, OnInit {
   private readonly notificationService = inject(NotificationService);
   private readonly notificationRealtime = inject(NotificationRealtimeService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly menuAbierto = signal(false);
   readonly notifications = signal<NotificationResponse[]>([]);
@@ -39,6 +40,21 @@ export class NotificationMenu implements OnDestroy, OnInit {
 
   toggleMenu(): void {
     this.menuAbierto.update((open) => !open);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.menuAbierto()) return;
+
+    const target = event.target as Node | null;
+    if (target && this.host.nativeElement.contains(target)) return;
+
+    this.menuAbierto.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.menuAbierto.set(false);
   }
 
   loadNotifications(): void {

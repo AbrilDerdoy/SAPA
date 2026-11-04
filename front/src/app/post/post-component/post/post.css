@@ -79,12 +79,12 @@
 }
 
 .form-actions button[type="button"] {
-  background: #e3e9e8;
-  color: var(--text);
+  background: var(--neutral-bg);
+  color: var(--neutral-text);
 }
 
 .form-actions button[type="button"]:hover {
-  background: #d1dddb;
+  background: var(--neutral-hover);
 }
 
 button:disabled {
@@ -155,11 +155,11 @@ button:disabled {
 .post-actions button:last-child {
   background: var(--danger-light);
   color: var(--danger);
-  border: 1px solid #f2c5c2;
+  border: 1px solid var(--danger-border);
 }
 
 .post-actions button:last-child:hover {
-  background: #ffe0de;
+  background: var(--danger-hover);
 }
 
 .post-meta {
@@ -180,9 +180,9 @@ button:disabled {
 .error-message {
   margin: 8px 0;
   padding: 10px 14px;
-  color: #a72f2b;
+  color: var(--danger);
   background: var(--danger-light);
-  border: 1px solid #f2c5c2;
+  border: 1px solid var(--danger-border);
   border-radius: 8px;
   font-size: 0.9rem;
 }

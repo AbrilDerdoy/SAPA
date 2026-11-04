@@ -1,0 +1,43 @@
+[mat-dialog-title] {
+  margin: 0;
+  padding: 16px 24px;
+  font-size: 1.25rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Colores dinámicos del título */
+.titulo-error { 
+  color: #d32f2f; 
+}
+.titulo-info { 
+  color: #0288d1; 
+}
+.titulo-exito { 
+  color: #2e7d32; 
+}
+
+/* Contenido del mensaje */
+mat-dialog-content {
+  padding: 8px 24px 24px 24px !important;
+  color: #4a4a4a;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Contenedor de los botones */
+mat-dialog-actions {
+  padding: 12px 24px !important;
+  background-color: #f9f9f9; /* Fondo sutil para la barra de botones */
+  border-top: 1px solid #eaeaea;
+}
+
+/* Botón de aceptar */
+button[mat-raised-button] {
+  border-radius: 6px;
+  padding: 0 20px;
+  font-weight: 500;
+  box-shadow: none; /* Quita la sombra exagerada por defecto */
+}

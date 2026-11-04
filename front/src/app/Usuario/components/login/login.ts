@@ -5,6 +5,7 @@ import { loginRequest } from '../../models/loginRequest';
 import { form, minLength, required, FormField, email } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
 import { Router, RouterLink } from '@angular/router';
+import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ import { Router, RouterLink } from '@angular/router';
 export class Login {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
+  private readonly alerta = inject(AlertaService)
   readonly modelo = signal<loginRequest>({email:'',password:''});
   readonly aviso = signal<{ tipo: 'info' | 'error'; texto: string } | null>(null);
   readonly formulario = form(this.modelo,(ruta)=>{
@@ -36,7 +38,7 @@ export class Login {
 
     this.auth.login(this.modelo()).subscribe({
       next:(token)=>{
-        alert('Sesion Iniciada')
+        this.alerta.mostrarInfo('Puedes usar el sistema','Sesion iniciada')
         localStorage.setItem('jwt',JSON.stringify(token));
         this.auth.guardarDatosUsuario()
         this.router.navigate(['/home']);

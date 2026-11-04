@@ -100,21 +100,21 @@
 }
 
 .view {
-  background-color: #d5f0ec;
-  color: #02776f;
+  background-color: var(--tone-teal-bg);
+  color: var(--tone-teal-text);
 }
 
 .view:hover {
-  background-color: #bce5df;
+  background-color: var(--tone-teal-hover);
 }
 
 .delete {
-  background-color: #fbe3e1;
-  color: #b94440;
+  background-color: var(--tone-red-bg);
+  color: var(--tone-red-text);
 }
 
 .delete:hover {
-  background-color: #f5cecb;
+  background-color: var(--tone-red-hover);
 }
 
 .empty-message {
@@ -141,7 +141,7 @@
   margin-bottom: 20px;
   padding: 12px 16px;
   background-color: var(--danger-light);
-  border: 1px solid #f5cecb;
+  border: 1px solid var(--danger-border);
   border-radius: 8px;
   color: var(--danger)
 }

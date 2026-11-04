@@ -6,11 +6,15 @@
 }
 
 .botones-usuario {
-    background-color: #fff;
-    color: #02968c;
+    background-color: var(--surface);
+    color: var(--primary-dark);
     width: 100%;
-    border: 2px solid #02968c;
+    border: 2px solid var(--primary);
     padding: 0.5rem 1rem;
     border-radius: 0;
     cursor: pointer;
+}
+
+.botones-usuario:hover {
+    background-color: var(--primary-light);
 }
