@@ -1,0 +1,18 @@
+<!-- Título dinámico con color según el tipo de alerta -->
+<h2 mat-dialog-title [ngClass]="obtenerClaseTitulo()">
+  {{ data.titulo }}
+</h2>
+
+<mat-dialog-content>
+  <p>{{ data.mensaje }}</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <!-- Un único botón que simplemente cierra el diálogo -->
+  <button mat-raised-button 
+          [color]="obtenerColorBoton()" 
+          [mat-dialog-close]="true" 
+          cdkFocusInitial>
+    {{ data.textoBoton }}
+  </button>
+</mat-dialog-actions>

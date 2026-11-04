@@ -3,6 +3,7 @@ import { form, FormField, minLength, required, validate } from '@angular/forms/s
 import { Auth } from '../../services/Auth/auth';
 import { FormError } from '../../../Common/form-error/form-error';
 import { Router, RouterLink } from '@angular/router';
+import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 export interface datos{
   token:string,
@@ -20,6 +21,7 @@ export interface datos{
 export class ResetPassword {
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
+  private readonly alerta = inject(AlertaService);
   readonly token = input<string>('token');
   readonly modelo = signal<datos>({token:'',password:'',repeatedPassword:''});
   readonly formulario = form(this.modelo,(ruta)=>{
@@ -48,7 +50,7 @@ export class ResetPassword {
     const token = this.token().trim();
 
     if(!token){
-      window.alert('El enlace no es valido o ha expirado. Por favor, solicita un nuevo enlace de restablecimiento de contraseña.');
+      this.alerta.mostrarInfo('El enlace no es valido o ha expirado. Por favor, solicita un nuevo enlace de restablecimiento de contraseña','Enlace Invalido')
       this.router.navigate(['/login']);
       return;
     }
@@ -60,7 +62,7 @@ export class ResetPassword {
         alert(JSON.stringify(res));
       },
       error:(err)=>{
-        alert('Ocurrio un error');
+        this.alerta.mostrarError('','Ocurrio un error');
         console.error("Error: ",err);
       }
     });

@@ -4,6 +4,7 @@ import { applyWhen, form, required, validate, FormField, disabled } from '@angul
 import { FormError } from '../../../Common/form-error/form-error';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { Auth } from '../../services/Auth/auth';
+import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 export interface datosUsuario{
   firstName:string,
@@ -22,6 +23,7 @@ export interface datosUsuario{
 export class Profile{
   readonly auth = inject(Auth);
   private readonly userService = inject(UsuarioService);
+  private readonly alerta = inject(AlertaService);
 
   profile = this.userService.getMyProfile();
 
@@ -64,8 +66,6 @@ export class Profile{
     evento.preventDefault();
     if(this.formulario().invalid())return;
 
-    console.log('Se ejecuto')
-
     this.userService.modifyData(
       {firstName:this.modelo().firstName,
         lastName:this.modelo().lastName,
@@ -76,10 +76,10 @@ export class Profile{
             localStorage.setItem('jwt',JSON.stringify(tokens));
             this.modificarDatos.set(false);
             this.profile.reload();
-            alert('Cambios registrados');
+            this.alerta.mostrarInfo('Se modificaron tus datos exitosamente','Cambios Registrados');
           },
           error:(err)=>{
-            alert('Ocurrio un error');
+            this.alerta.mostrarError('','Ocurrio un error');  
             console.error('Error: ',err);
           }
         });
