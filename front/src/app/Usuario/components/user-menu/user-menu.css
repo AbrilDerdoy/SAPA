@@ -1,10 +1,8 @@
-
 .user-menu {
   position: relative;
   display: inline-block;
 }
 
-/* Botón que despliega el menú */
 .user-menu > button {
   display: flex;
   align-items: center;
@@ -20,13 +18,6 @@
   transition: background 0.2s ease;
 }
 
-.user-menu > button .menu-icon {
-  display: block;
-  width: 20px;
-  height: 20px;
-}
-
-/* Solo si vas por la opción B */
 .user-menu > button.menu-trigger {
   width: 42px;
   height: 42px;
@@ -35,16 +26,21 @@
   justify-content: center;
 }
 
+.user-menu > button .menu-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
 .user-menu > button:hover {
   background: var(--surface-hover);
 }
 
-/* Menú desplegable */
 .dropdown {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 220px;
+  width: 245px;
   padding: 8px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -54,7 +50,6 @@
   animation: aparecer 0.18s ease-out;
 }
 
-/* Enlaces y botones */
 .dropdown a,
 .dropdown button {
   display: flex;
@@ -79,29 +74,63 @@
   background: var(--surface-hover);
 }
 
-/* Iconos */
 .dropdown i {
   font-size: 17px;
   color: var(--text-muted);
 }
 
-/* Separador */
 .dropdown hr {
   border: none;
   border-top: 1px solid var(--border);
   margin: 6px 4px;
 }
 
-/* Cerrar sesión */
-.dropdown button {
+.dropdown button.configuration-button {
+  justify-content: flex-start;
+  color: var(--text);
+}
+
+.configuration-button i:last-child {
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.configuration-options {
+  margin: 4px 0 8px;
+  padding: 6px;
+  background: var(--surface-hover);
+  border-radius: 9px;
+}
+
+.dropdown .configuration-options button {
+  color: var(--text);
+}
+
+.bubble-setting {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 8px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.bubble-setting input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.dropdown button.logout-button {
   color: var(--danger);
 }
 
-.dropdown button i {
+.dropdown button.logout-button i {
   color: var(--danger);
 }
 
-/* Animación */
 @keyframes aparecer {
   from {
     opacity: 0;
@@ -112,16 +141,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.dropdown button.theme-toggle {
-  color: var(--text);
-}
-
-.dropdown button.theme-toggle:hover {
-  background: var(--primary-light);
-}
-
-.dropdown button.theme-toggle svg {
-  flex-shrink: 0;
 }
