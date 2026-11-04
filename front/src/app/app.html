@@ -1,98 +1,165 @@
+
 <header class="main-header">
   <nav class="navbar">
+
     <a class="brand" routerLink="/home">
-      <img src="/images/logo.png" alt="Logo SAPA" class="header-logo">
+      <img
+        src="/images/logo.png"
+        alt="Logo SAPA"
+        class="header-logo">
       <span>SAPA</span>
     </a>
+
     <ul class="links">
-      @if(auth.isAuthenticated()){
+
+      @if (auth.isAuthenticated()) {
+
         <li>
-          <a 
+          <a
             routerLink="/home"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{exact: true}"
             #inicio="routerLinkActive">
-            
-            <img 
-              [src]="inicio.isActive 
-              ? '/images/home-filled.png'
-              : '/images/home-custom.png'">
+
+            <img
+              [src]="inicio.isActive
+                ? '/images/home-filled.png'
+                : '/images/home-custom.png'">
+
             Inicio
           </a>
         </li>
 
         <li>
-          <a 
-          routerLink="/forums"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{exact: true}"
-          #foros="routerLinkActive">
-            <img [src]="foros.isActive
-            ? '/images/signpost-t.png'
-            : '/images/signpost.png'">
+          <a
+            routerLink="/forums"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+            #foros="routerLinkActive">
+
+            <img
+              [src]="foros.isActive
+                ? '/images/signpost-t.png'
+                : '/images/signpost.png'">
+
             Foros
           </a>
         </li>
-        
+
         <li>
           <a
-          routerLink="/saved"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{exact: true}"
-          #guardados="routerLinkActive">
-            <img [src]="guardados.isActive
-            ? '/images/bookmark-fill-t.png'
-            : '/images/bookmark.png'" >
+            routerLink="/saved"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+            #guardados="routerLinkActive">
+
+            <img
+              [src]="guardados.isActive
+                ? '/images/bookmark-fill-t.png'
+                : '/images/bookmark.png'">
+
             Guardados
           </a>
         </li>
 
         <li>
-          <a routerLink="/medicamentos">Medicamentos</a></li>
+          <a routerLink="/medicamentos">
+            Medicamentos
+          </a>
+        </li>
+
         <li>
           <a
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{exact: true}"
-          #buscar="routerLinkActive">
-             <img [src]="buscar.isActive
-             ? '/images/magnifying-glass-t.png'
-             : '/images/magnifying-glass.png'">
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+            #buscar="routerLinkActive">
+
+            <img
+              [src]="buscar.isActive
+                ? '/images/magnifying-glass-t.png'
+                : '/images/magnifying-glass.png'">
+
             Buscar
-          </a></li>
+          </a>
+        </li>
+
         <li>
+
           @if (role === 'DOCTOR') {
-            <a routerLink="/solicitudes">Solicitudes de seguimiento</a>
+            <a routerLink="/solicitudes">
+              Solicitudes de seguimiento
+            </a>
           }
 
           @if (role === 'PATIENT') {
-            <a routerLink="/mis-solicitudes">Mis solicitudes</a>
+            <a routerLink="/mis-solicitudes">
+              Mis solicitudes
+            </a>
           }
+
         </li>
+
       }
+
     </ul>
-    
+
     <div class="actions">
+
       @if (auth.isAuthenticated()) {
+
         <app-notification-menu/>
         <app-user-menu/>
-      }@else {
-        <button class="login" routerLink="/login">Iniciar Sesión</button>
-        <button class="resgister" routerLink="/register">Registrarse</button>
+
+      } @else {
+
+        <button
+          class="login"
+          routerLink="/login">
+          Iniciar Sesión
+        </button>
+
+        <button
+          class="resgister"
+          routerLink="/register">
+          Registrarse
+        </button>
+
       }
+
     </div>
+
   </nav>
 </header>
+
 <main class="main-content">
   <router-outlet/>
 </main>
 
+@if (auth.isAuthenticated()) {
+  <app-chat-bubble/>
+}
+
 <footer class="main-footer">
+
   <div class="footer-content">
+
     <div class="footer-brand">
-      <img src="/images/logo.png" alt="Logo SAPA" class="footer-logo">
+      <img
+        src="/images/logo.png"
+        alt="Logo SAPA"
+        class="footer-logo">
+
       <strong>SAPA</strong>
     </div>
-    <p>Conectando pacientes y profesionales de la salud.</p>
-    <span class="footer-copy">© 2026 SAPA · Comunidad de Salud</span>
+
+    <p>
+      Conectando pacientes y profesionales de la salud.
+    </p>
+
+    <span class="footer-copy">
+      © 2026 SAPA · Comunidad de Salud
+    </span>
+
   </div>
+
 </footer>

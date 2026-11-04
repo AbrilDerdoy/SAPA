@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import {
   Client,
@@ -8,6 +7,10 @@ import {
 
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Message } from '../models/message.model';
+
+interface JwtTokens {
+  AccessToken?: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +36,6 @@ export class ChatWebSocketService {
     this.connectionSubject.asObservable();
 
   async connectToConversation(conversationId: number): Promise<void> {
-
     this.pendingConversationId = conversationId;
 
     if (this.client?.connected) {
@@ -56,14 +58,15 @@ export class ChatWebSocketService {
     let accessToken: string;
 
     try {
-      const tokens = JSON.parse(jwtData);
-      accessToken = tokens.AccessToken;
+      const tokens = JSON.parse(jwtData) as JwtTokens;
 
-      if (!accessToken) {
+      if (!tokens.AccessToken) {
         console.error('No se encontró AccessToken.');
         this.connectionSubject.next(false);
         return;
       }
+
+      accessToken = tokens.AccessToken;
     } catch (error) {
       console.error('Error al leer el token JWT:', error);
       this.connectionSubject.next(false);
@@ -74,15 +77,12 @@ export class ChatWebSocketService {
     this.connectionSubject.next(false);
 
     try {
-      // Prepara la variable global antes de cargar SockJS.
-      (globalThis as any).global = globalThis;
+      Reflect.set(globalThis, 'global', globalThis);
 
-      // Carga SockJS únicamente cuando se necesita conectar.
       const sockJsModule = await import('sockjs-client');
       const SockJS = sockJsModule.default;
 
       this.client = new Client({
-
         webSocketFactory: () => new SockJS(this.WS_URL),
 
         connectHeaders: {
@@ -94,8 +94,6 @@ export class ChatWebSocketService {
         heartbeatOutgoing: 10000,
 
         onConnect: () => {
-          console.log('WebSocket conectado correctamente.');
-
           this.connectionSubject.next(true);
 
           if (this.pendingConversationId !== null) {
@@ -116,7 +114,6 @@ export class ChatWebSocketService {
 
         onStompError: frame => {
           this.connectionSubject.next(false);
-
           console.error(
             'Error STOMP:',
             frame.headers['message'],
@@ -128,7 +125,6 @@ export class ChatWebSocketService {
           this.connectionSubject.next(false);
           console.error('Error WebSocket:', error);
         }
-
       });
 
       this.client.activate();
@@ -145,7 +141,6 @@ export class ChatWebSocketService {
   private subscribeToConversation(
     conversationId: number
   ): void {
-
     if (!this.client?.connected) {
       return;
     }
@@ -155,12 +150,10 @@ export class ChatWebSocketService {
 
     this.subscription = this.client.subscribe(
       `/queue/conversation/${conversationId}`,
-
       (frame: IMessage) => {
         try {
-          const message: Message = JSON.parse(frame.body);
+          const message = JSON.parse(frame.body) as Message;
           this.incomingMessageSubject.next(message);
-
         } catch (error) {
           console.error(
             'Error al procesar el mensaje recibido:',
@@ -169,18 +162,12 @@ export class ChatWebSocketService {
         }
       }
     );
-
-    console.log(
-      'Suscrito a la conversación:',
-      conversationId
-    );
   }
 
   sendMessage(
     conversationId: number,
     content: string
   ): boolean {
-
     if (!this.client?.connected) {
       console.error('WebSocket no está conectado.');
       return false;
@@ -210,12 +197,10 @@ export class ChatWebSocketService {
   }
 
   disconnect(): void {
-
     this.subscription?.unsubscribe();
     this.subscription = null;
 
     this.pendingConversationId = null;
-
     this.connectionSubject.next(false);
 
     if (this.client) {

@@ -27,6 +27,7 @@ export class ChatService {
     conversationId: number,
     file: File
   ): Observable<Message> {
+
     const formData = new FormData();
     formData.append('file', file);
 
