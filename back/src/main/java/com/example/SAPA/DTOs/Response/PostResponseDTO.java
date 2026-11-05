@@ -6,6 +6,7 @@ public record PostResponseDTO(
         Long postId,
         Long forumId,
         String forumTitle,
+        Long authorId,
         String authorName,
         String title,
         String content,

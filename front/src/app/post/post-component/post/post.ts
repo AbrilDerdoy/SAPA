@@ -53,14 +53,16 @@ export class Post {
   }
 
     // Obtener el usuario para la verificación de nombre de usuario y poder acceder a BM de publicaciones. 
-  get username(): string | null {
+  get usuarioId(): number | null {
     const usuario = localStorage.getItem('usuario')
-    return usuario ? (JSON.parse(usuario) as Usuario).username : null
+    return usuario ? JSON.parse(usuario).id : null
   }
 
     // Verificación de si el usuario autenticado es propietario de la publicación.
   esPropietario(post: PostResponse): boolean {
-    return this.username === post.authorName
+    console.log('Usuario ID:', this.usuarioId);
+    console.log('Autor ID:', post.authorId);
+    return this.usuarioId === post.authorId
   }
     
     // Listas.

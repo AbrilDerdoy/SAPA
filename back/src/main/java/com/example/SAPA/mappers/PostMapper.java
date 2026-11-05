@@ -14,6 +14,7 @@ public interface PostMapper {
     @Mapping(source = "post.id", target = "postId")
     @Mapping(source = "post.forum.id", target = "forumId")
     @Mapping(source = "post.forum.title", target = "forumTitle")
+    @Mapping(source = "author.id", target = "authorId")
     @Mapping(target = "authorName", expression = "java(authorName)")
     @Mapping(source = "post.title", target = "title")
     @Mapping(source = "post.content", target = "content")
