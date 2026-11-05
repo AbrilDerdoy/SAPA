@@ -1,0 +1,52 @@
+<main class="medical-record-page">
+  <header class="page-header">
+    <div>
+      <h1>Mi ficha médica</h1>
+      <p>Consultá tu información médica en un solo lugar.</p>
+    </div>
+  </header>
+
+  @if (cargando()) {
+    <section class="state-card">
+      <div class="spinner"></div>
+      <p>Cargando ficha médica...</p>
+    </section>
+  } @else if (error()) {
+    <section class="error">
+        <p>{{ error() }}</p>
+        <button type="button" (click)="cargarFichaMedica()">Reintentar</button>
+    </section>
+  } @else if (fichaMedica(); as ficha) {
+    <section class="record-card">
+      <div class="record-card-header">
+        <div class="record-icon">
+          <i class="bi bi-clipboard2-pulse"></i>
+        </div>
+        <div>
+          <h2>Ficha médica</h2>
+          <p>Tu registro de información médica</p>
+        </div>
+
+        <span class="status-badge">Disponible</span>
+      </div>
+
+      <div class="record-info">
+        <div class="info-item">
+          <span>Identificador de ficha</span>
+          <strong>#{{ ficha.medicalRecordId }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="information-card">
+      <div class="section-heading">
+        <i class="bi bi-info-circle"></i>
+        <h2>Información</h2>
+      </div>
+      <p>
+        Desde esta sección vas a poder consultar y gestionar la información
+        de tu ficha médica, incluyendo tus medicaciones registradas.
+      </p>
+    </section>
+  }
+</main>
