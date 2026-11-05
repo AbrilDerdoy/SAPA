@@ -208,14 +208,14 @@
     gap: 16px;
   }
 
-  .nav-links {
+  .links {
     order: 3;
     width: 100%;
     overflow-x: auto;
     justify-content: flex-start;
   }
 
-  .nav-actions {
+  .actions {
     margin-left: auto;
   }
 
@@ -231,16 +231,16 @@
     padding: 14px;
   }
 
-  .nav-actions button {
+  .actions button {
     padding: 9px 11px;
     font-size: 12px;
   }
 
-  .nav-links {
+  .links {
     gap: 2px;
   }
 
-  .nav-links li a {
+  .links li a {
     padding: 9px;
     font-size: 12px;
   }
