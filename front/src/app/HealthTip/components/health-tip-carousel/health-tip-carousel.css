@@ -1,0 +1,428 @@
+
+/* CONTENEDOR GENERAL */
+
+.tips-section {
+  width: 100%;
+  min-width: 0;
+  padding: 22px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ENCABEZADO */
+
+.section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-icon {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 1.7rem;
+}
+
+.section-heading h2 {
+  margin: 0 0 8px;
+  color: var(--primary-dark);
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.section-heading p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* BOTÓN PUBLICAR: SOLO PARA DOCTORES */
+
+.publish-button {
+  width: 100%;
+  padding: 11px 15px;
+  border: none;
+  border-radius: 9px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.publish-button:hover {
+  background: var(--primary-dark);
+}
+
+/* MENSAJES */
+
+.success-message,
+.error-message,
+.loading-message {
+  padding: 12px 14px;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.success-message {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.error-message {
+  background: #3b2025;
+  color: #ffc5c5;
+}
+
+.loading-message {
+  color: var(--text-muted);
+}
+
+/* CARRUSEL */
+
+.tip-carousel {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* TARJETA PRINCIPAL DEL CONSEJO */
+
+.tip-card {
+  min-width: 0;
+  min-height: 285px;
+  padding: 22px 18px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  background: var(--primary-light);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 13px;
+}
+
+.tip-label {
+  display: inline-block;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--primary-dark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.tip-card h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 1.25rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.tip-content {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.tip-author {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.tip-author strong {
+  color: var(--primary-dark);
+}
+
+.tip-counter {
+  align-self: flex-end;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* FLECHAS */
+
+.arrow-button {
+  width: 34px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--primary-dark);
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.arrow-button:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* PROFESIONALES RECOMENDADOS */
+
+.doctor-recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.doctor-recommendations h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 1.1rem;
+}
+
+.doctor-recommendations > p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.87rem;
+  line-height: 1.6;
+}
+
+.doctor-recommendation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 15px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+
+.doctor-recommendation > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.doctor-recommendation strong {
+  color: var(--primary-dark);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.doctor-recommendation span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* BOTÓN SEGUIR */
+
+.follow-button {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary-dark);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.follow-button:hover {
+  background: var(--primary-light);
+}
+
+.follow-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* INVITACIONES */
+
+.login-invitation,
+.follow-invitation {
+  margin: 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* ESTADO VACÍO */
+
+.empty-tips {
+  padding: 24px 16px;
+  text-align: center;
+  background: var(--primary-light);
+  border-radius: 12px;
+}
+
+.empty-icon {
+  font-size: 2rem;
+}
+
+.empty-tips h3 {
+  color: var(--primary-dark);
+  font-size: 1.05rem;
+}
+
+.empty-tips p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* FORMULARIO */
+
+.form-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: rgb(0 0 0 / 65%);
+}
+
+.tip-form {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-heading h3 {
+  margin: 0;
+  color: var(--primary-dark);
+}
+
+.close-button {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.tip-form label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tip-form input,
+.tip-form textarea {
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.tip-form textarea {
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cancel-button {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.form-actions .publish-button {
+  flex: 1;
+}
+
+/* PANTALLAS PEQUEÑAS */
+
+@media (max-width: 1000px) {
+  .tips-section {
+    padding: 18px;
+  }
+
+  .tip-card {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 750px) {
+  .tips-section {
+    padding: 18px;
+  }
+
+  .tip-carousel {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    gap: 6px;
+  }
+
+  .arrow-button {
+    width: 30px;
+    height: 36px;
+  }
+
+  .tip-card {
+    min-height: 240px;
+    padding: 18px 14px;
+  }
+
+  .tip-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .tip-content {
+    font-size: 0.9rem;
+  }
+}

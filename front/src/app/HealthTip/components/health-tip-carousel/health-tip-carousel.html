@@ -1,0 +1,231 @@
+<section class="tips-section">
+
+  <div class="section-heading">
+    <div>
+      <span class="section-icon">🌿</span>
+      <h2>Consejos de salud</h2>
+      <p>Recomendaciones para cuidar tu bienestar.</p>
+    </div>
+
+    @if (isDoctor) {
+      <button class="publish-button" (click)="openForm()">
+        + Publicar consejo
+      </button>
+    }
+  </div>
+
+  @if (successMessage) {
+    <div class="success-message">
+      {{ successMessage }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="loading-message">
+      Cargando consejos de salud...
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!loading && tips.length > 0 && currentTip) {
+
+    <div class="tip-carousel">
+
+      <button
+        class="arrow-button"
+        (click)="previousTip()"
+        aria-label="Consejo anterior">
+        ‹
+      </button>
+
+      <article class="tip-card">
+
+        <span class="tip-label">
+          CONSEJO DE SALUD
+        </span>
+
+        <h3>{{ currentTip.title }}</h3>
+
+        <p class="tip-content">
+          {{ currentTip.content }}
+        </p>
+
+        <div class="tip-author">
+
+          @if (currentTip.institutional) {
+            <span>Publicado por</span>
+            <strong>Equipo SAPA</strong>
+          } @else {
+            <span>Publicado por</span>
+            <strong>
+              Dr./Dra.
+              {{ currentTip.doctor?.firstName }}
+              {{ currentTip.doctor?.lastName }}
+            </strong>
+          }
+
+        </div>
+
+        <span class="tip-counter">
+          {{ currentIndex + 1 }} / {{ tips.length }}
+        </span>
+
+      </article>
+
+      <button
+        class="arrow-button"
+        (click)="nextTip()"
+        aria-label="Siguiente consejo">
+        ›
+      </button>
+
+    </div>
+
+  }
+
+  @if (!loading && tips.length === 0 && !errorMessage) {
+
+    <div class="empty-tips">
+
+      <span class="empty-icon">💚</span>
+
+      <h3>No hay consejos disponibles</h3>
+
+      <p>
+        Todavía no hay consejos para mostrar. Volvé pronto para
+        descubrir recomendaciones para cuidar tu salud.
+      </p>
+
+    </div>
+
+  }
+
+  @if (isLoggedIn && recommendations.length > 0) {
+
+    <div class="doctor-recommendations">
+
+      <h3>Profesionales para seguir</h3>
+
+      <p>
+        Conocé otros profesionales y solicitá seguir sus consejos de salud.
+      </p>
+
+      @for (doctor of recommendations; track doctor.id) {
+
+        <div class="doctor-recommendation">
+
+          <div>
+            <strong>
+              Dr./Dra. {{ doctor.firstName }} {{ doctor.lastName }}
+            </strong>
+
+            @if (doctor.licenseNumber) {
+              <span>Matrícula: {{ doctor.licenseNumber }}</span>
+            }
+          </div>
+
+          <button
+            class="follow-button"
+            [disabled]="requestingDoctorId === doctor.id"
+            (click)="requestFollow(doctor.id)">
+
+            @if (requestingDoctorId === doctor.id) {
+              Enviando...
+            } @else {
+              Solicitar seguimiento
+            }
+
+          </button>
+
+        </div>
+
+      }
+
+    </div>
+
+  }
+
+  @if (!isLoggedIn) {
+
+    <p class="login-invitation">
+      Iniciá sesión para descubrir los consejos publicados por los
+      profesionales que seguís.
+    </p>
+
+  }
+
+  @if (isLoggedIn && !loading && followedDoctorIds.length === 0) {
+
+    <p class="follow-invitation">
+      Seguí a profesionales de SAPA para recibir sus consejos de salud.
+    </p>
+
+  }
+
+  @if (showForm && isDoctor) {
+
+    <div class="form-overlay">
+
+      <div class="tip-form">
+
+        <div class="form-heading">
+          <h3>Publicar consejo de salud</h3>
+
+          <button
+            class="close-button"
+            (click)="closeForm()">
+            ×
+          </button>
+        </div>
+
+        <label for="tipTitle">Título</label>
+
+        <input
+          id="tipTitle"
+          type="text"
+          [(ngModel)]="title"
+          maxlength="255"
+          placeholder="Ej: La importancia de hidratarse">
+
+        <label for="tipContent">Contenido</label>
+
+        <textarea
+          id="tipContent"
+          [(ngModel)]="content"
+          maxlength="5000"
+          rows="5"
+          placeholder="Escribí tu recomendación...">
+        </textarea>
+
+        @if (errorMessage) {
+          <p class="error-message">{{ errorMessage }}</p>
+        }
+
+        <div class="form-actions">
+
+          <button
+            class="cancel-button"
+            (click)="closeForm()">
+            Cancelar
+          </button>
+
+          <button
+            class="publish-button"
+            (click)="publishTip()">
+            Publicar
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  }
+
+</section>

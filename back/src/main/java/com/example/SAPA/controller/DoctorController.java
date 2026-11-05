@@ -35,4 +35,9 @@ public class DoctorController {
     public ResponseEntity<List<DoctorResponseDTO>> search(@RequestParam(required = false) String query) {
         return ResponseEntity.ok(doctorService.searchDoctors(query));
     }
+
+    @GetMapping("/me")
+public ResponseEntity<DoctorResponseDTO> getCurrentDoctor() {
+    return ResponseEntity.ok(doctorService.getCurrentDoctor());
+}
 }
