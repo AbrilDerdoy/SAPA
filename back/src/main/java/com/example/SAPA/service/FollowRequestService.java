@@ -36,27 +36,30 @@ public class FollowRequestService {
         DoctorEntity doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el médico con id: " + doctorId));
 
-        boolean alreadyExists = followRequestRepository
-                .existsByPatientAndDoctorAndStatus(patient, doctor, FollowRequestStatus.PENDING);
-
-        if (alreadyExists) {
+        if (followRequestRepository.existsByPatientAndDoctorAndStatus(patient, doctor, FollowRequestStatus.PENDING)) {
             throw new RuntimeException("Ya existe una solicitud de seguimiento pendiente con este médico");
         }
 
-        FollowRequestEntity request = FollowRequestEntity.builder()
-                .patient(patient)
-                .doctor(doctor)
-                .build();
+        if (followRequestRepository.existsByPatientAndDoctorAndStatus(patient, doctor, FollowRequestStatus.APPROVED)) {
+            throw new RuntimeException("Ya estás siguiendo a este médico");
+        }
+
+        FollowRequestEntity saved = followRequestRepository.save(
+                FollowRequestEntity.builder()
+                        .patient(patient)
+                        .doctor(doctor)
+                        .build()
+        );
 
         notificationService.createNotification(
-                request.getDoctor().getUser(),
-                "Solitud recibida",
-                "El Paciente " + patient.getFirstName() + " " + patient.getLastName()
-                        + " te envio una solicitud de seguimiento.",
+                doctor.getUser(),
+                "Solicitud recibida",
+                "El paciente " + patient.getFirstName() + " " + patient.getLastName()
+                        + " te envió una solicitud de seguimiento.",
                 NotificationType.FOLLOW
         );
 
-        return followRequestRepository.save(request);
+        return saved;
     }
 
     @Transactional
@@ -68,6 +71,10 @@ public class FollowRequestService {
 
         if (!request.getDoctor().getId().equals(authenticatedDoctor.getId())) {
             throw new RuntimeException("No tenés permiso para aprobar esta solicitud");
+        }
+
+        if (request.getStatus() != FollowRequestStatus.PENDING) {
+            throw new RuntimeException("Solo se pueden responder solicitudes pendientes");
         }
 
         request.setStatus(FollowRequestStatus.APPROVED);
@@ -104,6 +111,10 @@ public class FollowRequestService {
 
         if (!request.getDoctor().getId().equals(authenticatedDoctor.getId())) {
             throw new RuntimeException("No tenés permiso para rechazar esta solicitud");
+        }
+
+        if (request.getStatus() != FollowRequestStatus.PENDING) {
+            throw new RuntimeException("Solo se pueden responder solicitudes pendientes");
         }
 
         request.setStatus(FollowRequestStatus.REJECTED);

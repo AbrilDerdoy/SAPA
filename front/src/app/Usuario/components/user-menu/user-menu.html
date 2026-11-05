@@ -38,6 +38,35 @@
 
       </a>
 
+      @if (role() === 'DOCTOR') {
+        <a [routerLink]="['/perfil-medico']" (click)="toggleMenu()">
+          <i class="bi bi-person-vcard"></i>
+          Perfil profesional
+        </a>
+        
+        <a [routerLink]="['/mis-pacientes']" (click)="toggleMenu()">
+          <i class="bi bi-people"></i>
+          Mis pacientes
+        </a>
+        
+        <a [routerLink]="['/solicitudes']" (click)="toggleMenu()">
+          <i class="bi bi-person-check"></i>
+          Solicitudes de seguimiento
+        </a>
+      }
+
+      @if (role() === 'PATIENT') {
+        <a [routerLink]="['/perfil-paciente']" (click)="toggleMenu()">
+          <i class="bi bi-person-vcard"></i>
+          Datos personales
+        </a>
+        
+        <a [routerLink]="['/mis-solicitudes']" (click)="toggleMenu()">
+          <i class="bi bi-person-check"></i>
+          Mis solicitudes
+        </a>
+      }
+
       <hr>
 
       <button

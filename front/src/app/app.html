@@ -1,4 +1,3 @@
-
 <header class="main-header">
   <nav class="navbar">
 
@@ -70,33 +69,19 @@
           </a>
         </li>
 
-      @if (role === 'DOCTOR') {
+        @if (role() === 'PATIENT') {
+          <li class="nav-search">
+            <app-doctor-quick-search />
+          </li>
+        }
+
+        @if (role() === 'DOCTOR') {
+          <li>
+            <a routerLink="/perfil-medico" routerLinkActive="active">Mi perfil profesional</a>
+          </li>
+        }
+
         <li>
-          <a routerLink="/perfil-medico" routerLinkActive="active">Mi perfil profesional</a>
-        </li>
-      }
-
-      @if (role === 'PATIENT') {
-        <li class="nav-search">
-          <app-doctor-quick-search />
-        </li>
-      }
-
-        <li>
-
-          @if (role === 'DOCTOR') {
-            <a routerLink="/solicitudes">
-              Solicitudes de seguimiento
-            </a>
-          }
-
-          @if (role === 'PATIENT') {
-            <a routerLink="/mis-solicitudes">
-              Mis solicitudes
-            </a>
-          }
-
-        </li>
 
       }
 

@@ -5,8 +5,8 @@ import { FormField, form } from '@angular/forms/signals';
 import { EMPTY, catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
 import { DoctorService } from '../../service/doctor.service';
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
-import { Feedback } from '../../interfaces/feedback';
 import { DoctorSummary } from '../../interfaces/doctor-summary';
+import { Feedback } from '../../interfaces/feedback';
 
 type PanelStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -71,6 +71,11 @@ export class DoctorQuickSearch {
       });
   }
 
+  onFocus(): void {
+    this.open.set(true);
+    this.followService.loadSent();
+  }
+
   goToFullSearch(event: Event): void {
     event.preventDefault();
     this.open.set(false);
@@ -83,21 +88,28 @@ export class DoctorQuickSearch {
     }
   }
 
-requestFollow(id: number): void {
-  this.busyId.set(id);
-  this.followService.send(id).subscribe({
-    next: () => {
-      this.busyId.set(null);
-    },
-    error: () => {
-      this.setFeedback(id, {
-        kind: 'error',
-        text: 'No se pudo enviar. Puede que ya tengas una solicitud pendiente.',
-      });
-      this.busyId.set(null);
-    },
-  });
-}
+  requestFollow(id: number): void {
+    this.busyId.set(id);
+    this.followService.send(id).subscribe({
+      next: () => this.busyId.set(null),
+      error: () => {
+        this.setFeedback(id, {
+          kind: 'error',
+          text: 'No se pudo enviar. Puede que ya tengas una solicitud pendiente.',
+        });
+        this.followService.loadSent();
+        this.busyId.set(null);
+      },
+    });
+  }
+
+  locked(id: number): boolean {
+    return this.followService.isLocked(id);
+  }
+
+  lockedLabel(id: number): string {
+    return this.followService.lockedLabel(id);
+  }
 
   initials(firstName: string, lastName: string): string {
     return ((firstName?.[0] ?? '') + (lastName?.[0] ?? '')).toUpperCase();
@@ -105,9 +117,5 @@ requestFollow(id: number): void {
 
   private setFeedback(id: number, value: Feedback): void {
     this.feedback.update((map) => ({ ...map, [id]: value }));
-  }
-
-  hasSent(id: number): boolean {
-    return this.followService.hasSent(id);
   }
 }

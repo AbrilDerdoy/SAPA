@@ -32,6 +32,7 @@ export class DoctorSearch {
   readonly hospitalUrls = signal<Record<number, string>>({});
 
   constructor() {
+    this.followService.loadSent();
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const query = params.get('query') ?? '';
       this.model.set({ query });
@@ -106,6 +107,7 @@ export class DoctorSearch {
           kind: 'error',
           text: 'No se pudo enviar la solicitud. Puede que ya tengas una pendiente con este médico.',
         });
+        this.followService.loadSent();
         this.busyKey.set(null);
       },
     });
@@ -115,15 +117,19 @@ export class DoctorSearch {
     return this.busyKey() === `${id}:${action}`;
   }
 
+  locked(id: number): boolean {
+    return this.followService.isLocked(id);
+  }
+
+  lockedLabel(id: number): string {
+    return this.followService.lockedLabel(id);
+  }
+
   initials(firstName: string, lastName: string): string {
     return ((firstName?.[0] ?? '') + (lastName?.[0] ?? '')).toUpperCase();
   }
 
   private setFeedback(id: number, value: Feedback): void {
     this.feedback.update((map) => ({ ...map, [id]: value }));
-  }
-
-  hasSent(id: number): boolean {
-    return this.followService.hasSent(id);
   }
 }

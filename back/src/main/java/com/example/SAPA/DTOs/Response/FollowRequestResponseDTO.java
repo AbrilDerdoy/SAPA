@@ -30,4 +30,14 @@ public class FollowRequestResponseDTO {
         private String lastName;
         private String phoneNumber;
     }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class DoctorSummaryDTO {
+        private Long id;
+        private String firstName;
+        private String lastName;
+    }
 }

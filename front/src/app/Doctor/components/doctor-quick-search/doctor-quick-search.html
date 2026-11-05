@@ -7,7 +7,7 @@
       placeholder="Buscar médico"
       autocomplete="off"
       [formField]="quickForm.query"
-      (focus)="open.set(true)"
+      (focus)="onFocus()"
     />
     <button type="submit" class="qs__btn">Buscar</button>
   </form>
@@ -25,20 +25,19 @@
                   <div class="row__avatar" aria-hidden="true">
                     {{ initials(doctor.firstName, doctor.lastName) }}
                   </div>
-                  
                   <div class="row__info">
                     <strong class="row__name">{{ doctor.firstName }} {{ doctor.lastName }}</strong>
                     <span class="row__meta">Matrícula {{ doctor.licenseNumber }}</span>
                   </div>
                   <button
-                  type="button"
-                  class="row__btn"
-                  [class.row__btn--sent]="hasSent(doctor.id)"
-                  [disabled]="busyId() === doctor.id || hasSent(doctor.id)"
-                  (click)="requestFollow(doctor.id)">
-                  {{ hasSent(doctor.id) ? 'Solicitud enviada' : busyId() === doctor.id ? 'Enviando…' : 'Solicitar' }}
-                </button>
-
+                    type="button"
+                    class="row__btn"
+                    [class.row__btn--sent]="locked(doctor.id)"
+                    [disabled]="busyId() === doctor.id || locked(doctor.id)"
+                    (click)="requestFollow(doctor.id)"
+                  >
+                    {{ busyId() === doctor.id ? 'Enviando…' : lockedLabel(doctor.id) || 'Solicitar' }}
+                  </button>
                 </div>
                 @if (feedback()[doctor.id]; as fb) {
                   <p class="row__feedback" [class.row__feedback--error]="fb.kind === 'error'" role="status">
