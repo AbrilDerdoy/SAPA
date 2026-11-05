@@ -16,6 +16,8 @@ public class FollowRequestResponseDTO {
 
     private Long id;
     private PatientSummaryDTO patient;
+    private DoctorSummaryDTO doctorFollower;
+    private DoctorSummaryDTO doctor;
     private FollowRequestStatus status;
     private LocalDateTime requestedAt;
     private LocalDateTime respondedAt;
@@ -25,6 +27,17 @@ public class FollowRequestResponseDTO {
     @NoArgsConstructor
     @Builder
     public static class PatientSummaryDTO {
+        private Long id;
+        private String firstName;
+        private String lastName;
+        private String phoneNumber;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class DoctorSummaryDTO {
         private Long id;
         private String firstName;
         private String lastName;
