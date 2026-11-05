@@ -78,9 +78,10 @@
                             <button
                             type="button"
                             class="btn btn--primary"
-                            [disabled]="isBusy(doctor.id, 'follow')"
+                            [class.btn--sent]="hasSent(doctor.id)"
+                            [disabled]="isBusy(doctor.id, 'follow') || hasSent(doctor.id)"
                             (click)="requestFollow(doctor.id)">
-                            Solicitar seguimiento
+                            {{ hasSent(doctor.id) ? 'Solicitud enviada' : isBusy(doctor.id, 'follow') ? 'Enviando…' : 'Solicitar seguimiento' }}
                         </button>
                     </div>
                 </div>

@@ -189,6 +189,14 @@
     background: var(--primary-dark);
 }
 
+.btn--sent:disabled {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+    opacity: 1;
+    cursor: default;
+}
+
 .btn--outline {
     background: var(--surface);
     border-color: var(--border);

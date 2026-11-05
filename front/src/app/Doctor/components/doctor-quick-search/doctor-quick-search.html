@@ -1,0 +1,83 @@
+<div class="qs" (keydown.escape)="open.set(false)">
+  <form class="qs__bar" (submit)="goToFullSearch($event)" novalidate>
+    <label class="sr-only" for="quickQuery">Buscar médico</label>
+    <input
+      id="quickQuery"
+      type="text"
+      placeholder="Buscar médico"
+      autocomplete="off"
+      [formField]="quickForm.query"
+      (focus)="open.set(true)"
+    />
+    <button type="submit" class="qs__btn">Buscar</button>
+  </form>
+
+  @if (showPanel()) {
+    <div class="qs__panel" aria-live="polite">
+      @if (status() === 'success') {
+        @if (results().length === 0) {
+          <p class="qs__empty">No encontramos médicos para "{{ query() }}".</p>
+        } @else {
+          <ul class="qs__list">
+            @for (doctor of visible(); track doctor.id) {
+              <li class="row">
+                <div class="row__main">
+                  <div class="row__avatar" aria-hidden="true">
+                    {{ initials(doctor.firstName, doctor.lastName) }}
+                  </div>
+                  
+                  <div class="row__info">
+                    <strong class="row__name">{{ doctor.firstName }} {{ doctor.lastName }}</strong>
+                    <span class="row__meta">Matrícula {{ doctor.licenseNumber }}</span>
+                  </div>
+                  <button
+                  type="button"
+                  class="row__btn"
+                  [class.row__btn--sent]="hasSent(doctor.id)"
+                  [disabled]="busyId() === doctor.id || hasSent(doctor.id)"
+                  (click)="requestFollow(doctor.id)">
+                  {{ hasSent(doctor.id) ? 'Solicitud enviada' : busyId() === doctor.id ? 'Enviando…' : 'Solicitar' }}
+                </button>
+
+                </div>
+                @if (feedback()[doctor.id]; as fb) {
+                  <p class="row__feedback" [class.row__feedback--error]="fb.kind === 'error'" role="status">
+                    {{ fb.text }}
+                  </p>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        <a
+          class="qs__more"
+          routerLink="/medicos"
+          [queryParams]="{ query: query() }"
+          (click)="open.set(false)"
+        >
+          @if (results().length === 0) {
+            Ir a la búsqueda completa
+          } @else if (results().length > visible().length) {
+            Ver los {{ results().length }} resultados
+          } @else {
+            Ver en la búsqueda completa
+          }
+        </a>
+      } @else if (status() === 'error') {
+        <p class="qs__empty qs__empty--error">No pudimos buscar en este momento. Probá de nuevo.</p>
+
+        <a
+          class="qs__more"
+          routerLink="/medicos"
+          [queryParams]="{ query: query() }"
+          (click)="open.set(false)"
+        >
+          Ir a la búsqueda completa
+        </a>
+      } @else {
+        <p class="qs__empty">Buscando…</p>
+      }
+    </div>
+  }
+</div>

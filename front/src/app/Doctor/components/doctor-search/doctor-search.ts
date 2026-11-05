@@ -1,9 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormField, form } from '@angular/forms/signals';
 import { DoctorService } from '../../service/doctor.service';
-import { DoctorSummary } from '../../interfaces/doctor-summary';
-import { Feedback } from '../../interfaces/feedback';
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
+import { Feedback } from '../../interfaces/feedback';
+import { DoctorSummary } from '../../interfaces/doctor-summary';
 
 type LoadStatus = 'loading' | 'success' | 'error';
 
@@ -13,9 +15,11 @@ type LoadStatus = 'loading' | 'success' | 'error';
   templateUrl: './doctor-search.html',
   styleUrl: './doctor-search.css',
 })
-export class DoctorSearch implements OnInit {
+export class DoctorSearch {
   private readonly doctorService = inject(DoctorService);
   private readonly followService = inject(FollowRequestService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly model = signal({ query: '' });
   readonly searchForm = form(this.model);
@@ -27,18 +31,28 @@ export class DoctorSearch implements OnInit {
   readonly feedback = signal<Record<number, Feedback>>({});
   readonly hospitalUrls = signal<Record<number, string>>({});
 
-  ngOnInit(): void {
-    this.load('');
+  constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const query = params.get('query') ?? '';
+      this.model.set({ query });
+      this.load(query);
+    });
   }
 
   search(event: Event): void {
     event.preventDefault();
-    this.load(this.model().query);
+    const query = this.model().query.trim();
+    const current = this.route.snapshot.queryParamMap.get('query') ?? '';
+    if (query === current) {
+      this.load(query);
+      return;
+    }
+    this.router.navigate([], { relativeTo: this.route, queryParams: { query: query || null } });
   }
 
   clear(): void {
     this.model.set({ query: '' });
-    this.load('');
+    this.router.navigate([], { relativeTo: this.route, queryParams: { query: null } });
   }
 
   load(query: string): void {
@@ -107,5 +121,9 @@ export class DoctorSearch implements OnInit {
 
   private setFeedback(id: number, value: Feedback): void {
     this.feedback.update((map) => ({ ...map, [id]: value }));
+  }
+
+  hasSent(id: number): boolean {
+    return this.followService.hasSent(id);
   }
 }

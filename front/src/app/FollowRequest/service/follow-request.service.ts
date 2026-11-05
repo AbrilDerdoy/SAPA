@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { FollowRequest } from '../interfaces/follow-request';
 
 @Injectable({
@@ -8,10 +8,21 @@ import { FollowRequest } from '../interfaces/follow-request';
 })
 export class FollowRequestService {
   private readonly http = inject(HttpClient);
+  readonly sentDoctorIds = signal<number[]>([]);
   private readonly baseUrl = 'http://localhost:8080/follow-requests';
 
   send(doctorId: number): Observable<FollowRequest> {
-    return this.http.post<FollowRequest>(`${this.baseUrl}/send/${doctorId}`, {});
+  return this.http
+    .post<FollowRequest>(`${this.baseUrl}/send/${doctorId}`, {})
+    .pipe(
+      tap(() =>
+        this.sentDoctorIds.update((ids) => (ids.includes(doctorId) ? ids : [...ids, doctorId]))
+      )
+    );
+}
+
+  hasSent(doctorId: number): boolean {
+    return this.sentDoctorIds().includes(doctorId);
   }
 
   approve(id: number): Observable<FollowRequest> {
