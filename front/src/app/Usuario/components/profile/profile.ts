@@ -16,7 +16,7 @@ export interface datosUsuario{
 
 @Component({
   selector: 'app-profile',
-  imports: [RouterLink, FormField, FormError],
+  imports: [FormField, FormError],
   templateUrl: './profile.html',
   styleUrl: '../../shared/form.css',
 })
