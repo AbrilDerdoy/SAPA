@@ -1,0 +1,106 @@
+
+<main class="questionnaires-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">SAPA · Seguimiento de salud</span>
+      <h1>Mis cuestionarios</h1>
+      <p>Completá los cuestionarios asignados por tus profesionales de salud.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="message">Cargando cuestionarios...</p>
+  }
+
+  @if (error()) {
+    <p class="message error">{{ error() }}</p>
+  }
+
+  @if (success()) {
+    <p class="message success">{{ success() }}</p>
+  }
+
+  @if (!loading() && assignments().length === 0) {
+    <section class="empty-state">
+      <h2>No tenés cuestionarios pendientes</h2>
+      <p>Cuando un profesional te asigne uno, aparecerá en esta sección.</p>
+    </section>
+  }
+
+  <section class="assignments">
+    @for (assignment of assignments(); track assignment.assignmentId) {
+      <article class="questionnaire-card">
+
+        <div class="card-header">
+          <div>
+            <h2>{{ assignment.questionnaireTitle }}</h2>
+          </div>
+          <span class="status">Pendiente</span>
+        </div>
+
+        <p class="due-date">
+          Fecha de disponibilidad:
+          {{ assignment.dueAt | date:'dd/MM/yyyy' }}
+        </p>
+
+        <div class="questions">
+          @for (question of assignment.questions; track question.questionId) {
+            <div class="question">
+
+              <label>
+                Pregunta {{ question.orderIndex + 1 }}:
+                {{ question.text }}
+              </label>
+
+              @if (question.type === 'TEXT') {
+                <textarea
+                  rows="3"
+                  placeholder="Escribí tu respuesta..."
+                  [value]="answers[question.questionId] || ''"
+                  (input)="updateAnswer(question.questionId, $any($event.target).value)">
+                </textarea>
+              }
+
+              @if (question.type === 'MULTIPLE_CHOICE') {
+                <input
+                  type="text"
+                  placeholder="Escribí tu respuesta..."
+                  [value]="answers[question.questionId] || ''"
+                  (input)="updateAnswer(question.questionId, $any($event.target).value)">
+              }
+
+              @if (question.type === 'SCALE') {
+                <div class="scale-answer">
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    step="1"
+                    placeholder="Del 1 al 10"
+                    [value]="answers[question.questionId] || ''"
+                    (input)="updateAnswer(question.questionId, $any($event.target).value)">
+                  <small>Ingresá un valor entero entre 1 y 10.</small>
+                </div>
+              }
+
+            </div>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="primary-button"
+          [disabled]="isSubmitting(assignment.assignmentId)"
+          (click)="submit(assignment)">
+
+          @if (isSubmitting(assignment.assignmentId)) {
+            Enviando...
+          } @else {
+            Enviar respuestas
+          }
+        </button>
+
+      </article>
+    }
+  </section>
+</main>

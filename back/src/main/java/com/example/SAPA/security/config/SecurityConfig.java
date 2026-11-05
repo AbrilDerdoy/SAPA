@@ -1,9 +1,8 @@
+
 package com.example.SAPA.security.config;
 
 import com.example.SAPA.security.filters.JwtAuthenticationFilter;
 import com.example.SAPA.security.filters.RestAuthenticationEntryPoint;
-import com.example.SAPA.security.repositories.CredentialRepository;
-import com.example.SAPA.security.service.UserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +25,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @EnableWebSecurity
@@ -37,6 +37,14 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
+    private static final String[] PATIENT_AND_DOCTOR = {
+            "ROLE_PATIENT", "ROLE_DOCTOR", "PATIENT", "DOCTOR"
+    };
+
+    private static final String[] ALL_ROLES = {
+            "ROLE_PATIENT", "ROLE_DOCTOR", "ROLE_ADMIN",
+            "PATIENT", "DOCTOR", "ADMIN"
+    };
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -44,22 +52,27 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager
-    authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-        // SockJS hace las peticiones XHR con withCredentials = true, por lo que el
-        // navegador exige Access-Control-Allow-Credentials: true en la respuesta.
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization", "Content-Type", "X-Requested-With"
+        ));
         configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
@@ -67,127 +80,178 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.authorizeHttpRequests(auth -> auth
+        http
+            .cors(Customizer.withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
 
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/specialities").permitAll()
-                        .requestMatchers("/specialities/**").hasRole("ADMIN")
+            .headers(headers ->
+                    headers.frameOptions(
+                            HeadersConfigurer.FrameOptionsConfig::sameOrigin
+                    )
+            )
 
-                        .requestMatchers(
-                                "/",
-                                "/index",
-                                "/index.html",
-                                "/login.html",
-                                "/registro-paciente.html",
-                                "/registro-medico.html",
-                                "/perfil.html",
-                                "/admin.html",
-                                "/doctor-panel.html",
-                                "/login",
-                                "/registro-paciente",
-                                "/registro-medico",
-                                "/perfil",
-                                "/admin",
-                                "/doctor-panel",
-                                "/error",
-                                "/favicon.ico"
-                        ).permitAll()
+            .sessionManagement(manager ->
+                    manager.sessionCreationPolicy(STATELESS)
+            )
 
-                        .requestMatchers(
-                                "/css/**",
-                                "/img/**",
-                                "/js/**"
-                        ).permitAll()
+            .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/uploads/chat/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                        .requestMatchers("/forums/**").hasAnyRole("PATIENT", "DOCTOR")
-                        .requestMatchers("/posts/**").hasAnyRole("PATIENT", "DOCTOR")
+                // Autenticación
+                .requestMatchers("/auth/**").permitAll()
 
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Archivos y páginas públicas
+                .requestMatchers(
+                        "/",
+                        "/index",
+                        "/index.html",
+                        "/login.html",
+                        "/registro-paciente.html",
+                        "/registro-medico.html",
+                        "/perfil.html",
+                        "/admin.html",
+                        "/doctor-panel.html",
+                        "/login",
+                        "/registro-paciente",
+                        "/registro-medico",
+                        "/perfil",
+                        "/admin",
+                        "/doctor-panel",
+                        "/error",
+                        "/favicon.ico"
+                ).permitAll()
 
-                        .requestMatchers("/medications/search/**").permitAll()
+                .requestMatchers(
+                        "/css/**",
+                        "/img/**",
+                        "/js/**"
+                ).permitAll()
 
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // WebSocket y archivos del chat
+                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/uploads/chat/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/health-tips/**").permitAll()
-                        .requestMatchers("/health-tips/**").hasAnyRole("PATIENT", "DOCTOR")
+                // Especialidades
+                .requestMatchers(HttpMethod.GET, "/specialities").permitAll()
+                .requestMatchers("/specialities/**").hasAuthority("ROLE_ADMIN")
 
-                        .requestMatchers("/follow-requests/**").hasAnyRole("PATIENT", "DOCTOR")
+                // Foros y publicaciones
+                .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                .requestMatchers("/forums/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/posts/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        .requestMatchers("/conversations/**").hasAnyRole("PATIENT", "DOCTOR")
-                        .requestMatchers("/medications/patient/**").hasAnyRole("PATIENT", "DOCTOR")
+                // Administración
+                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
 
-                        .requestMatchers("/questionnaires/**").hasAnyRole("PATIENT", "DOCTOR")
-                        .requestMatchers("/assignments/**").hasAnyRole("PATIENT", "DOCTOR")
+                // Medicamentos
+                .requestMatchers("/medications/search/**").permitAll()
+                .requestMatchers("/medications/patient/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers(HttpMethod.PUT, "/medications/**")
+                    .hasAuthority("ROLE_DOCTOR")
+                .requestMatchers(HttpMethod.DELETE, "/medications/**")
+                    .hasAuthority("ROLE_DOCTOR")
 
-                        .requestMatchers("/medical-records/**").hasAnyRole("PATIENT", "DOCTOR")
-                        .requestMatchers("/treatments/**").hasAnyRole("PATIENT", "DOCTOR")
+                // Consejos de salud
+                .requestMatchers(HttpMethod.GET, "/health-tips/**").permitAll()
+                .requestMatchers("/health-tips/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        .requestMatchers("/notifications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                // Solicitudes de seguimiento
+                .requestMatchers("/follow-requests/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        .requestMatchers(HttpMethod.POST, "/reports").hasAnyRole("PATIENT", "DOCTOR")
-                        .requestMatchers("/reports/**").hasRole("ADMIN")
+                // Conversaciones
+                .requestMatchers("/conversations/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        .requestMatchers(HttpMethod.POST, "/medications/patient/**").hasRole("DOCTOR")
-                        .requestMatchers(HttpMethod.PUT, "/medications/**").hasRole("DOCTOR")
-                        .requestMatchers(HttpMethod.DELETE, "/medications/**").hasRole("DOCTOR")
+                // Cuestionarios y asignaciones
+                .requestMatchers("/questionnaires/**")
+    .hasAnyAuthority("PATIENT", "DOCTOR", "ROLE_PATIENT", "ROLE_DOCTOR")
+                .requestMatchers("/assignments/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        .requestMatchers(HttpMethod.GET, "/users/all").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/users/active").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/users/inactive").hasRole("ADMIN")
-                        .requestMatchers("/users/**").hasAnyRole("DOCTOR", "PATIENT", "ADMIN")
+                // Historias clínicas y tratamientos
+                .requestMatchers("/medical-records/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/treatments/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        .requestMatchers(HttpMethod.GET, "/fda/search-medication").permitAll()
+                // Notificaciones
+                .requestMatchers("/notifications/**")
+                    .hasAnyAuthority(ALL_ROLES)
 
-                        .requestMatchers(HttpMethod.GET, "/doctors/**").permitAll()
-                        .requestMatchers("/doctors/**").hasRole("DOCTOR")
+                // Reportes
+                .requestMatchers(HttpMethod.POST, "/reports")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/reports/**")
+                    .hasAuthority("ROLE_ADMIN")
 
+                // Usuarios
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/users/all",
+                        "/users/active",
+                        "/users/inactive"
+                ).hasAuthority("ROLE_ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/patients/my-patients").hasRole("DOCTOR")
-                        .requestMatchers("/patients/**").hasRole("PATIENT")
+                .requestMatchers("/users/**")
+                    .hasAnyAuthority(ALL_ROLES)
 
-                        .requestMatchers("/health-tips/**").hasRole("DOCTOR")
-                        .requestMatchers(HttpMethod.GET, "/health-tips/*/hospital-url").permitAll()
+                // Búsqueda de medicamentos FDA
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/fda/search-medication"
+                ).permitAll()
 
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
+                // Médicos
+                .requestMatchers(HttpMethod.GET, "/doctors/**").permitAll()
+                .requestMatchers("/doctors/**").hasAuthority("ROLE_DOCTOR")
 
-                        .anyRequest().authenticated())
+                // Pacientes vinculados al médico
+                .requestMatchers(HttpMethod.GET, "/patients/my-patients")
+                    .hasAnyAuthority("ROLE_DOCTOR", "DOCTOR")
 
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers
-                        -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                )
-                .sessionManagement(manager ->
-                        manager.sessionCreationPolicy(STATELESS))
-                .addFilterBefore(jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(e -> e
-                        .authenticationEntryPoint(restAuthenticationEntryPoint)
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.setContentType("application/json");
-                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            String jsonResponse = String.format(
-                                    "{\"error\": \"%s\", \"status\": %d, \"path\": \"%s\"}",
-                                    "Acceso denegado",
-                                    HttpServletResponse.SC_FORBIDDEN,
-                                    request.getRequestURI()
-                            );
-                            response.getWriter().write(jsonResponse);
-                            response.getWriter().flush();
-                        }));
+                .requestMatchers("/patients/**")
+                    .hasAuthority("ROLE_PATIENT")
+
+                // Documentación
+                .requestMatchers(
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                ).permitAll()
+
+                .anyRequest().authenticated()
+            )
+
+            .addFilterBefore(
+                    jwtAuthenticationFilter,
+                    UsernamePasswordAuthenticationFilter.class
+            )
+
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .accessDeniedHandler((request, response, exceptionDenied) -> {
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+                    String jsonResponse = String.format(
+                            "{\"error\":\"%s\",\"status\":%d,\"path\":\"%s\"}",
+                            "Acceso denegado",
+                            HttpServletResponse.SC_FORBIDDEN,
+                            request.getRequestURI()
+                    );
+
+                    response.getWriter().write(jsonResponse);
+                    response.getWriter().flush();
+                })
+            );
 
         return http.build();
     }
 }
-

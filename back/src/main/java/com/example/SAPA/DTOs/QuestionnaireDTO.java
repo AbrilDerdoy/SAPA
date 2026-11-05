@@ -1,3 +1,4 @@
+
 package com.example.SAPA.DTOs;
 
 import com.example.SAPA.enums.QuestionType;
@@ -32,17 +33,17 @@ public class QuestionnaireDTO {
             @Size(max = 255, message = "El texto de la pregunta no puede superar los 255 caracteres.")
             String text,
 
-            @NotNull(message = "El tipo de pregunta (QuestionType) es obligatorio.")
+            @NotNull(message = "El tipo de pregunta es obligatorio.")
             QuestionType type,
 
             @NotNull(message = "El índice de orden es obligatorio.")
-            @PositiveOrZero(message = "El índice de orden debe ser cero o un número positivo.")
+            @PositiveOrZero(message = "El índice debe ser cero o positivo.")
             Integer orderIndex
     ) {}
 
     public record AssignQuestionnaireRequest(
             @NotNull(message = "El ID del paciente es obligatorio.")
-            @Positive(message = "El ID del paciente debe ser un número positivo.")
+            @Positive(message = "El ID del paciente debe ser positivo.")
             Long patientId
     ) {}
 
@@ -64,7 +65,7 @@ public class QuestionnaireDTO {
 
     public record SubmitAnswerRequest(
             @NotNull(message = "El ID de la pregunta es obligatorio.")
-            @Positive(message = "El ID de la pregunta debe ser un número positivo.")
+            @Positive(message = "El ID de la pregunta debe ser positivo.")
             Long questionId,
 
             @NotBlank(message = "El valor de la respuesta no puede estar vacío.")
@@ -94,12 +95,15 @@ public class QuestionnaireDTO {
             String questionnaireTitle,
             String patientName,
             boolean active,
-            LocalDateTime assignedAt
+            LocalDateTime assignedAt,
+            LocalDateTime dueAt,
+            List<QuestionResponse> questions
     ) {}
 
     public record QuestionnaireResponseDTO(
             Long responseId,
             Long assignmentId,
+            String questionnaireTitle,
             List<AnswerResponse> answers,
             LocalDateTime answeredAt
     ) {}
@@ -108,6 +112,7 @@ public class QuestionnaireDTO {
             Long answerId,
             Long questionId,
             String questionText,
+            QuestionType type,
             String value
     ) {}
 }

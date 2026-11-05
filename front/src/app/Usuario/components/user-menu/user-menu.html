@@ -1,3 +1,4 @@
+
 <div class="user-menu">
 
   <button
@@ -13,30 +14,49 @@
       src="/images/menu.svg"
       alt=""
       aria-hidden="true">
-
   </button>
 
   @if (menuAbierto()) {
 
     <div class="dropdown" id="user-dropdown">
 
-      <a
-        [routerLink]="['/profile']"
-        (click)="toggleMenu()">
-
+      <a [routerLink]="['/profile']" (click)="toggleMenu()">
         <i class="bi bi-person"></i>
         Mi perfil
-
       </a>
 
-      <a
-        [routerLink]="['/chat']"
-        (click)="toggleMenu()">
-
+      <a [routerLink]="['/chat']" (click)="toggleMenu()">
         <i class="bi bi-chat-dots"></i>
         Mensajes
-
       </a>
+
+      @if (auth.isDoctor()) {
+        <hr>
+
+        <a [routerLink]="['/gestionar-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-pulse"></i>
+          Gestionar cuestionarios
+        </a>
+
+        <a [routerLink]="['/historial-cuestionarios-pacientes']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history"></i>
+          Historial de pacientes
+        </a>
+      }
+
+      @if (auth.isPatient()) {
+        <hr>
+
+        <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-check"></i>
+          Mis cuestionarios
+        </a>
+
+        <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history"></i>
+          Mi historial
+        </a>
+      }
 
       <hr>
 
@@ -54,7 +74,6 @@
           [class.bi-chevron-down]="!configuracionAbierta()"
           [class.bi-chevron-up]="configuracionAbierta()">
         </i>
-
       </button>
 
       @if (configuracionAbierta()) {
@@ -68,47 +87,34 @@
             [attr.aria-pressed]="theme.theme() === 'dark'">
 
             @if (theme.theme() === 'dark') {
-
               <i class="bi bi-sun"></i>
               Tema claro
-
             } @else {
-
               <i class="bi bi-moon"></i>
               Tema oscuro
-
             }
 
           </button>
 
           <label class="bubble-setting">
-
             <input
               type="checkbox"
               [checked]="bubblePreference.enabled()"
               (change)="cambiarPreferenciaBurbuja()">
 
             <span>Mostrar burbuja de mensajes</span>
-
           </label>
 
         </div>
-
       }
 
       @if (auth.isAdmin()) {
-
         <hr>
 
-        <a
-          [routerLink]="['/admin']"
-          (click)="toggleMenu()">
-
+        <a [routerLink]="['/admin']" (click)="toggleMenu()">
           <i class="bi bi-shield-lock"></i>
           Panel de administración
-
         </a>
-
       }
 
       <hr>
@@ -120,11 +126,9 @@
 
         <i class="bi bi-box-arrow-right"></i>
         Cerrar sesión
-
       </button>
 
     </div>
-
   }
 
 </div>

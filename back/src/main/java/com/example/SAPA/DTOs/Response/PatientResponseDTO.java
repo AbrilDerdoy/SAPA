@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class PatientResponseDTO {
 
+    private Long patientId;
     private Long userId;
     private String firstName;
     private String lastName;

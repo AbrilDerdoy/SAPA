@@ -1,0 +1,188 @@
+
+<main class="history-page">
+
+  <header class="page-header">
+    <span class="eyebrow">SAPA · Seguimiento</span>
+
+    @if (mode() === 'patient') {
+      <h1>Mi historial de cuestionarios</h1>
+      <p>Consultá tus respuestas y revisá tu seguimiento.</p>
+    } @else {
+      <h1>Historial de pacientes</h1>
+      <p>Consultá las respuestas de tus pacientes vinculados.</p>
+    }
+  </header>
+
+  @if (error()) {
+    <div class="alert error">
+      {{ error() }}
+    </div>
+  }
+
+  <!-- SOLO EL MÉDICO PUEDE SELECCIONAR PACIENTES -->
+  @if (mode() === 'doctor') {
+    <section class="panel patient-selector">
+      <label for="patient">Seleccionar paciente</label>
+
+      <select
+        id="patient"
+        #patientSelect
+        [value]="selectedPatientId() ?? ''"
+        (change)="selectPatient(patientSelect.value ? +patientSelect.value : 0)"
+      >
+        <option value="">Elegir un paciente</option>
+
+        @for (patient of patients(); track patient.patientId) {
+          <option [value]="patient.patientId">
+            {{ getPatientName(patient) }}
+          </option>
+        }
+      </select>
+
+      @if (!loading() && patients().length === 0) {
+        <p class="empty-state">
+          No tenés pacientes vinculados actualmente.
+        </p>
+      }
+    </section>
+  }
+
+  @if (loading()) {
+    <section class="panel loading-state">
+      <p>Cargando historial...</p>
+    </section>
+  } @else {
+
+    <!-- EL MÉDICO DEBE SELECCIONAR UN PACIENTE -->
+    @if (mode() === 'doctor' && selectedPatientId() === null) {
+      <section class="panel empty-state">
+        <p>Seleccioná un paciente para consultar su historial.</p>
+      </section>
+    } @else {
+
+      @if (responses().length === 0) {
+        <section class="panel empty-state">
+          <h3>Sin respuestas todavía</h3>
+          <p>No hay cuestionarios respondidos para mostrar.</p>
+        </section>
+      } @else {
+
+        <section class="history-section">
+
+          <div class="section-heading">
+            <div>
+              <h2>Respuestas registradas</h2>
+              <p>Historial de cuestionarios completados.</p>
+            </div>
+
+            <span class="response-count">
+              {{ responses().length }}
+              {{ responses().length === 1 ? 'respuesta' : 'respuestas' }}
+            </span>
+          </div>
+
+          <div class="response-list">
+
+            @for (response of responses(); track response.responseId) {
+              <article class="response-card">
+
+                <header class="response-header">
+                  <div>
+                    <span class="response-label">
+                      Cuestionario respondido
+                    </span>
+
+                    <h3>{{ response.questionnaireTitle }}</h3>
+
+                    <span class="response-date">
+                      {{ response.answeredAt | date:'dd/MM/yyyy HH:mm' }}
+                    </span>
+                  </div>
+
+                  <span class="status-badge">Completado</span>
+                </header>
+
+                <div class="answers-list">
+
+                  @for (answer of response.answers; track answer.answerId) {
+                    <div class="answer-item">
+
+                      <h4>{{ answer.questionText }}</h4>
+
+                      @if (answer.type === 'SCALE') {
+                        <div class="scale-answer">
+                          <strong>{{ answer.value }}/10</strong>
+
+                          <span [class]="getScaleColor(+answer.value)">
+                            {{ getScaleLabel(+answer.value) }}
+                          </span>
+                        </div>
+                      } @else {
+                        <p>{{ answer.value }}</p>
+                      }
+
+                    </div>
+                  }
+
+                </div>
+              </article>
+            }
+
+          </div>
+        </section>
+
+        @if (scaleGroups().length > 0) {
+          <section class="history-section trends-section">
+
+            <div class="section-heading">
+              <div>
+                <h2>Evolución de respuestas</h2>
+                <p>Seguimiento de las preguntas de escala.</p>
+              </div>
+            </div>
+
+            <div class="trends-grid">
+
+              @for (group of scaleGroups(); track group.questionId) {
+                <article class="trend-card">
+
+                  <h3>{{ group.questionText }}</h3>
+
+                  <div class="trend-chart">
+
+                    @for (point of group.points; track point.responseId) {
+                      <div class="trend-point">
+                        <strong>{{ point.value }}</strong>
+
+                        <div class="bar-container">
+                          <div
+                            class="trend-bar"
+                            [style.height.%]="point.value * 10"
+                            [class]="getScaleColor(point.value)"
+                          ></div>
+                        </div>
+
+                        <span>
+                          {{ point.answeredAt | date:'dd/MM/yy' }}
+                        </span>
+                      </div>
+                    }
+
+                  </div>
+
+                  <p class="trend-caption">
+                    Escala de 1 a 10. Cada barra representa una respuesta.
+                  </p>
+
+                </article>
+              }
+
+            </div>
+          </section>
+        }
+
+      }
+    }
+  }
+
+</main>
