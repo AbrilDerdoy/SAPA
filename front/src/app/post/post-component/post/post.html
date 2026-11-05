@@ -61,23 +61,25 @@
       <div class="post-card-header">
         <h3>{{ post.title }}</h3>
 
-        @if (sesionIniciada) {
-        <button type="button" class="save" (click)="toggleSavedPost(post.postId)"
-          [attr.aria-label]="estaGuardada(post.postId) ? 'Quitar de guardados' : 'Guardar publicación'"
-          [attr.aria-pressed]="estaGuardada(post.postId)">
+        <div class="post-card-controls">
+          @if (sesionIniciada) {
+          <button type="button" class="save" (click)="toggleSavedPost(post.postId)"
+            [attr.aria-label]="estaGuardada(post.postId) ? 'Quitar de guardados' : 'Guardar publicación'"
+            [attr.aria-pressed]="estaGuardada(post.postId)">
 
-          <img [src]="estaGuardada(post.postId)
-        ? '/images/bookmark-fill-t.png'
-        : '/images/bookmark.png'" [alt]="estaGuardada(post.postId) ? 'Guardado' : 'Guardar'">
-        </button>
-        }
+            <img [src]="estaGuardada(post.postId)
+              ? '/images/bookmark-fill-t.png'
+              : '/images/bookmark.png'" [alt]="estaGuardada(post.postId) ? 'Guardado' : 'Guardar'">
+            </button>
+          }
 
-        @if (sesionIniciada && esPropietario(post)) {
-        <div class="post-actions">
-          <button type="button" (click)="editPost(post.postId, post)">Editar</button>
-          <button type="button" (click)="deletePost(post.postId)">Eliminar</button>
+          @if (sesionIniciada && esPropietario(post)) {
+          <div class="post-actions">
+            <button type="button" (click)="editPost(post.postId, post)">Editar</button>
+            <button type="button" (click)="deletePost(post.postId)">Eliminar</button>
+          </div>
+          }
         </div>
-        }
       </div>
 
       <p class="post-content">{{ post.content }}</p>
