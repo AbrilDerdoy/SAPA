@@ -66,4 +66,15 @@ public class DoctorService {
                 ))
                 .toList();
     }
+
+    public DoctorResponseDTO getCurrentDoctor() {
+    DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+
+    return new DoctorResponseDTO(
+        doctor.getId(),
+        doctor.getFirstName(),
+        doctor.getLastName(),
+        doctor.getLicenseNumber()
+    );
+}
 }

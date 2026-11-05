@@ -1,37 +1,57 @@
+
 .home {
-  width: min(1100px, 92%);
-  margin: 40px auto;
+  width: 96%;
+  max-width: 1800px;
+  margin: 26px auto 40px;
+  box-sizing: border-box;
+}
+
+.home-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 370px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.home-sidebar,
+.home-main {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .welcome {
-  padding: 40px;
+  padding: 38px 30px;
   background: var(--primary-light);
   border: 1px solid var(--border);
   border-radius: 16px;
   text-align: center;
+  margin-bottom: 22px;
+  box-sizing: border-box;
 }
 
 .welcome h1 {
-  margin-top: 0;
+  margin: 0 0 16px;
   color: var(--primary-dark);
-  font-size: 2.2rem;
+  font-size: 2.1rem;
 }
 
 .welcome p {
-  max-width: 650px;
+  max-width: 700px;
   margin: 0 auto;
   color: var(--text-muted);
+  line-height: 1.7;
 }
 
 .home-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
-  margin-top: 30px;
+  display: block;
+  width: 100%;
 }
 
 .home-card {
-  padding: 28px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 32px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-top: 4px solid var(--primary);
@@ -45,16 +65,18 @@
 
 .home-card h2 {
   color: var(--primary-dark);
+  margin: 20px 0 12px;
 }
 
 .home-card p {
   margin-bottom: 24px;
   color: var(--text-muted);
+  line-height: 1.7;
 }
 
 .card-button {
   display: inline-block;
-  padding: 10px 18px;
+  padding: 12px 22px;
   background: var(--primary);
   border-radius: 8px;
   color: var(--on-primary);
@@ -67,9 +89,28 @@
   background: var(--primary-dark);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1000px) {
+  .home-layout {
+    grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 750px) {
   .home {
+    width: 94%;
     margin: 20px auto;
+  }
+
+  .home-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .home-sidebar,
+  .home-main {
+    width: 100%;
   }
 
   .welcome {
@@ -77,6 +118,10 @@
   }
 
   .welcome h1 {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
+  }
+
+  .home-card {
+    padding: 22px;
   }
 }
