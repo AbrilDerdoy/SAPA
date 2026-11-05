@@ -36,5 +36,13 @@ export const routes: Routes = [
     loadComponent: () => import('./FollowRequest/components/follow-requests/follow-requests').then((m) => m.FollowRequests)},
   {path: 'medicamentos', loadComponent: () => import('./Medication/components/medication-search/medication-search').then(
     (m) => m.MedicationSearch)},
-  {path: 'admin', canActivate: [adminGuard],component:PanelAdmin}
+  {path: 'admin', canActivate: [adminGuard],component:PanelAdmin},
+  {path: 'medical-record', canActivate: [roleGuard(['PATIENT'])],
+    loadComponent: () => import('./medical-record/components/my-medical-record/my-medical-record')
+    .then(m => m.MyMedicalRecord)
+  },
+  {path: 'patient-medical-record', canActivate: [roleGuard(['DOCTOR'])],
+    loadComponent: () => import('./medical-record/components/patient-medical-record/patient-medical-record')
+    .then(m => m.PatientMedicalRecord)
+  }
 ];

@@ -29,6 +29,24 @@
 
       </a>
 
+      @if (auth.isPatient()) {
+        <a
+        [routerLink]="['/medical-record']"
+        (click)="toggleMenu()">
+        <i class="bi bi-medical-record"></i>
+        Mi ficha médica
+        </a>
+      }
+
+      @if (auth.isDoctor()) {
+        <a 
+        [routerLink]="['/patient-medical-record']"
+        (click)="toggleMenu()">
+        <i class="bi bi-patient-medical-record"></i>
+        Fichas de pacientes
+        </a>
+      }
+
       <a
         [routerLink]="['/chat']"
         (click)="toggleMenu()">

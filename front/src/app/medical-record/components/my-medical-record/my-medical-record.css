@@ -1,0 +1,200 @@
+:host {
+  display: block;
+  min-height: 100%;
+  background: var(--background, #f4f7f7);
+}
+
+.medical-record-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  color: var(--text, #222);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.page-header p,
+.record-card-header p {
+  margin: 0;
+  color: var(--text-muted, #687574);
+}
+
+.header-icon {
+  font-size: 42px;
+  color: var(--primary, #02968c);
+}
+
+.record-card,
+.information-card,
+.state-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #dce7e5);
+  border-radius: var(--radius, 12px);
+  box-shadow: var(--shadow, 0 4px 16px rgba(0, 80, 73, 0.08));
+}
+
+.record-card {
+  padding: 24px;
+}
+
+.record-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border, #dce7e5);
+}
+
+.record-card-header h2,
+.section-heading h2 {
+  margin: 0 0 5px;
+  font-size: 19px;
+}
+
+.record-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--primary-light, #ecf8f6);
+  color: var(--primary, #02968c);
+  font-size: 25px;
+}
+
+.status-badge {
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--primary-light, #ecf8f6);
+  color: var(--primary-dark, #02776f);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.record-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding-top: 22px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.info-item span {
+  color: var(--text-muted, #687574);
+  font-size: 13px;
+}
+
+.info-item strong {
+  font-size: 17px;
+}
+
+.information-card {
+  margin-top: 20px;
+  padding: 22px 24px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--primary, #02968c);
+}
+
+.section-heading h2 {
+  color: var(--text, #222);
+}
+
+.information-card p {
+  margin: 0;
+  color: var(--text-muted, #687574);
+  line-height: 1.6;
+}
+
+.state-card {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+}
+
+.state-card p {
+  margin: 0;
+  color: var(--text-muted, #687574);
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--border, #dce7e5);
+  border-top-color: var(--primary, #02968c);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.error > i {
+  font-size: 32px;
+  color: var(--danger, #d9534f);
+}
+
+.error button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary, #02968c);
+  color: white;
+  cursor: pointer;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .medical-record-page {
+    padding: 24px 16px;
+  }
+
+  .page-header h1 {
+    font-size: 23px;
+  }
+
+  .header-icon {
+    font-size: 32px;
+  }
+
+  .record-card {
+    padding: 18px;
+  }
+
+  .record-card-header {
+    flex-wrap: wrap;
+  }
+
+  .status-badge {
+    margin-left: 0;
+  }
+}
