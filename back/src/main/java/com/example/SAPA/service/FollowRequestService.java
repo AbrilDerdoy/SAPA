@@ -234,4 +234,13 @@ public class FollowRequestService {
 
     private void validateTargetDoctor(FollowRequestEntity request, DoctorEntity authenticatedDoctor) {
         if (!request.getDoctor().getId().equals(authenticatedDoctor.getId())) {throw new AccessDeniedException("No tenés permiso para responder esta solicitud.");}}
+
+    @Transactional(readOnly = true)
+    public List<FollowRequestEntity> getApprovedPatients() {
+        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+        return followRequestRepository.findByDoctorAndPatientIsNotNullAndStatus(
+                doctor,
+                FollowRequestStatus.APPROVED
+        );
+    }
 }

@@ -1,1 +1,59 @@
-<p>patient-medical-record works!</p>
+<section class="medical-record-container">
+  <a routerLink="/my-patients" class="back-link">Volver a mis pacientes</a>
+
+  <header class="page-header">
+    <h1>Ficha médica del paciente</h1>
+    <p>Paciente N.º {{ patientId }}</p>
+  </header>
+
+  @if (cargandoFicha()) {
+    <p>Cargando ficha médica...</p>
+  } @else if (errorFicha()) {
+    <div class="error">
+      {{ errorFicha() }}
+      <button (click)="cargarFichaMedica()">Reintentar</button>
+    </div>
+  } @else if (fichaMedica(); as ficha) {
+    <section class="record-card">
+      <h2>Información de la ficha médica</h2>
+      <p>Identificador: {{ ficha.medicalRecordId }}</p>
+    </section>
+  }
+
+  <section class="medications-card">
+    <h2>Medicación</h2>
+    @if (cargandoMedicaciones()) {
+      <p>Cargando medicaciones...</p>
+    } @else if (errorMedicaciones()) {
+      <div class="error">
+        {{ errorMedicaciones() }}
+        <button (click)="cargarMedicaciones()">Reintentar</button>
+      </div>
+    } @else if (medicaciones().length === 0) {
+      <p>Este paciente todavía no tiene medicaciones registradas.</p>
+    } @else {
+      <div class="medications-list">
+        @for (medicacion of medicaciones(); track medicacion.medicationId) {
+          <article class="medication-item">
+            <h3>{{ medicacion.fdaDrugName }}</h3>
+
+            <p>
+              <strong>Notas:</strong>
+              {{ medicacion.notes || 'Sin notas médicas' }}
+            </p>
+
+            <p>
+              <strong>Fecha de inicio:</strong>
+              {{ medicacion.startDate }}
+            </p>
+
+            <p>
+              <strong>Fecha de finalización:</strong>
+              {{ medicacion.endDate || 'Sin fecha de finalización' }}
+            </p>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>
