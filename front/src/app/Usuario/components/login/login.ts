@@ -56,12 +56,15 @@ export class Login {
       next: (token) => {
         localStorage.setItem('jwt', JSON.stringify(token));
 
-        this.auth.cargarUsuario().subscribe({
-          next: () => {
+        this.auth.guardarDatosUsuario().subscribe({
+          next: (user) => {
             this.alerta.mostrarInfo(
               'Puedes usar el sistema',
               'Sesion iniciada'
             );
+            const usuario = { id: user.id, username: user.username, email: user.email, role: user.role }
+            console.log('Usuario:', usuario);
+            localStorage.setItem('usuario', JSON.stringify(usuario));
 
             this.router.navigate(['/home']);
           },

@@ -36,6 +36,12 @@
           <i class="bi bi-clock-history"></i>
           Historial de pacientes
         </a>
+        <a 
+        [routerLink]="['/my-patients']"
+        (click)="toggleMenu()">
+        <i class="bi bi-patient-medical-record"></i>
+        Fichas de mis pacientes
+        </a>
       }
 
       @if (auth.isPatient()) {

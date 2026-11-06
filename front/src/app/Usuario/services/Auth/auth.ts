@@ -53,25 +53,7 @@ export class Auth {
   }
 
   guardarDatosUsuario() {
-    this.http.get<Usuario>("http://localhost:8080/users/me").subscribe({
-      next: (user) => {
-        const usuario = { id: user.id, username: user.username, email: user.email, role: user.role }
-        console.log('Usuario:', usuario);
-        localStorage.setItem('usuario', JSON.stringify(usuario));
-      },
-      error: (err) => {
-        console.error('Error:', err);
-      }
-    })
-  }
-
-  isAuthenticated() {
-    try {
-      const guardado = localStorage.getItem('usuario');
-      return guardado ? JSON.parse(guardado) as UsuarioSesion : null;
-    } catch {
-      return null;
-    }
+    return this.http.get<Usuario>("http://localhost:8080/users/me");
   }
 
   private normalizarRol(role: string): string {
@@ -79,15 +61,15 @@ export class Auth {
   }
 
   isDoctor(): boolean {
-    return this.rol() === 'DOCTOR';
+    return this.getRole() === 'DOCTOR';
   }
 
   isPatient(): boolean {
-    return this.rol() === 'PATIENT';
+    return this.getRole() === 'PATIENT';
   }
 
   isAdmin(): boolean {
-    return this.rol() === 'ADMIN';
+    return this.getRole() === 'ADMIN';
   }
 
   isAuthenticated(): boolean {
@@ -119,6 +101,11 @@ export class Auth {
     }
   }
 
+  resetPassword(datos:datosPassword){
+    return this.http.post(this.BASE_URL+'/logout',datos);
+  }
+  forgotPassword(mail:string){
+    return this.http.post(this.BASE_URL+'/forgot-password',{email:mail});
   }
 
   refreshToken() {
