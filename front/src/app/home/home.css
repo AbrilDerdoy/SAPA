@@ -124,4 +124,120 @@
   .home-card {
     padding: 22px;
   }
+
+  .questionnaires-home {
+  margin: 28px 0;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.questionnaires-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.questionnaires-heading h2 {
+  margin: 6px 0;
+  color: var(--text);
+}
+
+.questionnaires-heading p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.view-all {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.questionnaires-list {
+  display: grid;
+  gap: 14px;
+}
+
+.questionnaire-home-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-hover);
+}
+
+.questionnaire-card-icon {
+  font-size: 1.8rem;
+}
+
+.questionnaire-card-content {
+  flex: 1;
+}
+
+.questionnaire-card-content h3 {
+  margin: 0 0 6px;
+  color: var(--text);
+}
+
+.questionnaire-card-content p {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+}
+
+.questionnaire-frequency {
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.questionnaire-button {
+  padding: 10px 18px;
+  color: white;
+  background: var(--primary);
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.questionnaires-empty,
+.questionnaires-message {
+  padding: 18px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.questionnaires-empty span {
+  color: var(--primary);
+  font-size: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .questionnaire-home-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .questionnaire-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .questionnaires-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
 }

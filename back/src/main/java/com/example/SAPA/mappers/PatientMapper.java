@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PatientMapper {
 
+    @Mapping(source = "id", target = "patientId")
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "medicalRecord.id", target = "medicalRecordId")
     PatientResponseDTO toResponseDTO(PatientEntity patientEntity);

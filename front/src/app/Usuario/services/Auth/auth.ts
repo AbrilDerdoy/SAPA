@@ -1,30 +1,36 @@
+
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Usuario } from '../../models/usuario';
 import { registerRequest } from '../../models/registerRequest';
 import { loginRequest } from '../../models/loginRequest';
 import { TokenResponse } from '../../models/token-response';
-import { tap } from 'rxjs';
 import { Router } from '@angular/router';
+import { Observable, tap } from 'rxjs';
 
 export interface especialidad {
-  readonly id: number,
-  name: string
+  readonly id: number;
+  name: string;
 }
 
 export interface datosPassword {
-  token: string,
-  newPassword: string
+  token: string;
+  newPassword: string;
 }
 
-
+interface UsuarioSesion {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
-  private readonly BASE_URL = 'http://localhost:8080/auth'
-  private readonly http = inject(HttpClient)
+  private readonly BASE_URL = 'http://localhost:8080/auth';
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
   register(datos: registerRequest) {
@@ -61,22 +67,36 @@ export class Auth {
 
   isAuthenticated() {
     try {
-      const token: Partial<TokenResponse> = JSON.parse(localStorage.getItem('jwt') ?? '{}');
-      return !!token.AccessToken && !!token.RefreshToken;
+      const guardado = localStorage.getItem('usuario');
+      return guardado ? JSON.parse(guardado) as UsuarioSesion : null;
     } catch {
-      return false;
+      return null;
     }
   }
-  isAdmin() {
-    try {
-      const usuario: unknown = JSON.parse(localStorage.getItem('usuario') ?? '{}');
-      if (!usuario || typeof usuario !== 'object') {
-        return false;
-      }
 
-      const role: unknown = Reflect.get(usuario, 'role');
-      return typeof role === 'string'
-        && role.trim().toUpperCase().replace(/^ROLE_/, '') === 'ADMIN';
+  private normalizarRol(role: string): string {
+    return (role ?? '').trim().toUpperCase().replace(/^ROLE_/, '');
+  }
+
+  isDoctor(): boolean {
+    return this.rol() === 'DOCTOR';
+  }
+
+  isPatient(): boolean {
+    return this.rol() === 'PATIENT';
+  }
+
+  isAdmin(): boolean {
+    return this.rol() === 'ADMIN';
+  }
+
+  isAuthenticated(): boolean {
+    try {
+      const token: Partial<TokenResponse> = JSON.parse(
+        localStorage.getItem('jwt') ?? '{}'
+      );
+
+      return !!token.AccessToken && !!token.RefreshToken;
     } catch {
       return false;
     }
@@ -99,19 +119,6 @@ export class Auth {
     }
   }
 
-  isDoctor(): boolean {
-    return this.getRole() === 'DOCTOR'
-  }
-
-  isPatient(): boolean{
-    return this.getRole() === 'PATIENT'
-  }
-
-  forgotPassword(mail: string) {
-    return this.http.post(this.BASE_URL + '/forgot-password', { email: mail });
-  }
-  resetPassword(datos: datosPassword) {
-    return this.http.post<string>(this.BASE_URL + '/reset-password', datos);
   }
 
   refreshToken() {

@@ -1,3 +1,4 @@
+
 <div class="user-menu">
 
   <button
@@ -17,37 +18,39 @@
 
   @if (menuAbierto()) {
     <div class="dropdown" id="user-dropdown">
-      <a
-        [routerLink]="['/profile']"
-        (click)="toggleMenu()">
+
+      <a [routerLink]="['/profile']" (click)="toggleMenu()">
         <i class="bi bi-person"></i>
         Mi perfil
       </a>
 
-      @if (auth.isPatient()) {
-        <a
-        [routerLink]="['/medical-record']"
-        (click)="toggleMenu()">
-        <i class="bi bi-medical-record"></i>
-        Mi ficha médica
-        </a>
-      }
-
       @if (auth.isDoctor()) {
-        <a 
-        [routerLink]="['/my-patients']"
-        (click)="toggleMenu()">
-        <i class="bi bi-patient-medical-record"></i>
-        Fichas de mis pacientes
+        <hr>
+
+        <a [routerLink]="['/gestionar-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-pulse"></i>
+          Gestionar cuestionarios
+        </a>
+
+        <a [routerLink]="['/historial-cuestionarios-pacientes']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history"></i>
+          Historial de pacientes
         </a>
       }
 
-      <a
-        [routerLink]="['/chat']"
-        (click)="toggleMenu()">
-        <i class="bi bi-chat-dots"></i>
-        Mensajes
-      </a>
+      @if (auth.isPatient()) {
+        <hr>
+
+        <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-check"></i>
+          Mis cuestionarios
+        </a>
+
+        <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history"></i>
+          Mi historial
+        </a>
+      }
       <hr>
 
       <button
@@ -94,10 +97,8 @@
 
       @if (auth.isAdmin()) {
         <hr>
-        <a
-          [routerLink]="['/admin']"
-          (click)="toggleMenu()">
 
+        <a [routerLink]="['/admin']" (click)="toggleMenu()">
           <i class="bi bi-shield-lock"></i>
           Panel de administración
         </a>

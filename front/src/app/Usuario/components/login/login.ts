@@ -1,8 +1,15 @@
+
 import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Auth } from '../../services/Auth/auth';
 import { loginRequest } from '../../models/loginRequest';
-import { form, minLength, required, FormField, email } from '@angular/forms/signals';
+import {
+  form,
+  minLength,
+  required,
+  FormField,
+  email
+} from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
 import { Router, RouterLink } from '@angular/router';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
@@ -16,19 +23,28 @@ import { AlertaService } from '../../../Common/alerta/alerta-service';
 export class Login {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
-  private readonly alerta = inject(AlertaService)
-  readonly modelo = signal<loginRequest>({email:'',password:''});
-  readonly aviso = signal<{ tipo: 'info' | 'error'; texto: string } | null>(null);
-  readonly formulario = form(this.modelo,(ruta)=>{
-    required(ruta.email,{message:'El email es obligatorio'});
-    email(ruta.email,{message:'Debe ingresar un email valido'});
-    required(ruta.password,{message:'La contraseña es obligatoria'});
-    minLength(ruta.password,8,{message:'La contraseña debe tener al menos 8 caracteres'});
+  private readonly alerta = inject(AlertaService);
+
+  readonly modelo = signal<loginRequest>({
+    email: '',
+    password: ''
   });
 
-  enviar(evento:Event):void{
+  readonly aviso = signal<{ tipo: 'info' | 'error'; texto: string } | null>(null);
+
+  readonly formulario = form(this.modelo, (ruta) => {
+    required(ruta.email, { message: 'El email es obligatorio' });
+    email(ruta.email, { message: 'Debe ingresar un email valido' });
+    required(ruta.password, { message: 'La contraseña es obligatoria' });
+    minLength(ruta.password, 8, {
+      message: 'La contraseña debe tener al menos 8 caracteres'
+    });
+  });
+
+  enviar(evento: Event): void {
     evento.preventDefault();
-    if(this.formulario().invalid()){
+
+    if (this.formulario().invalid()) {
       this.formulario.email().markAsTouched();
       this.formulario.password().markAsTouched();
       return;
@@ -37,42 +53,74 @@ export class Login {
     this.aviso.set(null);
 
     this.auth.login(this.modelo()).subscribe({
-      next:(token)=>{
-        this.alerta.mostrarInfo('Puedes usar el sistema','Sesion iniciada')
-        localStorage.setItem('jwt',JSON.stringify(token));
-        this.auth.guardarDatosUsuario()
-        this.router.navigate(['/home']);
-       },
-      error:(err:HttpErrorResponse)=>{
+      next: (token) => {
+        localStorage.setItem('jwt', JSON.stringify(token));
+
+        this.auth.cargarUsuario().subscribe({
+          next: () => {
+            this.alerta.mostrarInfo(
+              'Puedes usar el sistema',
+              'Sesion iniciada'
+            );
+
+            this.router.navigate(['/home']);
+          },
+          error: (error) => {
+            console.error('No se pudo obtener el usuario:', error);
+
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('usuario');
+
+            this.aviso.set({
+              tipo: 'error',
+              texto: 'No se pudo cargar tu perfil. Intentá iniciar sesión nuevamente.'
+            });
+          }
+        });
+      },
+      error: (err: HttpErrorResponse) => {
         this.aviso.set(this.interpretarError(err));
-        console.error('Error:',err);
+        console.error('Error:', err);
       }
     });
   }
 
-  private interpretarError(error: HttpErrorResponse): { tipo: 'info' | 'error'; texto: string } {
+  private interpretarError(
+    error: HttpErrorResponse
+  ): { tipo: 'info' | 'error'; texto: string } {
     if (error.status === 0) {
-      return { tipo: 'error', texto: 'No se pudo conectar con el servidor. Verificá que esté disponible.' };
+      return {
+        tipo: 'error',
+        texto: 'No se pudo conectar con el servidor. Verificá que esté disponible.'
+      };
     }
 
     if (error.status === 401) {
-      return { tipo: 'error', texto: 'Email o contraseña incorrectos.' };
+      return {
+        tipo: 'error',
+        texto: 'Email o contraseña incorrectos.'
+      };
     }
 
     const mensaje = this.extraerMensaje(error.error);
 
     if (mensaje) {
-      // 403: la cuenta existe pero todavía no fue aprobada (médico PENDING/REJECTED).
-      // No es un error de credenciales, por eso se muestra como aviso informativo.
-      return { tipo: error.status === 403 ? 'info' : 'error', texto: mensaje };
+      return {
+        tipo: error.status === 403 ? 'info' : 'error',
+        texto: mensaje
+      };
     }
 
-    return { tipo: 'error', texto: 'No se pudo iniciar sesión. Intentá nuevamente.' };
+    return {
+      tipo: 'error',
+      texto: 'No se pudo iniciar sesión. Intentá nuevamente.'
+    };
   }
 
   private extraerMensaje(cuerpo: unknown): string | null {
     if (typeof cuerpo === 'string') {
       const texto = cuerpo.trim();
+
       if (!texto) return null;
 
       if (texto.startsWith('{')) {
@@ -88,6 +136,7 @@ export class Login {
 
     if (cuerpo && typeof cuerpo === 'object') {
       const mensaje = Reflect.get(cuerpo, 'message');
+
       if (typeof mensaje === 'string' && mensaje.trim()) {
         return mensaje.trim();
       }
@@ -95,6 +144,4 @@ export class Login {
 
     return null;
   }
-
 }
-
