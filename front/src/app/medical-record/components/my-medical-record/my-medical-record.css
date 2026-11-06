@@ -153,7 +153,7 @@
   animation: spin 0.8s linear infinite;
 }
 
-.error > i {
+.error>i {
   font-size: 32px;
   color: var(--danger, #d9534f);
 }
@@ -165,6 +165,135 @@
   background: var(--primary, #02968c);
   color: white;
   cursor: pointer;
+}
+
+.medications-card {
+  margin-top: 20px;
+  padding: 24px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #dce7e5);
+  border-radius: var(--radius, 12px);
+  box-shadow: var(--shadow, 0 4px 16px rgba(0, 80, 73, 0.08));
+}
+
+.medications-card .section-heading {
+  margin-bottom: 20px;
+}
+
+.medications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.medication-item {
+  padding: 18px;
+  border: 1px solid var(--border, #dce7e5);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.medication-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.medication-header h3 {
+  margin: 0;
+  font-size: 17px;
+  color: var(--text, #222);
+}
+
+.medication-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: var(--primary-light, #ecf8f6);
+  color: var(--primary-dark, #02776f);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.medication-item>p {
+  margin: 0 0 16px;
+  color: var(--text-muted, #687574);
+  line-height: 1.5;
+}
+
+.medication-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border, #dce7e5);
+}
+
+.medication-dates div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.medication-dates span {
+  color: var(--text-muted, #687574);
+  font-size: 13px;
+}
+
+.medication-dates strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #222);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 36px 20px;
+  border: 1px dashed var(--border, #dce7e5);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 32px;
+  color: var(--primary, #02968c);
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--text-muted, #687574);
+}
+
+.medications-card .error {
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--danger-light, #fff0ef);
+}
+
+.medications-card .error p {
+  margin: 0 0 12px;
+  color: var(--danger, #d9534f);
+}
+
+@media (max-width: 600px) {
+  .medications-card {
+    padding: 18px;
+  }
+
+  .medication-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .medication-dates {
+    flex-direction: column;
+    gap: 14px;
+  }
 }
 
 @keyframes spin {

@@ -7,46 +7,96 @@
   </header>
 
   @if (cargando()) {
-    <section class="state-card">
-      <div class="spinner"></div>
-      <p>Cargando ficha médica...</p>
-    </section>
+  <section class="state-card">
+    <div class="spinner"></div>
+    <p>Cargando ficha médica...</p>
+  </section>
   } @else if (error()) {
-    <section class="error">
-        <p>{{ error() }}</p>
-        <button type="button" (click)="cargarFichaMedica()">Reintentar</button>
-    </section>
+  <section class="error">
+    <p>{{ error() }}</p>
+    <button type="button" (click)="cargarFichaMedica()">Reintentar</button>
+  </section>
   } @else if (fichaMedica(); as ficha) {
-    <section class="record-card">
-      <div class="record-card-header">
-        <div class="record-icon">
-          <i class="bi bi-clipboard2-pulse"></i>
-        </div>
-        <div>
-          <h2>Ficha médica</h2>
-          <p>Tu registro de información médica</p>
-        </div>
-
-        <span class="status-badge">Disponible</span>
+  <section class="record-card">
+    <div class="record-card-header">
+      <div class="record-icon">
+        <i class="bi bi-clipboard2-pulse"></i>
+      </div>
+      <div>
+        <h2>Ficha médica</h2>
+        <p>Tu registro de información médica</p>
       </div>
 
-      <div class="record-info">
-        <div class="info-item">
-          <span>Identificador de ficha</span>
-          <strong>#{{ ficha.medicalRecordId }}</strong>
-        </div>
-      </div>
-    </section>
+      <span class="status-badge">Disponible</span>
+    </div>
 
-    <section class="information-card">
-      <div class="section-heading">
-        <i class="bi bi-info-circle"></i>
-        <h2>Información</h2>
+    <div class="record-info">
+      <div class="info-item">
+        <span>Identificador de ficha</span>
+        <strong>#{{ ficha.medicalRecordId }}</strong>
       </div>
-      <p>
-        Desde esta sección vas a poder consultar y gestionar la información
-        de tu ficha médica, incluyendo tus medicaciones registradas.
-      </p>
-    </section>
+    </div>
+  </section>
+
+  <section class="information-card">
+    <div class="section-heading">
+      <i class="bi bi-info-circle"></i>
+      <h2>Información</h2>
+    </div>
+    <p>
+      Desde esta sección vas a poder consultar y gestionar la información
+      de tu ficha médica, incluyendo tus medicaciones registradas.
+    </p>
+  </section>
+
+  <section class="medications-card">
+    <div class="section-heading">
+      <i class="bi bi-capsule"></i>
+      <h2>Mis medicaciones</h2>
+    </div>
+
+    @if (cargandoMedicaciones()) {
+    <p>Cargando medicaciones...</p>
+
+    } @else if (errorMedicaciones()) {
+    <div class="error">
+      <p>{{ errorMedicaciones() }}</p>
+      <button type="button" (click)="cargarMedicaciones()">Reintentar</button>
+    </div>
+    } @else if (medicaciones().length === 0) {
+    <div class="empty-state">
+      <i class="bi bi-capsule"></i>
+      <p>No tenés medicaciones registradas actualmente.</p>
+    </div>
+
+    } @else {
+    <div class="medications-list">
+      @for (medicacion of medicaciones(); track medicacion.medicationId) {
+      <article class="medication-item">
+        <div class="medication-header">
+          <h3>{{ medicacion.fdaDrugName }}</h3>
+          <span class="medication-badge">Registrada</span>
+        </div>
+
+        @if (medicacion.notes) {
+        <p>{{ medicacion.notes }}</p>
+        }
+
+        <div class="medication-dates">
+          <div>
+            <span>Fecha de inicio</span>
+            <strong>{{ medicacion.startDate }}</strong>
+          </div>
+
+          <div>
+            <span>Fecha de finalización</span>
+            <strong>{{ medicacion.endDate || 'Sin fecha de finalización' }}</strong>
+          </div>
+        </div>
+      </article>
+      }
+    </div>
+    }
+  </section>
   }
 </main>
