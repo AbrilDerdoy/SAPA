@@ -1,42 +1,105 @@
-@if(auth.isAuthenticated()){
-<button><a [routerLink]="['/home']">Volver al Inicio</a></button>
-@if(profile.isLoading()){
-<p>Cargando datos...</p>
-}
-@if(profile.error()){
-<p>Ocurrio un error</p>
-}
-@if(profile.hasValue()){
-<div class="container" style="padding:20px;">
-    <form novalidate (submit)="enviar($event)">
-        <label>
-            Nombre:
-            <input type="text" [formField]="formulario.firstName">
-            <app-form-error [field]="formulario.firstName()" />
-        </label>
-        <label>
-            Apellido:
-            <input type="text" [formField]="formulario.lastName">
-            <app-form-error [field]="formulario.lastName()" />
-        </label>
-        <label>
-            Email:
-            <input type="email" [formField]="formulario.email">
-            <app-form-error [field]="formulario.email()" />
-        </label>
-        <label>
-            Fecha de nacimiento:
-            <input type="date" [formField]="formulario.birthDate">
-            <app-form-error [field]="formulario.birthDate()" />
-        </label>
-        <label>
-            Telefono:
-            <input type="number" [formField]="formulario.phoneNumber">
-            <app-form-error [field]="formulario.phoneNumber()" />
-        </label>
-        <button type="button" (click)="toggleFormulario()">Editar datos</button>
-        <button class="btn-enviar" type="submit" [disabled]="toggleBotonEnviar()">Confirmar</button>
+<section class="profile">
+  <header class="profile__header">
+    <div>
+      <h1 class="profile__title">Mi perfil</h1>
+      <p class="profile__lead">Consultá y actualizá tus datos personales.</p>
+    </div>
+
+    @if (auth.isAuthenticated()) {
+      <a class="back" [routerLink]="['/home']">Volver al inicio</a>
+    }
+  </header>
+
+  @if (profile.isLoading()) {
+    <div class="skeleton">
+      <span class="skeleton__row"></span>
+      <span class="skeleton__row"></span>
+      <span class="skeleton__row"></span>
+    </div>
+  } @else if (profile.error()) {
+    <div class="notice notice--error" role="alert">
+      <strong>No pudimos cargar tu perfil</strong>
+      <p>Revisá tu conexión e intentá de nuevo.</p>
+      <button type="button" class="btn btn--outline" (click)="profile.reload()">Reintentar</button>
+    </div>
+  } @else {
+    <form class="card" (submit)="enviar($event)" novalidate>
+      <div class="card__bar">
+        <span class="card__state">
+          {{ modificarDatos() ? 'Editando datos' : 'Solo lectura' }}
+        </span>
+        <button type="button" class="btn btn--outline" (click)="modificarDatos() ? cancelar() : toggleFormulario()">
+          {{ modificarDatos() ? 'Cancelar' : 'Editar datos' }}
+        </button>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="firstName">Nombre</label>
+          <input id="firstName" type="text" autocomplete="given-name" [formField]="formulario.firstName" />
+          @if (formulario.firstName().touched() && formulario.firstName().invalid()) {
+            <ul class="field__errors" role="alert">
+              @for (e of formulario.firstName().errors(); track e.kind) {
+                <li>{{ e.message }}</li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="field">
+          <label for="lastName">Apellido</label>
+          <input id="lastName" type="text" autocomplete="family-name" [formField]="formulario.lastName" />
+          @if (formulario.lastName().touched() && formulario.lastName().invalid()) {
+            <ul class="field__errors" role="alert">
+              @for (e of formulario.lastName().errors(); track e.kind) {
+                <li>{{ e.message }}</li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="field field--wide">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" [formField]="formulario.email" />
+          @if (formulario.email().touched() && formulario.email().invalid()) {
+            <ul class="field__errors" role="alert">
+              @for (e of formulario.email().errors(); track e.kind) {
+                <li>{{ e.message }}</li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="field">
+          <label for="birthDate">Fecha de nacimiento</label>
+          <input id="birthDate" type="date" autocomplete="bday" [formField]="formulario.birthDate" />
+          @if (formulario.birthDate().touched() && formulario.birthDate().invalid()) {
+            <ul class="field__errors" role="alert">
+              @for (e of formulario.birthDate().errors(); track e.kind) {
+                <li>{{ e.message }}</li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="field">
+          <label for="phoneNumber">Teléfono</label>
+          <input id="phoneNumber" type="number" autocomplete="tel" [formField]="formulario.phoneNumber" />
+          @if (formulario.phoneNumber().touched() && formulario.phoneNumber().invalid()) {
+            <ul class="field__errors" role="alert">
+              @for (e of formulario.phoneNumber().errors(); track e.kind) {
+                <li>{{ e.message }}</li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+
+      @if (modificarDatos()) {
+        <div class="form__actions">
+          <button type="submit" [disabled]="toggleBotonEnviar()">Guardar cambios</button>
+        </div>
+      }
     </form>
-</div>
-}
-}
+  }
+</section>

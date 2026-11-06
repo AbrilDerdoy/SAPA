@@ -56,11 +56,6 @@
       }
 
       @if (role() === 'PATIENT') {
-        <a [routerLink]="['/perfil-paciente']" (click)="toggleMenu()">
-          <i class="bi bi-person-vcard"></i>
-          Datos personales
-        </a>
-        
         <a [routerLink]="['/mis-solicitudes']" (click)="toggleMenu()">
           <i class="bi bi-person-check"></i>
           Mis solicitudes
