@@ -134,7 +134,7 @@ public class AssignmentService {
         PatientEntity patient = userContextService.getAuthenticatedPatient();
 
         return assignmentRepository.findPendingAssignments(
-                        patient,
+                        patient.getId(),
                         LocalDateTime.now()
                 )
                 .stream()

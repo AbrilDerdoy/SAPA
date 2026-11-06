@@ -39,38 +39,38 @@ public interface QuestionnaireAssignmentRepository
             Long doctorId
     );
 
-    @Query("""
-            SELECT a
-            FROM QuestionnaireAssignmentEntity a
-            WHERE a.patient = :patient
-              AND a.active = true
-              AND (a.dueAt IS NULL OR a.dueAt <= :now)
-            ORDER BY a.dueAt ASC
-            """)
+    @Query(value = """
+        SELECT *
+        FROM questionnaire_assignment a
+        WHERE a.patient_id = :patientId
+          AND a.active = true
+          AND (a.due_at IS NULL OR a.due_at <= :now)
+        ORDER BY a.due_at ASC
+        """, nativeQuery = true)
     List<QuestionnaireAssignmentEntity> findPendingAssignments(
-            @Param("patient") PatientEntity patient,
+            @Param("patientId") Long patientId,
             @Param("now") LocalDateTime now
     );
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-            SELECT a
-            FROM QuestionnaireAssignmentEntity a
-            WHERE a.id = :id
-            """)
+    @Query(value = """
+        SELECT *
+        FROM questionnaire_assignment a
+        WHERE a.id = :id
+        FOR UPDATE
+        """, nativeQuery = true)
     Optional<QuestionnaireAssignmentEntity> findByIdForUpdate(
             @Param("id") Long id
     );
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-            SELECT a
-            FROM QuestionnaireAssignmentEntity a
-            WHERE a.active = true
-              AND a.notificationSent = false
-              AND a.dueAt IS NOT NULL
-              AND a.dueAt <= :now
-            """)
+    @Query(value = """
+        SELECT *
+        FROM questionnaire_assignment a
+        WHERE a.active = true
+          AND a.notification_sent = false
+          AND a.due_at IS NOT NULL
+          AND a.due_at <= :now
+        FOR UPDATE
+        """, nativeQuery = true)
     List<QuestionnaireAssignmentEntity> findDueAssignmentsForNotification(
             @Param("now") LocalDateTime now
     );
