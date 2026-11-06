@@ -148,10 +148,10 @@ public class PatientMedicationService {
                     return new MedicationDetailResponseDTO(
                             med.getId(),
                             med.getNotes(),
+                            med.getFdaDrugName(),
                             med.getStartDate(),
                             med.getEndDate(),
-                            med.getAddedAt(),
-                            fdaDetails
+                            med.getAddedAt()
                     );
                 })
                 .toList();
