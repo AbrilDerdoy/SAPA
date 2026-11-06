@@ -41,8 +41,13 @@ export const routes: Routes = [
     loadComponent: () => import('./medical-record/components/my-medical-record/my-medical-record')
     .then(m => m.MyMedicalRecord)
   },
-  {path: 'patient-medical-record', canActivate: [roleGuard(['DOCTOR'])],
+  {path: 'patient-medical-record/:patientId', canActivate: [roleGuard(['DOCTOR'])],
     loadComponent: () => import('./medical-record/components/patient-medical-record/patient-medical-record')
     .then(m => m.PatientMedicalRecord)
-  }
+  },
+  {
+  path: 'my-patients', canActivate: [roleGuard(['DOCTOR'])],
+    loadComponent: () => import('./medical-record/components/doctor-patients/doctor-patients')
+    .then(m => m.DoctorPatients)
+},
 ];
