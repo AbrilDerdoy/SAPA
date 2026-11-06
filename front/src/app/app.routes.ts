@@ -41,5 +41,9 @@ export const routes: Routes = [
   {path: 'perfil-medico', canActivate: [doctorGuard],loadComponent: () =>
     import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)},
   {path: 'medicos', canActivate: [patientGuard], loadComponent: () =>
-    import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)}
+    import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)},
+  {path: 'perfil-paciente', canActivate: [patientGuard], loadComponent: () =>
+    import('./Patient/components/patient-profile/patient-profile').then((m) => m.PatientProfile)},
+{path: 'mis-pacientes', canActivate: [doctorGuard], loadComponent: () =>
+    import('./Patient/components/my-patients/my-patients').then((m) => m.MyPatients)}
 ];
