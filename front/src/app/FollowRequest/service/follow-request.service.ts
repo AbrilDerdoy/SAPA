@@ -33,4 +33,9 @@ export class FollowRequestService {
   getSent(): Observable<FollowRequest[]> {
     return this.http.get<FollowRequest[]>(`${this.baseUrl}/sent`);
   }
+
+    // Se obtienen los pacientes aprobados.
+  getApprovedPatients(): Observable<FollowRequest[]> {
+  return this.http.get<FollowRequest[]>(`${this.baseUrl}/approved`);
+}
 }

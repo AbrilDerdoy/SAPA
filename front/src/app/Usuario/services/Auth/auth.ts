@@ -33,50 +33,39 @@ export class Auth {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
-  readonly usuario = signal<UsuarioSesion | null>(this.obtenerUsuarioGuardado());
-
-  readonly rol = signal<string>(
-    this.normalizarRol(this.usuario()?.role ?? '')
-  );
-
   register(datos: registerRequest) {
-    return this.http.post<TokenResponse>(
-      `${this.BASE_URL}/register`,
-      datos
-    );
+    return this.http.post<TokenResponse>(this.BASE_URL + '/register', datos)
   }
-
   login(datos: loginRequest) {
-    return this.http.post<TokenResponse>(
-      `${this.BASE_URL}/login`,
-      datos
-    );
+    return this.http.post<TokenResponse>(this.BASE_URL + '/login', datos);
+  }
+  logout() {
+    if (this.isAuthenticated()) {
+      this.http.post(`${this.BASE_URL}/logout`, null, { responseType: 'text' }).subscribe({
+        next: () => { console.log('Sesion cerrada exitosamente'); },
+        error: (error) => console.error('No se pudo cerrar la sesión en el servidor', error)
+      });
+    }
+
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('usuario');
+    this.router.navigate(['/home']);
   }
 
-  cargarUsuario(): Observable<Usuario> {
-    return this.http.get<Usuario>('http://localhost:8080/users/me').pipe(
-      tap((user) => {
-        const usuario: UsuarioSesion = {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: this.normalizarRol(user.role)
-        };
-
+  guardarDatosUsuario() {
+    this.http.get<Usuario>("http://localhost:8080/users/me").subscribe({
+      next: (user) => {
+        const usuario = { id: user.id, username: user.username, email: user.email, role: user.role }
+        console.log('Usuario:', usuario);
         localStorage.setItem('usuario', JSON.stringify(usuario));
-        this.usuario.set(usuario);
-        this.rol.set(usuario.role);
-      })
-    );
+      },
+      error: (err) => {
+        console.error('Error:', err);
+      }
+    })
   }
 
-  guardarDatosUsuario(): void {
-    this.cargarUsuario().subscribe({
-      error: (err) => console.error('Error al cargar usuario:', err)
-    });
-  }
-
-  private obtenerUsuarioGuardado(): UsuarioSesion | null {
+  isAuthenticated() {
     try {
       const guardado = localStorage.getItem('usuario');
       return guardado ? JSON.parse(guardado) as UsuarioSesion : null;
@@ -113,51 +102,32 @@ export class Auth {
     }
   }
 
-  logout(): void {
-    if (this.isAuthenticated()) {
-      this.http.post(
-        `${this.BASE_URL}/logout`,
-        null,
-        { responseType: 'text' }
-      ).subscribe({
-        error: (error) =>
-          console.error('No se pudo cerrar la sesión en el servidor', error)
-      });
+  private getRole(): string {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+
+      if (!usuario || typeof usuario !== 'object') {
+        return ''
+      }
+
+      const role = Reflect.get(usuario, 'role')
+      return typeof role === 'string'
+        ? role.trim().toUpperCase().replace(/^ROLE_/, '')
+        : ''
+    } catch {
+      return ''
     }
-
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('usuario');
-
-    this.usuario.set(null);
-    this.rol.set('');
-
-    this.router.navigate(['/home']);
   }
 
-  forgotPassword(mail: string) {
-    return this.http.post(
-      `${this.BASE_URL}/forgot-password`,
-      { email: mail }
-    );
-  }
-
-  resetPassword(datos: datosPassword) {
-    return this.http.post<string>(
-      `${this.BASE_URL}/reset-password`,
-      datos
-    );
   }
 
   refreshToken() {
     const tokens = JSON.parse(localStorage.getItem('jwt') || '{}');
+    const refreshToken = tokens.RefreshToken;
 
-    return this.http.post<TokenResponse>(
-      `${this.BASE_URL}/refresh`,
-      { refreshToken: tokens.RefreshToken }
-    ).pipe(
-      tap((newTokens) => {
+    return this.http.post<TokenResponse>(`${this.BASE_URL}/refresh`, { refreshToken })
+      .pipe(tap((newTokens) => {
         localStorage.setItem('jwt', JSON.stringify(newTokens));
-      })
-    );
+      }));
   }
 }

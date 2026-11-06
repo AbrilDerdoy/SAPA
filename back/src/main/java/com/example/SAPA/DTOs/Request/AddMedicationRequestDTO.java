@@ -20,7 +20,6 @@ public record AddMedicationRequestDTO(
         @FutureOrPresent(message = "La fecha de inicio debe ser de hoy en adelante.")
         LocalDate startDate,
 
-        @NotNull(message = "La fecha de finalización es obligatoria.")
         @FutureOrPresent(message = "La fecha de finalización debe ser una fecha presente o futura.")
         LocalDate endDate
 ) {

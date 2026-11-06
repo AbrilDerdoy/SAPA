@@ -62,4 +62,14 @@ public class FollowRequestController {
                 .toList();
         return ResponseEntity.ok(dtos);
     }
+
+    @GetMapping("/approved")
+    public ResponseEntity<List<FollowRequestResponseDTO>> getApprovedPatients() {
+        List<FollowRequestEntity> entities = followRequestService.getApprovedPatients();
+        List<FollowRequestResponseDTO> dtos = entities.stream()
+                .map(followRequestMapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
+    }
 }
