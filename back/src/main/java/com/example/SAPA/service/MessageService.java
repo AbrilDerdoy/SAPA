@@ -3,11 +3,14 @@ package com.example.SAPA.service;
 import com.example.SAPA.DTOs.ChatDTO;
 import com.example.SAPA.Models.Chat.ConversationEntity;
 import com.example.SAPA.Models.Chat.MessageEntity;
+import com.example.SAPA.Models.TutorPatientEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Repositories.ConversationRepository;
 import com.example.SAPA.Repositories.MessageRepository;
+import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.enums.MessageType;
 import com.example.SAPA.enums.NotificationType;
+import com.example.SAPA.enums.TutorLinkStatus;
 import com.example.SAPA.mappers.MessageMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ public class MessageService {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserContextService userContextService;
     private final NotificationService notificationService;
+    private final TutorPatientRepository tutorPatientRepository;
 
     public void sendMessage(Long conversationId, ChatDTO.SendMessageRequest request, Principal principal) {
         UserEntity sender = userContextService.getUserFromPrincipal(principal);
@@ -53,9 +57,28 @@ public class MessageService {
                 response
         );
 
-        UserEntity receiver = conversation.getPatient().getUser().getId().equals(sender.getId())
-                ? conversation.getDoctor().getUser()
-                : conversation.getPatient().getUser();
+        UserEntity receiver;
+
+        if (conversationService.isPatientSide(sender, conversation)) {
+            receiver = conversation.getDoctor().getUser();
+        } else {
+            receiver = conversation.getPatient().getUser();
+
+            tutorPatientRepository
+                    .findByPatientAndStatus(conversation.getPatient(), TutorLinkStatus.ACTIVE)
+                    .map(TutorPatientEntity::getTutor)
+                    .map(tutor -> tutor.getUser())
+                    .filter(tutorUser -> !tutorUser.getId().equals(sender.getId()))
+                    .ifPresent(tutorUser -> notificationService.createNotification(
+                            tutorUser,
+                            "Nuevo mensaje",
+                            userContextService.resolveName(sender)
+                                    + " le envió un mensaje a "
+                                    + conversation.getPatient().getFirstName() + " "
+                                    + conversation.getPatient().getLastName() + ".",
+                            NotificationType.MESSAGE
+                    ));
+        }
 
         notificationService.createNotification(
                 receiver,

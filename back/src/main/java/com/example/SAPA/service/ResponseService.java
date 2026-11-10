@@ -17,7 +17,6 @@ import com.example.SAPA.enums.NotificationType;
 import com.example.SAPA.mappers.QuestionnaireMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +35,7 @@ public class ResponseService {
     private final AnswerRepository answerRepository;
     private final FollowRequestRepository followRequestRepository;
     private final QuestionnaireMapper questionnaireMapper;
-    private final UserContextService userContextService;
+    private final PatientAccessService patientAccess;
     private final NotificationService notificationService;
 
     @Transactional
@@ -44,19 +43,14 @@ public class ResponseService {
             Long assignmentId,
             QuestionnaireDTO.SubmitResponseRequest request) {
 
-        PatientEntity patient = userContextService.getAuthenticatedPatient();
-
         // Bloquear la asignación para evitar respuestas simultáneas.
         QuestionnaireAssignmentEntity assignment =
                 assignmentRepository.findByIdForUpdate(assignmentId)
                         .orElseThrow(() -> new EntityNotFoundException(
                                 "Asignación no encontrada con id: " + assignmentId));
 
-        // Verificar que la asignación pertenezca al paciente autenticado.
-        if (!assignment.getPatient().getId().equals(patient.getId())) {
-            throw new AccessDeniedException(
-                    "No tenés permiso para responder este cuestionario.");
-        }
+        // Resolver el paciente accesible (propio o tutelado) y validar el vínculo.
+        PatientEntity patient = patientAccess.resolveClinical(assignment.getPatient().getId());
 
         // Verificar que no exista una respuesta previa.
         if (responseRepository.existsByAssignment(assignment)) {

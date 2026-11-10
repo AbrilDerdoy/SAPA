@@ -6,10 +6,12 @@ import com.example.SAPA.DTOs.Response.UserResponseDTO;
 import com.example.SAPA.DTOs.Response.fda.ProfileResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.PatientRepository;
 import com.example.SAPA.Repositories.SpecialityRepository;
+import com.example.SAPA.Repositories.TutorRepository;
 import com.example.SAPA.Repositories.UserRepository;
 import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.NotificationType;
@@ -41,6 +43,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final TutorRepository tutorRepository;
     private final CredentialRepository credentialRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -104,6 +107,20 @@ public class UserService {
                     .phoneNumber(request.phoneNumber())
                     .build();
             patientRepository.save(patient);
+        } else if (request.role() == Role.ROLE_TUTOR) {
+            String relationship = (request.relationship() == null || request.relationship().isBlank())
+                    ? "TUTOR"
+                    : request.relationship().trim();
+
+            TutorEntity tutor = TutorEntity.builder()
+                    .user(userConnector)
+                    .firstName(request.firstName())
+                    .lastName(request.lastName())
+                    .birthDate(request.birthDate())
+                    .phoneNumber(request.phoneNumber())
+                    .relationship(relationship)
+                    .build();
+            tutorRepository.save(tutor);
         }
 
         RoleEntity assignedRole = roleRepository.findByRole(request.role())
@@ -178,6 +195,18 @@ public class UserService {
                 doctor.setLastName(request.lastName());
                 doctor.setBirthDate(request.birthDate());
                 doctor.setPhoneNumber(request.phoneNumber());
+            }
+            case TUTOR -> {
+                TutorEntity tutor = tutorRepository.findByUser(user)
+                        .orElseThrow(() -> new EntityNotFoundException("Tutor no encontrado"));
+                if (!tutor.getPhoneNumber().equals(request.phoneNumber())
+                        && tutorRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), tutor.getId())) {
+                    throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
+                }
+                tutor.setFirstName(request.firstName());
+                tutor.setLastName(request.lastName());
+                tutor.setBirthDate(request.birthDate());
+                tutor.setPhoneNumber(request.phoneNumber());
             }
             case ADMIN -> throw new IllegalStateException("El perfil de administrador no se puede modificar desde este endpoint.");
         }
@@ -272,6 +301,24 @@ public class UserService {
                     patient.getMedicalRecord() != null
                             ? patient.getMedicalRecord().getId()
                             : null,
+                    null
+            );
+        }
+
+        if (user.getRole() == UserCategory.TUTOR) {
+
+            TutorEntity tutor = tutorRepository.findByUser(user)
+                    .orElseThrow(() -> new EntityNotFoundException("Tutor no encontrado"));
+
+            return new ProfileResponseDTO(
+                    user.getId(),
+                    tutor.getFirstName(),
+                    tutor.getLastName(),
+                    user.getEmail(),
+                    user.getRole().name(),
+                    tutor.getBirthDate(),
+                    tutor.getPhoneNumber(),
+                    null,
                     null
             );
         }

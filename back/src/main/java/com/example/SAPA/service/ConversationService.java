@@ -9,7 +9,7 @@ import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Repositories.ConversationRepository;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.MessageRepository;
-import com.example.SAPA.Repositories.PatientRepository;
+import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.mappers.MessageMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +25,10 @@ public class ConversationService {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
-    private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final MessageMapper messageMapper;
     private final UserContextService userContextService;
+    private final PatientAccessService patientAccess;
 
     @Transactional
     public ConversationEntity createConversation(PatientEntity patient, DoctorEntity doctor) {
@@ -46,23 +46,26 @@ public class ConversationService {
     public List<ChatDTO.ConversationSummary> getMyConversations() {
         UserEntity user = userContextService.getAuthenticatedUser();
 
-        boolean isPatient = patientRepository.findByUser(user).isPresent();
-
         List<ConversationEntity> conversations;
-        if (isPatient) {
-            PatientEntity patient = patientRepository.findByUser(user).get();
-            conversations = conversationRepository.findByPatient(patient);
+
+        if (user.getRole() == UserCategory.DOCTOR) {
+            conversations = conversationRepository.findByDoctor(
+                    userContextService.getAuthenticatedDoctor()
+            );
         } else {
-            DoctorEntity doctor = doctorRepository.findByUser(user)
-                    .orElseThrow(() -> new EntityNotFoundException("No se encontró perfil asociado al usuario"));
-            conversations = conversationRepository.findByDoctor(doctor);
+            conversations = patientAccess.getAccessiblePatients().stream()
+                    .flatMap(patient -> conversationRepository.findByPatient(patient).stream())
+                    .distinct()
+                    .toList();
         }
 
         return conversations.stream().map(conv -> {
             List<MessageEntity> messages = messageRepository
                     .findByConversationOrderBySentAtAsc(conv);
 
-            String otherName = isPatient
+            boolean patientSide = isPatientSide(user, conv);
+
+            String otherName = patientSide
                     ? "Dr. " + conv.getDoctor().getFirstName() + " " + conv.getDoctor().getLastName()
                     : conv.getPatient().getFirstName() + " " + conv.getPatient().getLastName();
 
@@ -103,11 +106,22 @@ public class ConversationService {
     }
 
     public void validateParticipant(UserEntity user, ConversationEntity conversation) {
-        boolean isPatient = conversation.getPatient().getUser().getId().equals(user.getId());
         boolean isDoctor = conversation.getDoctor().getUser().getId().equals(user.getId());
 
-        if (!isPatient && !isDoctor) {
+        if (!isPatientSide(user, conversation) && !isDoctor) {
             throw new AccessDeniedException("No tenés permiso para acceder a esta conversación");
         }
+    }
+
+    /**
+     * Indica si el usuario está del lado del paciente en la conversación,
+     * ya sea porque es el paciente o porque es su tutor activo.
+     */
+    public boolean isPatientSide(UserEntity user, ConversationEntity conversation) {
+        if (conversation.getPatient().getUser().getId().equals(user.getId())) {
+            return true;
+        }
+
+        return patientAccess.isTutorOf(user, conversation.getPatient());
     }
 }

@@ -31,6 +31,7 @@ public class MedicalRecordService {
     private final FollowRequestRepository followRequestRepository;
     private final MedicalRecordMapper medicalRecordMapper;
     private final UserContextService userContext;
+    private final PatientAccessService patientAccess;
     private final PatientMedicationRepository patientMedicationRepository;
 
 
@@ -50,7 +51,12 @@ public class MedicalRecordService {
 
     @Transactional
     public MedicalRecordResponseDTO getMyMedicalRecord() {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
+        return getMyMedicalRecord(null);
+    }
+
+    @Transactional
+    public MedicalRecordResponseDTO getMyMedicalRecord(Long patientId) {
+        PatientEntity patient = patientAccess.resolveClinical(patientId);
         MedicalRecordEntity record = getOrCreateMedicalRecord(patient);
         return medicalRecordMapper.toMedicalRecordResponse(record);
     }
@@ -81,7 +87,12 @@ public class MedicalRecordService {
 
     @Transactional(readOnly = true)
     public List<MedicationDetailResponseDTO> getMyMedications() {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
+        return getMyMedications(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MedicationDetailResponseDTO> getMyMedications(Long patientId) {
+        PatientEntity patient = patientAccess.resolveClinical(patientId);
 
         if (patient.getMedicalRecord() == null) {
             return List.of();

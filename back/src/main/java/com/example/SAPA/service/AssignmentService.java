@@ -35,6 +35,7 @@ public class AssignmentService {
     private final FollowRequestRepository followRequestRepository;
     private final QuestionnaireMapper questionnaireMapper;
     private final UserContextService userContextService;
+    private final PatientAccessService patientAccessService;
     private final NotificationService notificationService;
 
     /**
@@ -130,8 +131,13 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public List<QuestionnaireDTO.AssignmentResponse> getMyAssignments() {
+        return getMyAssignments(null);
+    }
 
-        PatientEntity patient = userContextService.getAuthenticatedPatient();
+    @Transactional(readOnly = true)
+    public List<QuestionnaireDTO.AssignmentResponse> getMyAssignments(Long patientId) {
+
+        PatientEntity patient = patientAccessService.resolveClinical(patientId);
 
         return assignmentRepository.findPendingAssignments(
                         patient.getId(),
@@ -181,8 +187,13 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public List<QuestionnaireDTO.QuestionnaireResponseDTO> getMyResponses() {
+        return getMyResponses(null);
+    }
 
-        PatientEntity patient = userContextService.getAuthenticatedPatient();
+    @Transactional(readOnly = true)
+    public List<QuestionnaireDTO.QuestionnaireResponseDTO> getMyResponses(Long patientId) {
+
+        PatientEntity patient = patientAccessService.resolveClinical(patientId);
 
         return responseRepository.findAllByPatientWithDetails(patient)
                 .stream()

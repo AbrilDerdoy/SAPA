@@ -23,19 +23,35 @@ public class PatientService {
 
     private final PatientMapper patientMapper;
     private final UserContextService userContextService;
+    private final PatientAccessService patientAccessService;
     private final FollowRequestRepository followRequestRepository;
     private final DoctorRepository doctorRepository;
 
 
     @Transactional
     public void updatePatient(UpdatePatientRequestDTO request) {
+        updatePatient(null, request);
+    }
 
-        PatientEntity patient = userContextService.getAuthenticatedPatient();
+    @Transactional
+    public void updatePatient(Long patientId, UpdatePatientRequestDTO request) {
+
+        PatientEntity patient = patientAccessService.resolve(patientId);
 
         patient.setFirstName(request.firstName());
         patient.setLastName(request.lastName());
         patient.setBirthDate(request.birthDate());
         patient.setPhoneNumber(request.phoneNumber());
+    }
+
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getPatientProfile() {
+        return getPatientProfile(null);
+    }
+
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getPatientProfile(Long patientId) {
+        return patientMapper.toResponseDTO(patientAccessService.resolve(patientId));
     }
 
     @Transactional(readOnly = true)

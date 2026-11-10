@@ -42,6 +42,31 @@ public class RolePermitMapping {
                 Permit.CONTENIDO_REPORTAR
         ));
 
+        rolePermissions.put(Role.ROLE_TUTOR, EnumSet.of(
+
+                Permit.SEGUIMIENTO_SOLICITAR,
+                Permit.SEGUIMIENTO_DISOLVER,
+                Permit.CHAT_ENVIAR,
+                Permit.CHAT_LEER,
+                Permit.CHAT_SUBIR_ADJUNTOS,
+                Permit.CUESTIONARIO_LEER,
+                Permit.CUESTIONARIO_RESPONDER,
+                Permit.CONSEJO_LEER,
+                Permit.FORO_CREAR,
+                Permit.FORO_EDITAR,
+                Permit.FORO_ELIMINAR,
+                Permit.FORO_LEER,
+                Permit.POST_CREAR,
+                Permit.POST_EDITAR,
+                Permit.POST_ELIMINAR,
+                Permit.POST_LEER,
+                Permit.CONTENIDO_REPORTAR,
+                Permit.TUTELADO_LEER,
+                Permit.TUTELADO_GESTIONAR,
+                Permit.TUTELADO_VINCULAR,
+                Permit.TUTELADO_REVOCAR
+        ));
+
         rolePermissions.put(Role.ROLE_DOCTOR, EnumSet.of(
 
                 Permit.SEGUIMIENTO_GESTIONAR,

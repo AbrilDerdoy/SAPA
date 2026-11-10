@@ -5,5 +5,6 @@ public enum NotificationType {
     MESSAGE,
     REMINDER,
     FOLLOW,
-    QUESTIONNAIRE
+    QUESTIONNAIRE,
+    TUTORSHIP
 }

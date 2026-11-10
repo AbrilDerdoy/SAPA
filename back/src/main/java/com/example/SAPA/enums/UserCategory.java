@@ -2,7 +2,7 @@ package com.example.SAPA.enums;
 
 public enum UserCategory {
     PATIENT,
-    GUARDIAN,
+    TUTOR,
     DOCTOR,
     ADMIN;
 }

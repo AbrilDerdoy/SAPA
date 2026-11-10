@@ -41,9 +41,18 @@ public class SecurityConfig {
             "ROLE_PATIENT", "ROLE_DOCTOR", "PATIENT", "DOCTOR"
     };
 
+    private static final String[] PATIENT_TUTOR_DOCTOR = {
+            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR",
+            "PATIENT", "TUTOR", "DOCTOR"
+    };
+
+    private static final String[] PATIENT_AND_TUTOR = {
+            "ROLE_PATIENT", "ROLE_TUTOR", "PATIENT", "TUTOR"
+    };
+
     private static final String[] ALL_ROLES = {
-            "ROLE_PATIENT", "ROLE_GUARDIAN", "ROLE_DOCTOR", "ROLE_ADMIN",
-            "PATIENT", "GUARDIAN", "DOCTOR", "ADMIN"
+            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR", "ROLE_ADMIN",
+            "PATIENT", "TUTOR", "DOCTOR", "ADMIN"
     };
 
     @Bean
@@ -139,8 +148,8 @@ public class SecurityConfig {
                 // Foros y publicaciones
                 .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                .requestMatchers("/forums/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
-                .requestMatchers("/posts/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/forums/**").hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+                .requestMatchers("/posts/**").hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Administración
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
@@ -148,7 +157,7 @@ public class SecurityConfig {
                 // Medicamentos
                 .requestMatchers("/medications/search/**").permitAll()
                 .requestMatchers("/medications/patient/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
                 .requestMatchers(HttpMethod.PUT, "/medications/**")
                     .hasAuthority("ROLE_DOCTOR")
                 .requestMatchers(HttpMethod.DELETE, "/medications/**")
@@ -157,27 +166,36 @@ public class SecurityConfig {
                 // Consejos de salud
                 .requestMatchers(HttpMethod.GET, "/health-tips/**").permitAll()
                 .requestMatchers("/health-tips/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Solicitudes de seguimiento
                 .requestMatchers("/follow-requests/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Conversaciones
                 .requestMatchers("/conversations/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Cuestionarios y asignaciones
                 .requestMatchers("/questionnaires/**")
-    .hasAnyAuthority("PATIENT", "DOCTOR", "ROLE_PATIENT", "ROLE_DOCTOR")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
                 .requestMatchers("/assignments/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Historias clínicas y tratamientos
+                .requestMatchers(HttpMethod.GET, "/medical-records/**")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
                 .requestMatchers("/medical-records/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAuthority("ROLE_DOCTOR")
+
+                .requestMatchers(HttpMethod.GET, "/treatments/**")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
                 .requestMatchers("/treatments/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAuthority("ROLE_DOCTOR")
+
+                // Tutela (tutor y paciente)
+                .requestMatchers("/tutors/**")
+                    .hasAnyAuthority(PATIENT_AND_TUTOR)
 
                 // Notificaciones
                 .requestMatchers("/notifications/**")
@@ -185,7 +203,7 @@ public class SecurityConfig {
 
                 // Reportes
                 .requestMatchers(HttpMethod.POST, "/reports")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
                 .requestMatchers("/reports/**")
                     .hasAuthority("ROLE_ADMIN")
 
@@ -215,7 +233,7 @@ public class SecurityConfig {
                     .hasAnyAuthority("ROLE_DOCTOR", "DOCTOR")
 
                 .requestMatchers("/patients/**")
-                    .hasAuthority("ROLE_PATIENT")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Documentación
                 .requestMatchers(

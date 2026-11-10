@@ -5,21 +5,23 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-@Getter @Setter
-@ToString
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name="tutores")
-public class GuardianEntity {
+@Table(name = "tutors")
+public class TutorEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="tutor_id")
+    @Column(name = "tutor_id")
     private Long id;
+
     @OneToOne
-    @JoinColumn(name="user_id",nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
+
     @Column(nullable = false)
     private String firstName;
 
@@ -31,4 +33,7 @@ public class GuardianEntity {
 
     @Column(nullable = false, unique = true)
     private String phoneNumber;
+
+    @Column(nullable = false)
+    private String relationship;
 }

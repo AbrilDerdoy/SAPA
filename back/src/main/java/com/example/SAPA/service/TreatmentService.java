@@ -6,14 +6,12 @@ import com.example.SAPA.DTOs.TreatmentDurationDTO;
 import com.example.SAPA.DTOs.TreatmentFrequencyDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
-import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.MedicalRecord.DurationEntity;
 import com.example.SAPA.Models.MedicalRecord.FrequencyEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordEntity;
 import com.example.SAPA.Models.MedicalRecord.TreatmentEntity;
 import com.example.SAPA.Repositories.*;
 import com.example.SAPA.enums.FollowRequestStatus;
-import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.mappers.TreatmentMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +34,7 @@ public class TreatmentService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final UserContextService userContext;
+    private final PatientAccessService patientAccess;
     private final TreatmentMapper treatmentMapper;
 
 
@@ -74,8 +73,7 @@ public class TreatmentService {
     @Transactional
     public TreatmentResponseDTO createTreatment(Long patientId, TreatmentRequestDTO request) {
 
-        UserEntity currentUser = userContext.getAuthenticatedUser();
-        validatePatientAccess(currentUser, patientId);
+        validatePatientAccess(patientId);
 
         PatientEntity patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
@@ -105,7 +103,6 @@ public class TreatmentService {
 
     @Transactional
     public TreatmentResponseDTO updateTreatment(Long treatmentId, TreatmentRequestDTO request) {
-        UserEntity currentUser = userContext.getAuthenticatedUser();
 
         TreatmentEntity treatment = treatmentRepository.findById(treatmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Tratamiento no encontrado con id: " + treatmentId));
@@ -113,7 +110,7 @@ public class TreatmentService {
         PatientEntity patient = patientRepository.findByMedicalRecordId(treatment.getMedicalRecord().getId())
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el paciente asociado a este tratamiento."));
 
-        validatePatientAccess(currentUser, patient.getId());
+        validatePatientAccess(patient.getId());
 
         if (request.duration() != null) {
             DurationEntity duration = treatment.getDuration() != null ? treatment.getDuration() : new DurationEntity();
@@ -163,9 +160,8 @@ public class TreatmentService {
 
     @Transactional(readOnly = true)
     public List<TreatmentResponseDTO> getTreatments(Long patientId) {
-        UserEntity currentUser = userContext.getAuthenticatedUser();
 
-        validatePatientAccess(currentUser, patientId);
+        validatePatientAccess(patientId);
 
         PatientEntity patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
@@ -182,9 +178,8 @@ public class TreatmentService {
 
     @Transactional(readOnly = true)
     public List<TreatmentResponseDTO> filterTreatments(Long patientId, String name) {
-        UserEntity currentUser = userContext.getAuthenticatedUser();
 
-        validatePatientAccess(currentUser, patientId);
+        validatePatientAccess(patientId);
 
         PatientEntity patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
@@ -201,33 +196,7 @@ public class TreatmentService {
     }
 
 
-    private void validatePatientAccess(UserEntity currentUser, Long patientId) {
-        if (currentUser.getRole().equals(UserCategory.PATIENT)) {
-            PatientEntity patient = patientRepository.findByUserId(currentUser.getId())
-                    .orElseThrow(() -> new AccessDeniedException("No se encontró un perfil de paciente asociado a este usuario."));
-
-            if (!patient.getId().equals(patientId)) {
-                throw new AccessDeniedException("No tienes permiso para ver la ficha médica de otro paciente.");
-            }
-            return;
-        }
-
-        if (currentUser.getRole().equals(UserCategory.DOCTOR)) {
-            DoctorEntity doctor = doctorRepository.findByUserId(currentUser.getId())
-                    .orElseThrow(() -> new AccessDeniedException("No se encontró un perfil médico asociado a este usuario."));
-
-            boolean hasFollow = followRequestRepository.existsByDoctorIdAndPatientIdAndStatus(
-                    doctor.getId(),
-                    patientId,
-                    FollowRequestStatus.APPROVED
-            );
-
-            if (!hasFollow) {
-                throw new AccessDeniedException("No tienes permiso para acceder a este paciente porque no está bajo tu seguimiento aprobado.");
-            }
-            return;
-        }
-
-        throw new AccessDeniedException("Acceso denegado: Rol no autorizado.");
+    private void validatePatientAccess(Long patientId) {
+        patientAccess.resolveClinical(patientId);
     }
 }

@@ -7,8 +7,10 @@ import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.FollowRequestEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.FollowRequestRepository;
+import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.enums.NotificationType;
+import com.example.SAPA.enums.TutorLinkStatus;
 import com.example.SAPA.enums.UserCategory;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +30,17 @@ public class FollowRequestService {
     private final ConversationService conversationService;
     private final MessageService messageService;
     private final UserContextService userContextService;
+    private final PatientAccessService patientAccessService;
+    private final TutorPatientRepository tutorPatientRepository;
     private final NotificationService notificationService;
 
     @Transactional
     public FollowRequestEntity create(Long doctorId) {
+        return create(doctorId, null);
+    }
+
+    @Transactional
+    public FollowRequestEntity create(Long doctorId, Long patientId) {
 
         UserEntity authenticatedUser = userContextService.getAuthenticatedUser();
 
@@ -42,9 +51,10 @@ public class FollowRequestService {
 
         FollowRequestEntity request;
 
-        if (authenticatedUser.getRole() == UserCategory.PATIENT) {
+        if (authenticatedUser.getRole() == UserCategory.PATIENT
+                || authenticatedUser.getRole() == UserCategory.TUTOR) {
 
-            PatientEntity patient = userContextService.getAuthenticatedPatient();
+            PatientEntity patient = patientAccessService.resolveClinical(patientId);
 
             if (followRequestRepository.existsByPatientAndDoctorAndStatus(
                     patient, targetDoctor, FollowRequestStatus.PENDING)
@@ -104,7 +114,7 @@ public class FollowRequestService {
 
         } else {
             throw new AccessDeniedException(
-                    "Solo los pacientes y médicos pueden enviar solicitudes de seguimiento."
+                    "Solo los pacientes, tutores y médicos pueden enviar solicitudes de seguimiento."
             );
         }
 
@@ -153,6 +163,16 @@ public class FollowRequestService {
                     NotificationType.FOLLOW
             );
 
+            notifyTutor(
+                    request.getPatient(),
+                    "Solicitud aprobada",
+                    "El Dr. " + authenticatedDoctor.getFirstName() + " "
+                            + authenticatedDoctor.getLastName()
+                            + " aprobó la solicitud de seguimiento de "
+                            + request.getPatient().getFirstName() + " "
+                            + request.getPatient().getLastName() + "."
+            );
+
         } else if (request.getDoctorFollower() != null) {
 
             notificationService.createNotification(
@@ -181,6 +201,7 @@ public class FollowRequestService {
 
         if (request.getPatient() != null) {
             notificationService.createNotification( request.getPatient().getUser(), "Solicitud rechazada", "El Dr. " + authenticatedDoctor.getFirstName() + " " + authenticatedDoctor.getLastName() + " rechazó tu solicitud de seguimiento.", NotificationType.FOLLOW);
+            notifyTutor(request.getPatient(), "Solicitud rechazada", "El Dr. " + authenticatedDoctor.getFirstName() + " " + authenticatedDoctor.getLastName() + " rechazó la solicitud de seguimiento de " + request.getPatient().getFirstName() + " " + request.getPatient().getLastName() + ".");
         } else if (request.getDoctorFollower() != null) {
             notificationService.createNotification(request.getDoctorFollower().getUser(), "Solicitud rechazada", "El Dr. " + authenticatedDoctor.getFirstName() + " " + authenticatedDoctor.getLastName() + " rechazó tu solicitud para seguir sus consejos.", NotificationType.FOLLOW);
         }
@@ -192,10 +213,11 @@ public class FollowRequestService {
         UserEntity authenticatedUser = userContextService.getAuthenticatedUser();
         FollowRequestEntity request = findRequest(id);
         boolean isPatientFollower = request.getPatient() != null && request.getPatient().getUser().getId().equals(authenticatedUser.getId());
+        boolean isTutorFollower = request.getPatient() != null && patientAccessService.isTutorOf(authenticatedUser, request.getPatient());
         boolean isDoctorFollower = request.getDoctorFollower() != null && request.getDoctorFollower().getUser().getId().equals(authenticatedUser.getId());
         boolean isTargetDoctor = request.getDoctor().getUser().getId().equals(authenticatedUser.getId());
 
-        if (!isPatientFollower && !isDoctorFollower && !isTargetDoctor) {
+        if (!isPatientFollower && !isTutorFollower && !isDoctorFollower && !isTargetDoctor) {
             throw new AccessDeniedException("No tenés permiso para disolver este seguimiento.");
         }
 
@@ -215,17 +237,51 @@ public class FollowRequestService {
 
     @Transactional(readOnly = true)
     public List<FollowRequestEntity> getSentRequests() {
+        return getSentRequests(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FollowRequestEntity> getSentRequests(Long patientId) {
         UserEntity authenticatedUser = userContextService.getAuthenticatedUser();
 
         if (authenticatedUser.getRole() == UserCategory.PATIENT) {
-            PatientEntity patient = userContextService.getAuthenticatedPatient();
+            PatientEntity patient = patientAccessService.resolve(patientId);
             return followRequestRepository.findByPatient(patient);
+        }
+
+        if (authenticatedUser.getRole() == UserCategory.TUTOR) {
+            if (patientId != null) {
+                return followRequestRepository.findByPatient(
+                        patientAccessService.resolve(patientId)
+                );
+            }
+
+            List<PatientEntity> patients = patientAccessService.getAccessiblePatients();
+
+            if (patients.isEmpty()) {
+                return List.of();
+            }
+
+            return followRequestRepository.findByPatientIn(patients);
         }
 
         if (authenticatedUser.getRole() == UserCategory.DOCTOR) {
             DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
             return followRequestRepository.findByDoctorFollower(doctor);
-        }throw new AccessDeniedException("No tenés permiso para consultar estas solicitudes.");
+        }
+
+        throw new AccessDeniedException("No tenés permiso para consultar estas solicitudes.");
+    }
+
+    private void notifyTutor(PatientEntity patient, String title, String message) {
+        tutorPatientRepository
+                .findByPatientAndStatus(patient, TutorLinkStatus.ACTIVE)
+                .ifPresent(link -> notificationService.createNotification(
+                        link.getTutor().getUser(),
+                        title,
+                        message,
+                        NotificationType.TUTORSHIP
+                ));
     }
 
     private FollowRequestEntity findRequest(Long id) {
