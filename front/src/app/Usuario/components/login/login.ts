@@ -30,6 +30,7 @@ export class Login {
     password: ''
   });
 
+  readonly mostrarPassword = signal(false);
   readonly aviso = signal<{ tipo: 'info' | 'error'; texto: string } | null>(null);
 
   readonly formulario = form(this.modelo, (ruta) => {
@@ -86,6 +87,10 @@ export class Login {
         console.error('Error:', err);
       }
     });
+  }
+
+  alternarVisibilidadPassword(): void {
+    this.mostrarPassword.update((visible) => !visible);
   }
 
   private interpretarError(

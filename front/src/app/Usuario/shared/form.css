@@ -107,3 +107,47 @@ input:disabled::placeholder {
   box-shadow: none;
   transform: none;
 }
+
+.btn-toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.btn-toggle-password:hover {
+  background: var(--primary-light);
+}
+
+.btn-toggle-password:active {
+  transform: translateY(-50%);
+}
+
+.btn-toggle-password svg {
+  width: 22px;
+  height: 22px;
+}
+
+.btn-toggle-password img {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  padding-right: 52px;
+}

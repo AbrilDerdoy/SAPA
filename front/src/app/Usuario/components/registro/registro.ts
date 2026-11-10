@@ -41,6 +41,7 @@ export class Registro {
     return hoy.toISOString().slice(0, 10);
   })();
   readonly errorRegistro = signal<string | null>(null);
+  readonly mostrarPassword = signal(false);
   readonly formulario = form(this.modelo, (ruta) => {
     required(ruta.role, {message: 'Selecciona un tipo de usuario'});
     required(ruta.email, {message: 'El email es obligatorio'});
@@ -65,6 +66,10 @@ export class Registro {
   })
 
   especialidades = this.userService.specialities;
+
+  alternarVisibilidadPassword(): void {
+    this.mostrarPassword.update((visible) => !visible);
+  }
 
   enviar(evento: Event): void {
     evento.preventDefault();

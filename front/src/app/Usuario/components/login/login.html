@@ -20,7 +20,17 @@
         </label>
         <label>
             Contraseña:
-            <input type="password" [formField]="formulario.password">
+            <div class="password-input">
+                <input [type]="mostrarPassword() ? 'text' : 'password'" [formField]="formulario.password">
+                <button
+                    class="btn-toggle-password"
+                    type="button"
+                    [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                    [attr.aria-pressed]="mostrarPassword()"
+                    (click)="alternarVisibilidadPassword()">
+                    <img [src]="mostrarPassword() ? '/images/eye-off.svg' : '/images/eye.svg'" alt="">
+                </button>
+            </div>
             <app-form-error [field]="formulario.password()"/>
             <p><a [routerLink]="['/forgotPassword']">¿Olvidaste tu contraseña?</a></p>
         </label>

@@ -1,12 +1,12 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { form, FormField, minLength, required, validate } from '@angular/forms/signals';
 import { Auth } from '../../services/Auth/auth';
 import { FormError } from '../../../Common/form-error/form-error';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 export interface datos{
-  token:string,
   password:string,
   repeatedPassword:string
 }
@@ -19,11 +19,12 @@ export interface datos{
   styleUrl: '../../shared/form.css',
 })
 export class ResetPassword {
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
   private readonly alerta = inject(AlertaService);
-  readonly token = input<string>('token');
-  readonly modelo = signal<datos>({token:'',password:'',repeatedPassword:''});
+  readonly token = this.route.snapshot.queryParamMap.get('token')?.trim() ?? '';
+  readonly modelo = signal<datos>({password:'',repeatedPassword:''});
   readonly formulario = form(this.modelo,(ruta)=>{
     required(ruta.password,{message:'La contraseña nueva es obligatoria'});
     required(ruta.repeatedPassword,{message:'Es necesario repetir la contraseña'});
@@ -47,24 +48,48 @@ export class ResetPassword {
     evento.preventDefault();
     if(this.formulario().invalid())return;
 
-    const token = this.token().trim();
-
-    if(!token){
+    if(!this.token){
       this.alerta.mostrarInfo('El enlace no es valido o ha expirado. Por favor, solicita un nuevo enlace de restablecimiento de contraseña','Enlace Invalido')
       this.router.navigate(['/login']);
       return;
     }
 
-    const datos = {token:this.modelo().token,newPassword:this.modelo().password}
+    const datos = {token:this.token,newPassword:this.modelo().password}
 
     this.auth.resetPassword(datos).subscribe({
-      next:(res)=>{
-        alert(JSON.stringify(res));
+      next:()=>{
+        this.alerta.mostrarInfo(
+          'Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión con la nueva contraseña.',
+          'Contraseña actualizada'
+        );
+        this.router.navigate(['/login']);
       },
-      error:(err)=>{
-        this.alerta.mostrarError('','Ocurrio un error');
-        console.error("Error: ",err);
+      error:(error: HttpErrorResponse)=>{
+        const detalle = this.extraerMensaje(error.error);
+        const mensaje = detalle
+          ?? (error.status === 0
+            ? 'No se pudo conectar con el servidor. Inténtalo nuevamente.'
+            : `No se pudo actualizar la contraseña (HTTP ${error.status}). Verifica que el enlace siga vigente.`);
+        this.alerta.mostrarError(mensaje,'No se pudo actualizar la contraseña');
+        console.error('Error al restablecer la contraseña:',error);
       }
     });
+  }
+
+  private extraerMensaje(cuerpo: unknown): string | null {
+    if (typeof cuerpo === 'string' && cuerpo.trim()) {
+      return cuerpo.trim();
+    }
+
+    if (cuerpo && typeof cuerpo === 'object') {
+      for (const campo of ['message', 'detail', 'title']) {
+        const mensaje = Reflect.get(cuerpo, campo);
+        if (typeof mensaje === 'string' && mensaje.trim()) {
+          return mensaje.trim();
+        }
+      }
+    }
+
+    return null;
   }
 }

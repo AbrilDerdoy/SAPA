@@ -101,8 +101,8 @@ export class Auth {
     }
   }
 
-  resetPassword(datos:datosPassword){
-    return this.http.post(this.BASE_URL+'/logout',datos);
+  resetPassword(datos: datosPassword) {
+    return this.http.post<void>(`${this.BASE_URL}/reset-password`, datos);
   }
   forgotPassword(mail:string){
     return this.http.post(this.BASE_URL+'/forgot-password',{email:mail});

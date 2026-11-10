@@ -3,24 +3,38 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 
 import { Registro } from './registro';
-import { Auth } from '../service/auth';
+import { Auth } from '../../services/Auth/auth';
+import { AlertaService } from '../../../Common/alerta/alerta-service';
+import { UsuarioService } from '../../services/Usuario/usuario-service';
+import { provideRouter } from '@angular/router';
 
 describe('Registro', () => {
   let component: Registro;
   let fixture: ComponentFixture<Registro>;
   const authMock = {
+    register: vi.fn(() => of({})),
+  };
+  const usuarioServiceMock = {
     specialities: {
       isLoading: () => false,
       error: () => null,
       value: () => [],
     },
-    register: vi.fn(() => of({})),
+  };
+  const alertaMock = {
+    mostrarInfo: vi.fn(),
+    mostrarError: vi.fn(),
   };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Registro],
-      providers: [{provide: Auth, useValue: authMock}],
+      providers: [
+        { provide: Auth, useValue: authMock },
+        { provide: UsuarioService, useValue: usuarioServiceMock },
+        { provide: AlertaService, useValue: alertaMock },
+        provideRouter([]),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Registro);
@@ -30,6 +44,21 @@ describe('Registro', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('toggles password visibility without submitting the form', () => {
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input[type="password"]');
+    const toggle: HTMLButtonElement = fixture.nativeElement.querySelector('.btn-toggle-password');
+    const submit = vi.spyOn(component, 'enviar');
+
+    expect(input.type).toBe('password');
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(input.type).toBe('text');
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(toggle.querySelector('img')?.getAttribute('src')).toBe('/images/eye-off.svg');
+    expect(submit).not.toHaveBeenCalled();
   });
 
   it('selects a doctor without submitting and displays the license error on submit', () => {
