@@ -65,4 +65,13 @@ describe('Auth', () => {
     navigateSpy.mockRestore();
     consoleErrorSpy.mockRestore();
   });
+
+  it('sends password resets to the reset-password endpoint', () => {
+    service.resetPassword({ token: 'reset-token', newPassword: 'password-seguro' }).subscribe();
+
+    const request = httpTestingController.expectOne('http://localhost:8080/auth/reset-password');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ token: 'reset-token', newPassword: 'password-seguro' });
+    request.flush(null);
+  });
 });

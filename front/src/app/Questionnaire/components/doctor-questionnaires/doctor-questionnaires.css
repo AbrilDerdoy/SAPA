@@ -1,0 +1,252 @@
+
+.questionnaires-page {
+  width: min(1050px, 100%);
+  box-sizing: border-box;
+  margin: 35px auto;
+  padding: 0 24px 50px;
+  color: var(--text);
+}
+
+.page-header {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.page-header h1 {
+  margin: 8px 0;
+  font-size: 30px;
+}
+
+.page-header p,
+.section-description {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.panel {
+  margin-bottom: 24px;
+  padding: 25px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.panel h2 {
+  margin: 0 0 20px;
+  font-size: 20px;
+}
+
+.panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.panel input,
+.panel textarea,
+.panel select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.panel input:focus,
+.panel textarea:focus,
+.panel select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.panel textarea {
+  min-height: 85px;
+  resize: vertical;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.section-heading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.question-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.question-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+}
+
+.question-fields {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+}
+
+.primary-button,
+.secondary-button,
+.remove-button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 16px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.primary-button {
+  margin-top: 12px;
+  background: var(--primary);
+  color: white;
+}
+
+.secondary-button {
+  background: var(--surface-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.remove-button {
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--danger);
+  font-size: 22px;
+}
+
+.primary-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.remove-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.questionnaire-list {
+  display: grid;
+  gap: 12px;
+}
+
+.questionnaire-card {
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.2s;
+}
+
+.questionnaire-card:hover {
+  border-color: var(--primary);
+}
+
+.questionnaire-card h3 {
+  margin: 0 0 8px;
+}
+
+.questionnaire-card p,
+.empty-state {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.frequency,
+.question-count {
+  display: inline-block;
+  margin: 8px 12px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.alert {
+  margin-bottom: 18px;
+  padding: 13px 16px;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.success {
+  background: #e7f5ec;
+  color: #17683a;
+}
+
+.error {
+  background: #fbeaea;
+  color: #a32626;
+}
+
+@media (max-width: 600px) {
+  .questionnaires-page {
+    margin-top: 20px;
+    padding: 0 14px 35px;
+  }
+
+  .page-header h1 {
+    font-size: 25px;
+  }
+
+  .panel {
+    padding: 17px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .question-row {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .question-number {
+    flex-basis: 27px;
+    height: 27px;
+  }
+}

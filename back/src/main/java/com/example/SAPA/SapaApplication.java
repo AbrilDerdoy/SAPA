@@ -1,13 +1,15 @@
+
 package com.example.SAPA;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-public class  SapaApplication {
+@EnableScheduling
+public class SapaApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(SapaApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(SapaApplication.class, args);
+    }
 }

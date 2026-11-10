@@ -1,0 +1,221 @@
+
+<main class="questionnaires-page">
+
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">SAPA · Seguimiento de pacientes</span>
+      <h1>Cuestionarios</h1>
+      <p>Creá cuestionarios y asignáselos a tus pacientes vinculados.</p>
+    </div>
+  </header>
+
+  @if (message()) {
+    <div class="alert success">{{ message() }}</div>
+  }
+
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  <!-- CREAR CUESTIONARIO -->
+  <section class="panel">
+    <h2>Crear cuestionario</h2>
+
+    <form (ngSubmit)="createQuestionnaire()">
+
+      <label for="title">Título</label>
+      <input
+        id="title"
+        name="title"
+        [(ngModel)]="title"
+        placeholder="Ej. Seguimiento semanal"
+        required>
+
+      <label for="description">Descripción</label>
+      <textarea
+        id="description"
+        name="description"
+        [(ngModel)]="description"
+        placeholder="Indicaciones para el paciente"
+        required>
+      </textarea>
+
+      <label for="frequency">Frecuencia</label>
+      <select
+        id="frequency"
+        name="frequency"
+        [(ngModel)]="frequency">
+
+        <option value="DAILY">Diaria</option>
+        <option value="WEEKLY">Semanal</option>
+        <option value="MONTHLY">Mensual</option>
+      </select>
+
+      <div class="section-heading">
+        <h3>Preguntas</h3>
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="addQuestion()">
+          + Agregar pregunta
+        </button>
+      </div>
+
+      @for (question of questions; track $index) {
+        <div class="question-row">
+
+          <div class="question-number">
+            {{ $index + 1 }}
+          </div>
+
+          <div class="question-fields">
+
+            <input
+              [name]="'question-' + $index"
+              [(ngModel)]="question.text"
+              placeholder="Escribí la pregunta"
+              required>
+
+            <select
+              [name]="'type-' + $index"
+              [(ngModel)]="question.type">
+
+              <option value="TEXT">Respuesta de texto</option>
+              <option value="MULTIPLE_CHOICE">Opción múltiple</option>
+              <option value="SCALE">Escala del 1 al 10</option>
+            </select>
+
+          </div>
+
+          <button
+            type="button"
+            class="remove-button"
+            (click)="removeQuestion($index)"
+            [disabled]="questions.length === 1"
+            aria-label="Eliminar pregunta">
+            ×
+          </button>
+
+        </div>
+      }
+
+      <button
+        class="primary-button"
+        type="submit"
+        [disabled]="saving()">
+
+        {{ saving() ? 'Guardando...' : 'Crear cuestionario' }}
+
+      </button>
+
+    </form>
+  </section>
+
+  <!-- ASIGNAR CUESTIONARIO -->
+  <section class="panel">
+
+    <h2>Asignar cuestionario</h2>
+
+    <p class="section-description">
+      Elegí uno de tus cuestionarios y un paciente vinculado.
+    </p>
+
+    <label for="questionnaire">Cuestionario</label>
+
+    <select
+      id="questionnaire"
+      name="questionnaire"
+      [(ngModel)]="selectedQuestionnaireId">
+
+      <option [ngValue]="null">Seleccionar cuestionario</option>
+
+      @for (item of questionnaires(); track item.questionnaireId) {
+        <option [ngValue]="item.questionnaireId">
+          {{ item.title }}
+        </option>
+      }
+
+    </select>
+
+    <label for="patient">Paciente</label>
+
+    <select
+      id="patient"
+      name="patient"
+      [(ngModel)]="selectedPatientId"
+      [disabled]="loadingPatients() || patients().length === 0">
+
+      <option [ngValue]="null">
+        {{ loadingPatients() ? 'Cargando pacientes...' : 'Seleccionar paciente' }}
+      </option>
+
+      @for (patient of patients(); track patient.patientId) {
+        <option [ngValue]="patient.patientId">
+          {{ patient.firstName }} {{ patient.lastName }}
+        </option>
+      }
+
+    </select>
+
+    @if (!loadingPatients() && patients().length === 0) {
+      <p class="empty-state">
+        No tenés pacientes vinculados actualmente.
+      </p>
+    }
+
+    <button
+      type="button"
+      class="primary-button"
+      (click)="assignQuestionnaire()"
+      [disabled]="assigning() || loadingPatients() || patients().length === 0">
+
+      {{ assigning() ? 'Asignando...' : 'Asignar cuestionario' }}
+
+    </button>
+
+  </section>
+
+  <!-- LISTADO DE CUESTIONARIOS -->
+  <section class="panel">
+
+    <h2>Mis cuestionarios</h2>
+
+    @if (loading()) {
+      <p>Cargando cuestionarios...</p>
+    } @else if (questionnaires().length === 0) {
+      <p class="empty-state">
+        Todavía no creaste cuestionarios.
+      </p>
+    } @else {
+
+      <div class="questionnaire-list">
+
+        @for (item of questionnaires(); track item.questionnaireId) {
+          <article class="questionnaire-card">
+
+            <div>
+              <h3>{{ item.title }}</h3>
+
+              <p>{{ item.description }}</p>
+
+              <span class="frequency">
+                Frecuencia:
+                {{ item.frequency === 'DAILY' ? 'Diaria' :
+                   item.frequency === 'WEEKLY' ? 'Semanal' : 'Mensual' }}
+              </span>
+
+              <span class="question-count">
+                {{ item.questions.length }} preguntas
+              </span>
+            </div>
+
+          </article>
+        }
+
+      </div>
+    }
+
+  </section>
+
+</main>

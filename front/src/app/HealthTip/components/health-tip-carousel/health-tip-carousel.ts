@@ -1,13 +1,12 @@
 
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import {Component,OnInit,OnDestroy,NgZone,ChangeDetectorRef,inject} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-
+import { Router, NavigationEnd } from '@angular/router';
+import {forkJoin,of,Subscription} from 'rxjs';
+import { catchError, filter } from 'rxjs/operators';
 import { HealthTipService } from '../../services/health-tip.service';
-import { HealthTip, CreateHealthTip, Doctor } from '../../models/health-tip';
-
+import {HealthTip,CreateHealthTip,Doctor} from '../../models/health-tip';
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 
@@ -24,6 +23,9 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   private readonly followService = inject(FollowRequestService);
   private readonly http = inject(HttpClient);
   private readonly auth = inject(Auth);
+  private readonly zone = inject(NgZone);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
 
   private readonly DOCTORS_URL = 'http://localhost:8080/doctors';
 
@@ -50,6 +52,8 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   private sentDoctorIds: number[] = [];
 
   private carouselTimer: ReturnType<typeof setInterval> | null = null;
+
+  private subscriptions = new Subscription();
 
   private readonly institutionalTips: HealthTip[] = [
     {
@@ -81,12 +85,35 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.checkRole();
-    this.startCarouselTimer();
     this.loadTips();
+
+    // Actualiza los permisos cuando se navega o cambia de sesión.
+    this.subscriptions.add(
+      this.router.events
+        .pipe(
+          filter(event => event instanceof NavigationEnd)
+        )
+        .subscribe(() => {
+          const previousRole = this.isDoctor;
+          const previousLogin = this.isLoggedIn;
+
+          this.checkRole();
+
+          if (
+            previousRole !== this.isDoctor ||
+            previousLogin !== this.isLoggedIn
+          ) {
+            this.loadTips();
+          }
+
+          this.cdr.markForCheck();
+        })
+    );
   }
 
   ngOnDestroy(): void {
     this.stopCarouselTimer();
+    this.subscriptions.unsubscribe();
   }
 
   private checkRole(): void {
@@ -103,13 +130,19 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
         localStorage.getItem('usuario') ?? '{}'
       );
 
-      const role = String(usuario.role ?? '')
+      const role = String(
+        usuario.role ??
+        usuario.rol ??
+        ''
+      )
         .toUpperCase()
         .replace('ROLE_', '');
 
       this.isDoctor = role === 'DOCTOR';
 
-    } catch {
+    } catch (error) {
+      console.error('Error al obtener el rol:', error);
+
       this.isLoggedIn = false;
       this.isDoctor = false;
     }
@@ -127,63 +160,63 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
     this.tips = [...this.institutionalTips];
     this.recommendations = [];
     this.followedDoctorIds = [];
+    this.sentDoctorIds = [];
+    this.currentDoctorId = null;
     this.currentIndex = 0;
 
+    this.stopCarouselTimer();
+
+    // Si no hay sesión, solamente se muestran consejos institucionales.
     if (!this.isLoggedIn) {
-      this.loading = false;
+      this.finishLoading();
       return;
     }
 
-    this.followService.getSent().subscribe({
-      next: (requests) => {
+    // Cancela la consulta anterior si se cambia de usuario.
+    this.subscriptions.add(
+      this.followService.getSent().subscribe({
+        next: requests => {
+          const sentRequests = requests ?? [];
 
-        const sentRequests = requests ?? [];
+          this.sentDoctorIds = sentRequests
+            .map(request => request.doctor?.id)
+            .filter((id): id is number => typeof id === 'number');
 
-        this.sentDoctorIds = sentRequests
-          .map(request => request.doctor?.id)
-          .filter((id): id is number => typeof id === 'number');
+          this.followedDoctorIds = sentRequests
+            .filter(request => request.status === 'APPROVED')
+            .map(request => request.doctor.id);
 
-        this.followedDoctorIds = sentRequests
-          .filter(request => request.status === 'APPROVED')
-          .map(request => request.doctor.id);
-
-        if (this.isDoctor) {
-          this.loadCurrentDoctor();
-        } else {
-          this.loadRecommendations();
-          this.loadFollowedDoctorsTips();
+          if (this.isDoctor) {
+            this.loadCurrentDoctor();
+          } else {
+            this.loadRecommendations();
+            this.loadFollowedDoctorsTips();
+          }
+        },
+        error: error => {
+          console.error('Error al consultar seguimientos:', error);
+          this.errorMessage = 'No se pudieron consultar tus seguimientos.';
+          this.finishLoading();
         }
-      },
-
-      error: (error) => {
-        console.error('Error al consultar seguimientos:', error);
-
-        this.errorMessage =
-          'No se pudieron consultar tus seguimientos.';
-
-        this.finishLoading();
-      }
-    });
+      })
+    );
   }
 
   private loadCurrentDoctor(): void {
-    this.http.get<Doctor>(`${this.DOCTORS_URL}/me`).subscribe({
-      next: (doctor) => {
-        this.currentDoctorId = doctor.id;
-
-        // Primero obtenemos el ID propio y después recomendamos.
-        this.loadRecommendations();
-        this.loadFollowedDoctorsTips();
-      },
-
-      error: (error) => {
-        console.error('Error al obtener el doctor autenticado:', error);
-
-        // Si no conocemos el ID propio, no recomendamos doctores
-        // para evitar mostrar al profesional autenticado.
-        this.finishLoading();
-      }
-    });
+    this.subscriptions.add(
+      this.http.get<Doctor>(`${this.DOCTORS_URL}/me`).subscribe({
+        next: doctor => {
+          this.currentDoctorId = doctor.id;
+          this.loadRecommendations();
+          this.loadFollowedDoctorsTips();
+        },
+        error: error => {
+          console.error('Error al obtener el doctor autenticado:', error);
+          this.currentDoctorId = null;
+          this.finishLoading();
+        }
+      })
+    );
   }
 
   private loadFollowedDoctorsTips(): void {
@@ -207,74 +240,91 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
       )
     );
 
-    forkJoin(requests).subscribe({
-      next: (results) => {
-        const followedTips = results.flat();
+    this.subscriptions.add(
+      forkJoin(requests).subscribe({
+        next: results => {
+          const followedTips = results.flat();
 
-        // Visitantes: solo consejos institucionales.
-        // Pacientes y doctores: institucionales + seguidos aprobados.
-        this.tips = [
-          ...this.institutionalTips,
-          ...followedTips
-        ];
+          this.tips = [
+            ...this.institutionalTips,
+            ...followedTips
+          ];
 
-        this.finishLoading();
-      },
-
-      error: (error) => {
-        console.error('Error al cargar consejos:', error);
-        this.finishLoading();
-      }
-    });
+          this.finishLoading();
+        },
+        error: error => {
+          console.error('Error al cargar consejos:', error);
+          this.finishLoading();
+        }
+      })
+    );
   }
 
   private loadRecommendations(): void {
-    this.http.get<Doctor[]>(`${this.DOCTORS_URL}/search`).subscribe({
-      next: (doctors) => {
+    this.subscriptions.add(
+      this.http.get<Doctor[]>(`${this.DOCTORS_URL}/search`).subscribe({
+        next: doctors => {
+          const excludedIds = new Set<number>([
+            ...this.sentDoctorIds,
+            ...(this.currentDoctorId !== null
+              ? [this.currentDoctorId]
+              : [])
+          ]);
 
-        const excludedIds = new Set<number>([
-          ...this.sentDoctorIds,
-          ...(this.currentDoctorId !== null
-            ? [this.currentDoctorId]
-            : [])
-        ]);
+          this.recommendations = (doctors ?? []).filter(
+            doctor => !excludedIds.has(doctor.id)
+          );
 
-        this.recommendations = (doctors ?? []).filter(
-          doctor => !excludedIds.has(doctor.id)
-        );
-      },
-
-      error: (error) => {
-        console.error('Error al cargar profesionales:', error);
-        this.recommendations = [];
-      }
-    });
+          this.cdr.markForCheck();
+        },
+        error: error => {
+          console.error('Error al cargar profesionales:', error);
+          this.recommendations = [];
+          this.cdr.markForCheck();
+        }
+      })
+    );
   }
 
   private finishLoading(): void {
     this.currentIndex = 0;
     this.loading = false;
+    this.cdr.markForCheck();
     this.resetCarouselTimer();
   }
 
   get currentTip(): HealthTip | null {
+    if (
+      this.currentIndex < 0 ||
+      this.currentIndex >= this.tips.length
+    ) {
+      return null;
+    }
+
     return this.tips[this.currentIndex] ?? null;
   }
 
   private advanceTip(): void {
-    if (this.tips.length === 0) return;
+    if (this.tips.length <= 1) {
+      return;
+    }
 
-    this.currentIndex =
-      (this.currentIndex + 1) % this.tips.length;
+    this.currentIndex = (this.currentIndex + 1) % this.tips.length;
   }
 
   nextTip(): void {
+    if (this.tips.length === 0) {
+      return;
+    }
+
     this.advanceTip();
     this.resetCarouselTimer();
   }
 
   previousTip(): void {
-    if (this.tips.length === 0) return;
+    if (this.tips.length === 0) {
+      return;
+    }
 
     this.currentIndex =
       (this.currentIndex - 1 + this.tips.length) % this.tips.length;
@@ -285,9 +335,18 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   private startCarouselTimer(): void {
     this.stopCarouselTimer();
 
-    this.carouselTimer = setInterval(() => {
-      this.advanceTip();
-    }, 5000);
+    if (this.tips.length <= 1 || this.loading) {
+      return;
+    }
+
+    this.zone.runOutsideAngular(() => {
+      this.carouselTimer = setInterval(() => {
+        this.zone.run(() => {
+          this.advanceTip();
+          this.cdr.markForCheck();
+        });
+      }, 5000);
+    });
   }
 
   private resetCarouselTimer(): void {
@@ -314,37 +373,40 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.followService.send(doctorId).subscribe({
-      next: () => {
-        this.successMessage =
-          'La solicitud de seguimiento fue enviada. El profesional debe aprobarla.';
+    this.subscriptions.add(
+      this.followService.send(doctorId).subscribe({
+        next: () => {
+          this.successMessage =
+            'La solicitud de seguimiento fue enviada. El profesional debe aprobarla.';
 
-        this.sentDoctorIds = [
-          ...this.sentDoctorIds,
-          doctorId
-        ];
+          this.sentDoctorIds = [
+            ...this.sentDoctorIds,
+            doctorId
+          ];
 
-        this.recommendations = this.recommendations.filter(
-          doctor => doctor.id !== doctorId
-        );
+          this.recommendations = this.recommendations.filter(
+            doctor => doctor.id !== doctorId
+          );
 
-        this.requestingDoctorId = null;
-      },
+          this.requestingDoctorId = null;
+        },
+        error: error => {
+          console.error('Error al solicitar seguimiento:', error);
 
-      error: (error) => {
-        console.error('Error al solicitar seguimiento:', error);
+          this.errorMessage =
+            error.error?.message ??
+            'No se pudo enviar la solicitud de seguimiento.';
 
-        this.errorMessage =
-          error.error?.message ??
-          'No se pudo enviar la solicitud de seguimiento.';
-
-        this.requestingDoctorId = null;
-      }
-    });
+          this.requestingDoctorId = null;
+        }
+      })
+    );
   }
 
   openForm(): void {
-    if (!this.isLoggedIn || !this.isDoctor) return;
+    if (!this.isLoggedIn || !this.isDoctor) {
+      return;
+    }
 
     this.showForm = true;
     this.successMessage = '';
@@ -359,7 +421,9 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   }
 
   publishTip(): void {
-    if (!this.isLoggedIn || !this.isDoctor) return;
+    if (!this.isLoggedIn || !this.isDoctor) {
+      return;
+    }
 
     const cleanTitle = this.title.trim();
     const cleanContent = this.content.trim();
@@ -388,32 +452,33 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
     this.errorMessage = '';
 
-    this.healthTipService.create(newTip).subscribe({
-      next: (tip) => {
-        this.tips = [
-          ...this.tips,
-          tip
-        ];
+    this.subscriptions.add(
+      this.healthTipService.create(newTip).subscribe({
+        next: tip => {
+          this.tips = [
+            ...this.tips,
+            tip
+          ];
 
-        this.currentIndex = this.tips.length - 1;
+          this.currentIndex = this.tips.length - 1;
 
-        this.successMessage =
-          '¡Tu consejo se publicó correctamente!';
+          this.successMessage =
+            '¡Tu consejo se publicó correctamente!';
 
-        this.title = '';
-        this.content = '';
-        this.showForm = false;
+          this.title = '';
+          this.content = '';
+          this.showForm = false;
 
-        this.resetCarouselTimer();
-      },
+          this.resetCarouselTimer();
+        },
+        error: error => {
+          console.error('Error al publicar consejo:', error);
 
-      error: (error) => {
-        console.error('Error al publicar consejo:', error);
-
-        this.errorMessage =
-          error.error?.message ??
-          'No se pudo publicar el consejo. Verificá tu sesión e intentá nuevamente.';
-      }
-    });
+          this.errorMessage =
+            error.error?.message ??
+            'No se pudo publicar el consejo. Verificá tu sesión e intentá nuevamente.';
+        }
+      })
+    );
   }
 }
