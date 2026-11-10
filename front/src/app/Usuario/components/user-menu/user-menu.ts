@@ -5,11 +5,22 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter, map } from 'rxjs';
 
 import { Auth } from '../../services/Auth/auth';
-import { RouterLink } from '@angular/router';
 import { ThemeService } from '../../../Theme/Service/theme-service';
 import { ChatBubblePreferenceService } from '../../../Chat/services/chat-bubble-preference.service';
+
+function readRole(): string {
+  try {
+    const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
+    return String(usuario.role ?? '').toUpperCase().replace('ROLE_', '');
+  } catch {
+    return '';
+  }
+}
 
 @Component({
   selector: 'app-user-menu',
@@ -24,6 +35,15 @@ export class UserMenu {
   readonly bubblePreference = inject(ChatBubblePreferenceService);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly router = inject(Router);
+
+  readonly role = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => readRole())
+    ),
+    { initialValue: readRole() }
+  );
 
   menuAbierto = signal<boolean>(false);
   configuracionAbierta = signal<boolean>(false);
