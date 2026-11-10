@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import { PatientService } from '../../service/patient.service';
 import { Patient } from '../../interfaces/patient';
+import { RouterLink } from '@angular/router';
 
 type LoadStatus = 'loading' | 'success' | 'error';
 
@@ -15,7 +16,7 @@ function normalize(text: string): string {
 
 @Component({
   selector: 'app-my-patients',
-  imports: [FormField],
+  imports: [FormField, RouterLink],
   templateUrl: './my-patients.html',
   styleUrl: './my-patients.css',
 })

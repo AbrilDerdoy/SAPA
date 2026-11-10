@@ -107,6 +107,9 @@
 }
 
 .btn {
+  flex-shrink: 0;
+  display: inline-block;
+  text-decoration: none;
   padding: 0.55rem 1.1rem;
   border: 1px solid transparent;
   border-radius: 8px;
