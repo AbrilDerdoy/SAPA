@@ -1,5 +1,5 @@
 export interface registerRequest {
-    role:'ROLE_PATIENT' | 'ROLE_DOCTOR',
+    role:'ROLE_PATIENT' | 'ROLE_TUTOR' | 'ROLE_DOCTOR',
     email:string,
     password:string,
     firstName:string,
@@ -7,5 +7,6 @@ export interface registerRequest {
     birthDate:string,
     phoneNumber:string,
     licenseNumber:string|null,
-    specialities:number[]|null
+    specialities:number[]|null,
+    relationship?: string | null
 }

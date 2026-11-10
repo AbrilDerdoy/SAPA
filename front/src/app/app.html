@@ -85,15 +85,15 @@
 
         <li>
 
-          @if (role === 'DOCTOR') {
+          @if (auth.isDoctor()) {
             <a routerLink="/solicitudes">
               Solicitudes de seguimiento
             </a>
           }
 
-          @if (role === 'PATIENT') {
+          @if (auth.isPatient()) {
             <a routerLink="/mis-solicitudes">
-              Mis solicitudes
+              Seguimiento
             </a>
           }
 

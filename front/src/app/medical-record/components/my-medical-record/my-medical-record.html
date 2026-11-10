@@ -1,10 +1,28 @@
 <main class="medical-record-page">
   <header class="page-header">
     <div>
-      <h1>Mi ficha médica</h1>
-      <p>Consultá tu información médica en un solo lugar.</p>
+      @if (auth.isTutor()) {
+        <h1>Ficha médica del paciente</h1>
+        <p>Consultá la información clínica del paciente seleccionado.</p>
+      } @else {
+        <h1>Mi ficha médica</h1>
+        <p>Consultá tu información médica en un solo lugar.</p>
+      }
     </div>
   </header>
+
+  @if (auth.isTutor()) {
+    <app-tutor-patient-selector
+      label="Paciente"
+      [selectedPatientId]="selectedPatientId()"
+      (patientSelected)="onPatientSelected($event)" />
+
+    @if (selectedPatientId() === null) {
+      <section class="state-card">
+        <p>Seleccioná un paciente para ver su ficha médica.</p>
+      </section>
+    }
+  }
 
   @if (cargando()) {
   <section class="state-card">

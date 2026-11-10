@@ -5,6 +5,7 @@ import { FormError } from '../../../Common/form-error/form-error';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { Auth } from '../../services/Auth/auth';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
+import { PatientTutor } from '../../../Tutor/components/patient-tutor/patient-tutor';
 
 export interface datosUsuario{
   firstName:string,
@@ -16,7 +17,7 @@ export interface datosUsuario{
 
 @Component({
   selector: 'app-profile',
-  imports: [FormField, FormError],
+  imports: [FormField, FormError, PatientTutor],
   templateUrl: './profile.html',
   styleUrl: '../../shared/form.css',
 })

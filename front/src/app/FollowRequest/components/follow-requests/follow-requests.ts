@@ -4,13 +4,15 @@ import { ActivatedRoute } from '@angular/router';
 import { FollowRequestService } from '../../service/follow-request.service';
 import { FollowRequest } from '../../interfaces/follow-request';
 import { FollowRequestStatus } from '../../interfaces/follow-request-status';
+import { Auth } from '../../../Usuario/services/Auth/auth';
+import { TutorPatientSelector } from '../../../Tutor/components/tutor-patient-selector/tutor-patient-selector';
 
 type ViewMode = 'doctor' | 'patient';
 type LoadStatus = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-follow-requests',
-  imports: [DatePipe],
+  imports: [DatePipe, TutorPatientSelector],
   templateUrl: './follow-requests.html',
   styleUrl: './follow-requests.css',
 })
@@ -19,7 +21,11 @@ export class FollowRequests implements OnInit{
   private readonly service = inject(FollowRequestService);
   private readonly route = inject(ActivatedRoute);
 
+  readonly auth = inject(Auth);
+
   readonly mode: ViewMode = (this.route.snapshot.data['mode'] as ViewMode) ?? 'doctor';
+
+  readonly selectedPatientId = signal<number | null>(null);
 
   readonly requests = signal<FollowRequest[]>([]);
   readonly loadStatus = signal<LoadStatus>('loading');
@@ -27,13 +33,19 @@ export class FollowRequests implements OnInit{
   readonly actionError = signal('');
 
   readonly title = computed(() =>
-    this.mode === 'doctor' ? 'Solicitudes de seguimiento' : 'Mis solicitudes'
+    this.mode === 'doctor'
+      ? 'Solicitudes de seguimiento'
+      : this.auth.isTutor()
+        ? 'Seguimiento de mis pacientes'
+        : 'Mis solicitudes'
   );
 
   readonly subtitle = computed(() =>
     this.mode === 'doctor'
       ? 'Pacientes que quieren que los sigas. Al aprobar, se abre un chat con ellos.'
-      : 'Seguí el estado de las solicitudes que enviaste a los médicos.'
+      : this.auth.isTutor()
+        ? 'Seguí el estado de las solicitudes de seguimiento de los pacientes a tu cargo.'
+        : 'Seguí el estado de las solicitudes que enviaste a los médicos.'
   );
 
   readonly sorted = computed(() =>
@@ -50,12 +62,38 @@ export class FollowRequests implements OnInit{
   };
 
   ngOnInit(): void {
+    if (this.auth.isTutor()) {
+      const initialPatientId = Number(
+        this.route.snapshot.queryParamMap.get('patientId')
+      );
+
+      if (Number.isFinite(initialPatientId) && initialPatientId > 0) {
+        this.selectedPatientId.set(initialPatientId);
+        this.load();
+        return;
+      }
+
+      this.loadStatus.set('success');
+      return;
+    }
+
+    this.load();
+  }
+
+  onPatientSelected(patientId: number): void {
+    this.selectedPatientId.set(patientId);
     this.load();
   }
 
   load(): void {
+    if (this.auth.isTutor() && this.selectedPatientId() === null) {
+      return;
+    }
+
     this.loadStatus.set('loading');
-    const request$ = this.mode === 'doctor' ? this.service.getPending() : this.service.getSent();
+    const request$ = this.mode === 'doctor'
+      ? this.service.getPending()
+      : this.service.getSent(this.selectedPatientId());
     request$.subscribe({
       next: (list) => {
         this.requests.set(list);

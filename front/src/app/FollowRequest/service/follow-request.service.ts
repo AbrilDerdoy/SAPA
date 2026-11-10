@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { FollowRequest } from '../interfaces/follow-request';
 
@@ -10,8 +10,16 @@ export class FollowRequestService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = 'http://localhost:8080/follow-requests';
 
-  send(doctorId: number): Observable<FollowRequest> {
-    return this.http.post<FollowRequest>(`${this.baseUrl}/send/${doctorId}`, {});
+  send(doctorId: number, patientId?: number | null): Observable<FollowRequest> {
+    const params = patientId
+      ? new HttpParams().set('patientId', patientId)
+      : undefined;
+
+    return this.http.post<FollowRequest>(
+      `${this.baseUrl}/send/${doctorId}`,
+      {},
+      { params }
+    );
   }
 
   approve(id: number): Observable<FollowRequest> {
@@ -30,8 +38,12 @@ export class FollowRequestService {
     return this.http.get<FollowRequest[]>(`${this.baseUrl}/pending`);
   }
 
-  getSent(): Observable<FollowRequest[]> {
-    return this.http.get<FollowRequest[]>(`${this.baseUrl}/sent`);
+  getSent(patientId?: number | null): Observable<FollowRequest[]> {
+    const params = patientId
+      ? new HttpParams().set('patientId', patientId)
+      : undefined;
+
+    return this.http.get<FollowRequest[]>(`${this.baseUrl}/sent`, { params });
   }
 
     // Se obtienen los pacientes aprobados.

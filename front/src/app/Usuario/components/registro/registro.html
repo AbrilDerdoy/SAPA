@@ -9,7 +9,8 @@
             <h2>Informacion Personal</h2>
             <div class="botones-tipo-usuario">
                 <button type="button" class="botones-usuario" (click)="cambiarPaciente()">Paciente</button>
-                <button type="button" class="botones-usuario" (click)="cambiarMedico()">Medico</button>                
+                <button type="button" class="botones-usuario" (click)="cambiarMedico()">Medico</button>
+                <button type="button" class="botones-usuario" (click)="cambiarTutor()">Tutor</button>
             </div>
             @if (errorRegistro()) {
             <p class="server-error" role="alert">{{errorRegistro()}}</p>
@@ -54,6 +55,18 @@
                 <input type="tel" [formField]="formulario.phoneNumber">
                 <app-form-error [field]="formulario.phoneNumber()" />
             </label>
+            @if(modelo().role === 'ROLE_TUTOR'){
+            <label>
+                Parentesco con el paciente:
+                <select [value]="modelo().relationship" (change)="actualizarParentesco($event)">
+                    <option value="">Seleccioná un parentesco</option>
+                    @for (relacion of relationships; track relacion) {
+                    <option [value]="relacion">{{relacion}}</option>
+                    }
+                </select>
+                <app-form-error [field]="formulario.relationship()" />
+            </label>
+            }
             @if(modelo().role === 'ROLE_DOCTOR'){
             <label>
                 Matricula:

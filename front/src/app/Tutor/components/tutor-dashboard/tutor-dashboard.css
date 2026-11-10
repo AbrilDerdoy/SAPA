@@ -1,0 +1,385 @@
+:host {
+  display: block;
+  color: var(--text);
+}
+
+.tutor-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+.tutor-header {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow,
+.panel-label {
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.tutor-header h1 {
+  margin: 0.35rem 0 0.4rem;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+.tutor-header p,
+.panel-heading p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.tutor-tabs {
+  position: sticky;
+  top: 82px;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.tutor-tabs button {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tutor-tabs button:hover {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.panel {
+  margin-bottom: 1.5rem;
+  padding: 1.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  scroll-margin-top: 150px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.panel-heading h2 {
+  margin: 0.25rem 0 0.35rem;
+  font-size: 1.35rem;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.avatar--small {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.counter {
+  display: grid;
+  place-items: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+
+.counter--small {
+  min-width: 28px;
+  height: 28px;
+  font-size: 0.8rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.profile-grid div {
+  padding: 0.8rem 0.9rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.profile-grid dt {
+  margin-bottom: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.profile-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.patient-list,
+.invitation-list {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.patient-card,
+.invitation-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.patient-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-card__info h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+}
+
+.patient-card__info p,
+.invitation-card p,
+.invitation-card small,
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.patient-card__info span {
+  margin: 0 0.35rem;
+}
+
+.patient-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn--outline {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+.btn--danger {
+  background: var(--surface);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--danger-light);
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.invite-form label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.invite-form__row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.invite-form__row input {
+  flex: 1;
+}
+
+.invite-form__row button {
+  flex-shrink: 0;
+}
+
+.invitations-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.invitations-column {
+  min-width: 0;
+}
+
+.column-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+.column-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.invitation-card {
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.invitation-card strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.92rem;
+}
+
+.invitation-card__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.empty-state {
+  padding: 1rem;
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+}
+
+.empty-state p {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+}
+
+.state-card {
+  padding: 1.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.state-card--error {
+  border-color: var(--danger);
+  background: var(--danger-light);
+}
+
+.notice {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+}
+
+.notice--error {
+  background: var(--danger-light);
+  border-left: 4px solid var(--danger);
+  color: var(--danger-strong);
+}
+
+@media (max-width: 760px) {
+  .invitations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-card {
+    flex-wrap: wrap;
+  }
+
+  .patient-card__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .invite-form__row {
+    flex-direction: column;
+  }
+
+  .tutor-tabs {
+    top: 70px;
+  }
+}

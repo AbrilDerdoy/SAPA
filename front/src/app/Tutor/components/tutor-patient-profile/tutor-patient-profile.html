@@ -1,0 +1,91 @@
+<main class="tutor-patient-page">
+  <a routerLink="/tutor" class="back-link">Volver al panel de tutor</a>
+
+  <header class="page-header">
+    <span class="eyebrow">SAPA · Tutela</span>
+    <h1>Datos del paciente</h1>
+    <p>
+      Actualizá la información personal del paciente bajo tu tutela.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <section class="state-card">
+      <p>Cargando datos del paciente...</p>
+    </section>
+  } @else if (patient(); as currentPatient) {
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-label">Paciente</span>
+          <h2>{{ currentPatient.firstName }} {{ currentPatient.lastName }}</h2>
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="notice notice--error" role="alert">{{ error() }}</div>
+      }
+
+      <form class="profile-form" (submit)="save($event)">
+        <div class="form-grid">
+          <label>
+            Nombre
+            <input
+              type="text"
+              [value]="firstName()"
+              (input)="updateField('firstName', $event)"
+              [disabled]="saving()">
+          </label>
+
+          <label>
+            Apellido
+            <input
+              type="text"
+              [value]="lastName()"
+              (input)="updateField('lastName', $event)"
+              [disabled]="saving()">
+          </label>
+
+          <label>
+            Fecha de nacimiento
+            <input
+              type="date"
+              [value]="birthDate()"
+              (input)="updateField('birthDate', $event)"
+              [disabled]="saving()">
+          </label>
+
+          <label>
+            Teléfono
+            <input
+              type="tel"
+              [value]="phoneNumber()"
+              (input)="updateField('phoneNumber', $event)"
+              [disabled]="saving()">
+          </label>
+        </div>
+
+        <p class="hint">
+          Estos datos son los que el paciente verá en su perfil. El correo de
+          acceso no puede modificarse desde aquí.
+        </p>
+
+        <div class="form-actions">
+          <a class="btn btn--outline" routerLink="/tutor">Cancelar</a>
+          <button type="submit" class="btn btn--primary" [disabled]="saving()">
+            @if (saving()) {
+              Guardando...
+            } @else {
+              Guardar cambios
+            }
+          </button>
+        </div>
+      </form>
+    </section>
+  } @else {
+    <section class="state-card state-card--error">
+      <p>{{ error() ?? 'No se encontró el paciente.' }}</p>
+      <button type="button" (click)="loadPatient()">Reintentar</button>
+    </section>
+  }
+</main>

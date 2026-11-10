@@ -4,6 +4,8 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { QuestionnaireService } from '../../services/questionnaire.service';
+import { Auth } from '../../../Usuario/services/Auth/auth';
+import { TutorPatientSelector } from '../../../Tutor/components/tutor-patient-selector/tutor-patient-selector';
 
 import {
   AnswerResponse,
@@ -26,7 +28,7 @@ interface ScaleGroup {
 @Component({
   selector: 'app-questionnaire-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TutorPatientSelector],
   templateUrl: './questionnaire-history.html',
   styleUrl: './questionnaire-history.css'
 })
@@ -34,6 +36,8 @@ export class QuestionnaireHistory implements OnInit {
 
   private readonly questionnaireService = inject(QuestionnaireService);
   private readonly route = inject(ActivatedRoute);
+
+  readonly auth = inject(Auth);
 
   mode = signal<'patient' | 'doctor'>('patient');
 
@@ -94,16 +98,34 @@ export class QuestionnaireHistory implements OnInit {
 
     if (this.mode() === 'doctor') {
       this.loadPatients();
-    } else {
-      this.loadMyHistory();
+      return;
     }
+
+    if (this.auth.isTutor()) {
+      const initialPatientId = Number(
+        this.route.snapshot.queryParamMap.get('patientId')
+      );
+
+      if (Number.isFinite(initialPatientId) && initialPatientId > 0) {
+        this.selectedPatientId.set(initialPatientId);
+        this.loadMyHistory();
+      }
+
+      return;
+    }
+
+    this.loadMyHistory();
   }
 
   loadMyHistory(): void {
+    if (this.auth.isTutor() && this.selectedPatientId() === null) {
+      return;
+    }
+
     this.loading.set(true);
     this.error.set('');
 
-    this.questionnaireService.getMyResponses().subscribe({
+    this.questionnaireService.getMyResponses(this.selectedPatientId()).subscribe({
       next: (responses: QuestionnaireResponseDTO[]) => {
         this.responses.set(responses ?? []);
         this.loading.set(false);
@@ -146,6 +168,11 @@ export class QuestionnaireHistory implements OnInit {
 
     this.loading.set(true);
     this.error.set('');
+
+    if (this.auth.isTutor()) {
+      this.loadMyHistory();
+      return;
+    }
 
     this.questionnaireService.getPatientResponses(patientId).subscribe({
       next: (responses: QuestionnaireResponseDTO[]) => {

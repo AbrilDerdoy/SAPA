@@ -40,6 +40,16 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final List<String> ALLOWED_TUTOR_RELATIONSHIPS = List.of(
+            "Madre",
+            "Padre",
+            "Tutor legal",
+            "Abuelo/a",
+            "Hermano/a",
+            "Tío/a",
+            "Otro familiar"
+    );
+
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
@@ -108,9 +118,14 @@ public class UserService {
                     .build();
             patientRepository.save(patient);
         } else if (request.role() == Role.ROLE_TUTOR) {
-            String relationship = (request.relationship() == null || request.relationship().isBlank())
-                    ? "TUTOR"
+            String relationship = request.relationship() == null
+                    ? ""
                     : request.relationship().trim();
+
+            if (!ALLOWED_TUTOR_RELATIONSHIPS.contains(relationship)) {
+                throw new IllegalArgumentException(
+                        "El parentesco debe ser uno de: " + String.join(", ", ALLOWED_TUTOR_RELATIONSHIPS) + ".");
+            }
 
             TutorEntity tutor = TutorEntity.builder()
                     .user(userConnector)

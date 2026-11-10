@@ -1,6 +1,6 @@
 
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import {
@@ -51,8 +51,15 @@ export class QuestionnaireService {
     return this.http.post<AssignmentResponse>(`${this.assignmentUrl}/${questionnaireId}`, data);
   }
 
-  getMyAssignments(): Observable<AssignmentResponse[]> {
-    return this.http.get<AssignmentResponse[]>(`${this.assignmentUrl}/my-assignments`);
+  getMyAssignments(patientId?: number | null): Observable<AssignmentResponse[]> {
+    const params = patientId
+      ? new HttpParams().set('patientId', patientId)
+      : undefined;
+
+    return this.http.get<AssignmentResponse[]>(
+      `${this.assignmentUrl}/my-assignments`,
+      { params }
+    );
   }
 
   submitResponse(assignmentId: number, data: SubmitResponseRequest): Observable<QuestionnaireResponseDTO> {
@@ -61,8 +68,15 @@ export class QuestionnaireService {
     );
   }
 
-  getMyResponses(): Observable<QuestionnaireResponseDTO[]> {
-    return this.http.get<QuestionnaireResponseDTO[]>(`${this.assignmentUrl}/my-responses`);
+  getMyResponses(patientId?: number | null): Observable<QuestionnaireResponseDTO[]> {
+    const params = patientId
+      ? new HttpParams().set('patientId', patientId)
+      : undefined;
+
+    return this.http.get<QuestionnaireResponseDTO[]>(
+      `${this.assignmentUrl}/my-responses`,
+      { params }
+    );
   }
 
   getQuestionnaireResponses(questionnaireId: number): Observable<QuestionnaireResponseDTO[]> {

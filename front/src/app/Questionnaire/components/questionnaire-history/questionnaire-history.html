@@ -5,8 +5,13 @@
     <span class="eyebrow">SAPA · Seguimiento</span>
 
     @if (mode() === 'patient') {
-      <h1>Mi historial de cuestionarios</h1>
-      <p>Consultá tus respuestas y revisá tu seguimiento.</p>
+      @if (auth.isTutor()) {
+        <h1>Historial de mis pacientes</h1>
+        <p>Consultá las respuestas de los pacientes a tu cargo.</p>
+      } @else {
+        <h1>Mi historial de cuestionarios</h1>
+        <p>Consultá tus respuestas y revisá tu seguimiento.</p>
+      }
     } @else {
       <h1>Historial de pacientes</h1>
       <p>Consultá las respuestas de tus pacientes vinculados.</p>
@@ -17,6 +22,13 @@
     <div class="alert error">
       {{ error() }}
     </div>
+  }
+
+  @if (auth.isTutor()) {
+    <app-tutor-patient-selector
+      label="Paciente"
+      [selectedPatientId]="selectedPatientId()"
+      (patientSelected)="selectPatient($event)" />
   }
 
   <!-- SOLO EL MÉDICO PUEDE SELECCIONAR PACIENTES -->
@@ -54,7 +66,7 @@
   } @else {
 
     <!-- EL MÉDICO DEBE SELECCIONAR UN PACIENTE -->
-    @if (mode() === 'doctor' && selectedPatientId() === null) {
+    @if ((mode() === 'doctor' || auth.isTutor()) && selectedPatientId() === null) {
       <section class="panel empty-state">
         <p>Seleccioná un paciente para consultar su historial.</p>
       </section>

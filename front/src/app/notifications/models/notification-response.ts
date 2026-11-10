@@ -3,7 +3,8 @@ export type NotificationType =
   | 'MESSAGE'
   | 'REMINDER'
   | 'FOLLOW'
-  | 'QUESTIONNAIRE';
+  | 'QUESTIONNAIRE'
+  | 'TUTORSHIP';
 
 export interface NotificationResponse {
   notificationId: number;

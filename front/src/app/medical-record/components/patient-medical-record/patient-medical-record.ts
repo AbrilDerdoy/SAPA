@@ -1,12 +1,13 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MedicalRecordService } from '../../services/medical-record-service';
 import { MedicalRecord } from '../../interfaces/medical-record';
 import { Medication } from '../../interfaces/medication/medication';
+import { Auth } from '../../../Usuario/services/Auth/auth';
 
 @Component({
   selector: 'app-patient-medical-record',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './patient-medical-record.html',
   styleUrl: './patient-medical-record.css',
 })
@@ -14,6 +15,8 @@ export class PatientMedicalRecord implements OnInit {
 
   private readonly route = inject(ActivatedRoute);
   private readonly medicalRecordService = inject(MedicalRecordService);
+
+  readonly auth = inject(Auth);
 
   patientId = 0;
 

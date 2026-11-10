@@ -1,0 +1,151 @@
+<section class="patient-tutor">
+  <header class="patient-tutor__header">
+    <div>
+      <span class="eyebrow">SAPA · Tutela</span>
+      <h2>Mi tutor</h2>
+      <p>
+        Tu tutor puede consultar tu información y realizar acciones en tu
+        nombre, excepto las que son exclusivas del médico.
+      </p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Cargando información de tutela...</p>
+  } @else if (loadError()) {
+    <div class="notice notice--error">
+      <span>{{ loadError() }}</span>
+      <button type="button" (click)="loadSection()">Reintentar</button>
+    </div>
+  } @else {
+    @if (actionError()) {
+      <div class="notice notice--error" role="alert">{{ actionError() }}</div>
+    }
+
+    @if (tutor(); as currentTutor) {
+      <article class="tutor-card">
+        <div class="tutor-card__avatar" aria-hidden="true">
+          {{ currentTutor.firstName[0] }}{{ currentTutor.lastName[0] }}
+        </div>
+
+        <div class="tutor-card__info">
+          <span class="badge">Tutor activo</span>
+          <h3>{{ getTutorName(currentTutor) }}</h3>
+          <p>
+            {{ currentTutor.relationship }}
+            <span>·</span>
+            {{ currentTutor.email }}
+          </p>
+          <p>
+            Teléfono:
+            {{ currentTutor.phoneNumber || 'No registrado' }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn--danger"
+          [disabled]="busy() === 'revoke'"
+          (click)="revokeTutor()">
+          Revocar vínculo
+        </button>
+      </article>
+    } @else {
+      <form class="invite-form" (submit)="sendInvitation($event)">
+        <label for="patient-tutor-email">
+          Invitá a tu tutor con su correo electrónico
+        </label>
+
+        <div class="invite-form__row">
+          <input
+            id="patient-tutor-email"
+            type="email"
+            autocomplete="email"
+            placeholder="tutor@correo.com"
+            [value]="inviteEmail()"
+            (input)="updateInviteEmail($event)"
+            [disabled]="inviting()">
+          <button type="submit" [disabled]="inviting() || !inviteEmail().trim()">
+            @if (inviting()) {
+              Enviando...
+            } @else {
+              Enviar invitación
+            }
+          </button>
+        </div>
+
+        <p class="hint">
+          La persona recibirá un correo con un enlace para aceptar o rechazar
+          la tutela. Solo podés tener un tutor activo a la vez.
+        </p>
+      </form>
+    }
+
+    @if (receivedInvitations().length > 0) {
+      <div class="subsection">
+        <h3>Invitaciones recibidas</h3>
+
+        <ul class="invitation-list">
+          @for (invitation of receivedInvitations(); track invitation.id) {
+            <li class="invitation-card">
+              <div>
+                <strong>Invitación de tutela pendiente</strong>
+                <p>{{ invitation.invitedEmail }}</p>
+                <small>
+                  Recibida el {{ invitation.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                </small>
+              </div>
+
+              <div class="invitation-card__actions">
+                <button
+                  type="button"
+                  class="btn btn--outline"
+                  [disabled]="busy() === 'invitation-' + invitation.id"
+                  (click)="rejectInvitation(invitation)">
+                  Rechazar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn--primary"
+                  [disabled]="busy() === 'invitation-' + invitation.id"
+                  (click)="acceptInvitation(invitation)">
+                  Aceptar
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (sentInvitations().length > 0) {
+      <div class="subsection">
+        <h3>Invitaciones enviadas</h3>
+
+        <ul class="invitation-list">
+          @for (invitation of sentInvitations(); track invitation.id) {
+            <li class="invitation-card">
+              <div>
+                <strong>Esperando respuesta</strong>
+                <p>{{ invitation.invitedEmail }}</p>
+                <small>
+                  Enviada el {{ invitation.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                </small>
+              </div>
+
+              <div class="invitation-card__actions">
+                <button
+                  type="button"
+                  class="btn btn--danger"
+                  [disabled]="busy() === 'invitation-' + invitation.id"
+                  (click)="cancelInvitation(invitation)">
+                  Cancelar
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  }
+</section>

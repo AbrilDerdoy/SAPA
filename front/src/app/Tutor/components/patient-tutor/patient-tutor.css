@@ -1,0 +1,263 @@
+:host {
+  display: block;
+  margin-top: 1.5rem;
+  color: var(--text);
+}
+
+.patient-tutor {
+  padding: 1.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.patient-tutor__header {
+  margin-bottom: 1.1rem;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.patient-tutor h2 {
+  margin: 0.25rem 0 0.35rem;
+  font-size: 1.35rem;
+}
+
+.patient-tutor__header p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.tutor-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.tutor-card__avatar {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tutor-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tutor-card__info h3 {
+  margin: 0.15rem 0 0.2rem;
+  font-size: 1.1rem;
+}
+
+.tutor-card__info p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.tutor-card__info span {
+  margin: 0 0.3rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1rem;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.invite-form label {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.invite-form__row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.invite-form__row input {
+  flex: 1;
+}
+
+.invite-form__row button {
+  flex-shrink: 0;
+}
+
+.hint,
+.muted {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.subsection {
+  margin-top: 1.2rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+.subsection h3 {
+  margin: 0 0 0.7rem;
+  font-size: 1rem;
+}
+
+.invitation-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.invitation-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.invitation-card strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.invitation-card p,
+.invitation-card small {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.invitation-card__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn--outline {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+.btn--danger {
+  background: var(--surface);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--danger-light);
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 8px;
+}
+
+.notice--error {
+  background: var(--danger-light);
+  border-left: 4px solid var(--danger);
+  color: var(--danger-strong);
+}
+
+.notice button {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid currentColor;
+  color: inherit;
+}
+
+@media (max-width: 620px) {
+  .tutor-card {
+    flex-wrap: wrap;
+  }
+
+  .tutor-card > button {
+    width: 100%;
+  }
+
+  .invite-form__row {
+    flex-direction: column;
+  }
+
+  .invitation-card__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+}

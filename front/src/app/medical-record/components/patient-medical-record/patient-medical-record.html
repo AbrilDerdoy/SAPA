@@ -1,5 +1,7 @@
 <section class="medical-record-container">
-  <a routerLink="/my-patients" class="back-link">Volver a mis pacientes</a>
+  <a [routerLink]="auth.isTutor() ? '/tutor' : '/my-patients'" class="back-link">
+    {{ auth.isTutor() ? 'Volver al panel de tutor' : 'Volver a mis pacientes' }}
+  </a>
 
   <header class="page-header">
     <h1>Ficha médica del paciente</h1>

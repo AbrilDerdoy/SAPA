@@ -40,4 +40,10 @@
         </form>
     </div>
     }
+
+    @if(auth.isPatient()){
+        <div class="container" style="padding:20px;">
+            <app-patient-tutor />
+        </div>
+    }
 }

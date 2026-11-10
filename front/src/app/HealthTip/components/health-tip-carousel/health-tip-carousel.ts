@@ -8,6 +8,7 @@ import { catchError, filter } from 'rxjs/operators';
 import { HealthTipService } from '../../services/health-tip.service';
 import {HealthTip,CreateHealthTip,Doctor} from '../../models/health-tip';
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
+import { TutorService } from '../../../Tutor/services/tutor.service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 
 @Component({
@@ -21,6 +22,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   private readonly healthTipService = inject(HealthTipService);
   private readonly followService = inject(FollowRequestService);
+  private readonly tutorService = inject(TutorService);
   private readonly http = inject(HttpClient);
   private readonly auth = inject(Auth);
   private readonly zone = inject(NgZone);
@@ -41,6 +43,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   showForm = false;
   isDoctor = false;
+  isTutor = false;
   isLoggedIn = false;
 
   title = '';
@@ -50,6 +53,9 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   private currentDoctorId: number | null = null;
   private sentDoctorIds: number[] = [];
+
+  private tutorPatientId: number | null = null;
+  private tutorPatientName = '';
 
   private carouselTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -119,6 +125,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   private checkRole(): void {
     this.isLoggedIn = this.auth.isAuthenticated();
     this.isDoctor = false;
+    this.isTutor = false;
 
     if (!this.isLoggedIn) {
       this.showForm = false;
@@ -139,12 +146,14 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
         .replace('ROLE_', '');
 
       this.isDoctor = role === 'DOCTOR';
+      this.isTutor = role === 'TUTOR';
 
     } catch (error) {
       console.error('Error al obtener el rol:', error);
 
       this.isLoggedIn = false;
       this.isDoctor = false;
+      this.isTutor = false;
     }
 
     if (!this.isDoctor) {
@@ -162,6 +171,8 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
     this.followedDoctorIds = [];
     this.sentDoctorIds = [];
     this.currentDoctorId = null;
+    this.tutorPatientId = null;
+    this.tutorPatientName = '';
     this.currentIndex = 0;
 
     this.stopCarouselTimer();
@@ -373,11 +384,43 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.successMessage = '';
 
+    if (this.isTutor && this.tutorPatientId === null) {
+      this.subscriptions.add(
+        this.tutorService.getMyPatients().subscribe({
+          next: (patients) => {
+            const patient = patients?.[0];
+
+            if (!patient) {
+              this.errorMessage =
+                'Primero necesitás tener un paciente vinculado para solicitar seguimiento.';
+              this.requestingDoctorId = null;
+              return;
+            }
+
+            this.tutorPatientId = patient.patientId;
+            this.tutorPatientName = `${patient.firstName} ${patient.lastName}`;
+            this.sendFollowRequest(doctorId);
+          },
+          error: () => {
+            this.errorMessage = 'No se pudieron cargar tus pacientes.';
+            this.requestingDoctorId = null;
+          }
+        })
+      );
+
+      return;
+    }
+
+    this.sendFollowRequest(doctorId);
+  }
+
+  private sendFollowRequest(doctorId: number): void {
     this.subscriptions.add(
-      this.followService.send(doctorId).subscribe({
+      this.followService.send(doctorId, this.tutorPatientId).subscribe({
         next: () => {
-          this.successMessage =
-            'La solicitud de seguimiento fue enviada. El profesional debe aprobarla.';
+          this.successMessage = this.isTutor
+            ? `La solicitud de seguimiento de ${this.tutorPatientName} fue enviada. El profesional debe aprobarla.`
+            : 'La solicitud de seguimiento fue enviada. El profesional debe aprobarla.';
 
           this.sentDoctorIds = [
             ...this.sentDoctorIds,

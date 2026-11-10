@@ -5,13 +5,27 @@
         <p class="fr__lead">{{ subtitle() }}</p>
     </header>
 
+    @if (auth.isTutor()) {
+        <app-tutor-patient-selector
+            label="Paciente"
+            [selectedPatientId]="selectedPatientId()"
+            (patientSelected)="onPatientSelected($event)" />
+    }
+
+    @if (auth.isTutor() && selectedPatientId() === null) {
+        <div class="notice">
+            <strong>Seleccioná un paciente</strong>
+            <p>Elegí un paciente para consultar el estado de sus solicitudes de seguimiento.</p>
+        </div>
+    }
+
     @if (actionError()) {
         <div class="notice notice--error" role="alert">
             {{ actionError() }}
         </div>
     }
 
-    @if (loadStatus() === 'loading') {
+    @if (loadStatus() === 'loading' && !(auth.isTutor() && selectedPatientId() === null)) {
         <div class="skeleton">
             <span class="skeleton__row"></span>
             <span class="skeleton__row"></span>
@@ -29,14 +43,16 @@
         </div>
     }
 
-    @if (loadStatus() === 'success') {
+    @if (loadStatus() === 'success' && !(auth.isTutor() && selectedPatientId() === null)) {
         @if (sorted().length === 0) {
             <div class="notice">
                 <strong>No hay solicitudes por ahora</strong>
                 <p>
                     {{ mode === 'doctor'
                         ? 'Cuando recibas una solicitud de seguimiento, va a aparecer acá.'
-                        : 'Todavía no enviaste ninguna solicitud.' }}
+                        : auth.isTutor()
+                            ? 'El paciente seleccionado todavía no envió ninguna solicitud de seguimiento.'
+                            : 'Todavía no enviaste ninguna solicitud.' }}
                 </p>
             </div>
         }

@@ -3,10 +3,29 @@
   <header class="page-header">
     <div>
       <span class="eyebrow">SAPA · Seguimiento de salud</span>
-      <h1>Mis cuestionarios</h1>
-      <p>Completá los cuestionarios asignados por tus profesionales de salud.</p>
+      @if (auth.isTutor()) {
+        <h1>Cuestionarios del paciente</h1>
+        <p>Respondé los cuestionarios asignados al paciente seleccionado.</p>
+      } @else {
+        <h1>Mis cuestionarios</h1>
+        <p>Completá los cuestionarios asignados por tus profesionales de salud.</p>
+      }
     </div>
   </header>
+
+  @if (auth.isTutor()) {
+    <app-tutor-patient-selector
+      label="Paciente"
+      [selectedPatientId]="selectedPatientId()"
+      (patientSelected)="onPatientSelected($event)" />
+
+    @if (selectedPatientId() === null) {
+      <section class="empty-state">
+        <h2>Seleccioná un paciente</h2>
+        <p>Elegí un paciente para ver sus cuestionarios pendientes.</p>
+      </section>
+    }
+  }
 
   @if (loading()) {
     <p class="message">Cargando cuestionarios...</p>
@@ -20,7 +39,7 @@
     <p class="message success">{{ success() }}</p>
   }
 
-  @if (!loading() && assignments().length === 0) {
+  @if (!loading() && assignments().length === 0 && !(auth.isTutor() && selectedPatientId() === null)) {
     <section class="empty-state">
       <h2>No tenés cuestionarios pendientes</h2>
       <p>Cuando un profesional te asigne uno, aparecerá en esta sección.</p>

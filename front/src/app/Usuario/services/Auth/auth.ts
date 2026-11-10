@@ -68,6 +68,10 @@ export class Auth {
     return this.getRole() === 'PATIENT';
   }
 
+  isTutor(): boolean {
+    return this.getRole() === 'TUTOR';
+  }
+
   isAdmin(): boolean {
     return this.getRole() === 'ADMIN';
   }

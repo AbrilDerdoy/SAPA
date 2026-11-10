@@ -66,11 +66,34 @@ export const routes: Routes = [
   },
   {
     path: 'mis-solicitudes',
-    canActivate: [roleGuard(['PATIENT'])],
+    canActivate: [roleGuard(['PATIENT', 'TUTOR'])],
     data: { mode: 'patient' },
     loadComponent: () =>
       import('./FollowRequest/components/follow-requests/follow-requests')
         .then(m => m.FollowRequests)
+  },
+
+  // Tutor
+  {
+    path: 'tutor',
+    pathMatch: 'full',
+    canActivate: [roleGuard(['TUTOR'])],
+    loadComponent: () =>
+      import('./Tutor/components/tutor-dashboard/tutor-dashboard')
+        .then(m => m.TutorDashboard)
+  },
+  {
+    path: 'tutor/patients/:patientId/profile',
+    canActivate: [roleGuard(['TUTOR'])],
+    loadComponent: () =>
+      import('./Tutor/components/tutor-patient-profile/tutor-patient-profile')
+        .then(m => m.TutorPatientProfile)
+  },
+  {
+    path: 'tutor-invitation',
+    loadComponent: () =>
+      import('./Tutor/components/tutor-invitation/tutor-invitation')
+        .then(m => m.TutorInvitation)
   },
 
   // Medicamentos
@@ -81,10 +104,10 @@ export const routes: Routes = [
         .then(m => m.MedicationSearch)
   },
 
-  // Cuestionarios: SOLO PACIENTES
+  // Cuestionarios: PACIENTES Y TUTORES
   {
     path: 'mis-cuestionarios',
-    canActivate: [roleGuard(['PATIENT'])],
+    canActivate: [roleGuard(['PATIENT', 'TUTOR'])],
     component: PatientQuestionnaires
   },
 
@@ -95,10 +118,10 @@ export const routes: Routes = [
     component: DoctorQuestionnaires
   },
 
-  // Historial propio: SOLO PACIENTES
+  // Historial propio: PACIENTES Y TUTORES
   {
     path: 'historial-cuestionarios',
-    canActivate: [roleGuard(['PATIENT'])],
+    canActivate: [roleGuard(['PATIENT', 'TUTOR'])],
     data: { mode: 'patient' },
     component: QuestionnaireHistory
   },
@@ -117,10 +140,10 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     component: PanelAdmin
   },
-  {path: 'medical-record', canActivate: [roleGuard(['PATIENT'])],
+  {path: 'medical-record', canActivate: [roleGuard(['PATIENT', 'TUTOR'])],
     loadComponent: () => import('./medical-record/components/my-medical-record/my-medical-record')
     .then(m => m.MyMedicalRecord)},
-  {path: 'patient-medical-record/:patientId', canActivate: [roleGuard(['DOCTOR'])],
+  {path: 'patient-medical-record/:patientId', canActivate: [roleGuard(['DOCTOR', 'TUTOR'])],
     loadComponent: () => import('./medical-record/components/patient-medical-record/patient-medical-record')
     .then(m => m.PatientMedicalRecord)},
   {path: 'my-patients', canActivate: [roleGuard(['DOCTOR'])],

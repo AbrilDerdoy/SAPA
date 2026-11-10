@@ -1,0 +1,27 @@
+<section class="patient-selector">
+  @if (loading()) {
+    <p class="patient-selector__status">Cargando pacientes...</p>
+  } @else if (error()) {
+    <div class="patient-selector__error">
+      <span>{{ error() }}</span>
+      <button type="button" (click)="loadPatients()">Reintentar</button>
+    </div>
+  } @else if (patients().length === 0) {
+    <p class="patient-selector__status">
+      Todavía no tenés pacientes vinculados.
+    </p>
+  } @else {
+    <label for="tutor-patient-select">{{ label() }}</label>
+
+    <select
+      id="tutor-patient-select"
+      [value]="selectedPatientId() ?? ''"
+      (change)="onSelectionChange($event)">
+      @for (patient of patients(); track patient.patientId) {
+        <option [value]="patient.patientId">
+          {{ getPatientName(patient) }}
+        </option>
+      }
+    </select>
+  }
+</section>

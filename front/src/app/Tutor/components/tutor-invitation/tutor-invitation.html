@@ -1,0 +1,81 @@
+<main class="invitation-page">
+  <section class="invitation-card">
+    <div class="invitation-icon" aria-hidden="true">🤝</div>
+
+    <span class="eyebrow">SAPA · Tutela</span>
+    <h1>Invitación de tutela</h1>
+
+    @if (!auth.isAuthenticated()) {
+      <p class="lead">
+        Para aceptar o rechazar esta invitación tenés que iniciar sesión con el
+        correo electrónico al que fue enviada.
+      </p>
+
+      <div class="invitation-actions">
+        <a
+          class="btn btn--primary"
+          routerLink="/login"
+          [queryParams]="{ returnUrl: returnUrl() }">
+          Iniciar sesión
+        </a>
+        <a class="btn btn--outline" routerLink="/register">
+          Crear una cuenta
+        </a>
+      </div>
+
+      <p class="hint">
+        Si todavía no tenés una cuenta, registrate con el mismo correo de la
+        invitación y volvé a abrir el enlace del correo.
+      </p>
+    } @else {
+      @if (error()) {
+        <div class="notice notice--error" role="alert">{{ error() }}</div>
+      }
+
+      @if (success()) {
+        <div class="notice notice--success" role="status">{{ success() }}</div>
+      }
+
+      @if (!processed() && token()) {
+        <p class="lead">
+          Fuiste invitado/a a establecer un vínculo de tutela en SAPA. Podés
+          aceptar para acceder a la información y las acciones del paciente, o
+          rechazar la invitación.
+        </p>
+
+        <div class="invitation-actions">
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="loading()"
+            (click)="accept()">
+            @if (loading()) {
+              Procesando...
+            } @else {
+              Aceptar invitación
+            }
+          </button>
+
+          <button
+            type="button"
+            class="btn btn--danger"
+            [disabled]="loading()"
+            (click)="reject()">
+            Rechazar
+          </button>
+        </div>
+      }
+
+      @if (processed()) {
+        <div class="invitation-actions">
+          <a class="btn btn--outline" routerLink="/home">Ir al inicio</a>
+          @if (auth.isTutor()) {
+            <a class="btn btn--primary" routerLink="/tutor">Ir a mi panel</a>
+          } @else {
+            <a class="btn btn--primary" routerLink="/profile">Ir a mi perfil</a>
+          }
+        </div>
+      }
+    }
+  </section>
+</main>

@@ -57,6 +57,25 @@
           Mi historial
         </a>
       }
+
+      @if (auth.isTutor()) {
+        <hr>
+
+        <a [routerLink]="['/tutor']" (click)="toggleMenu()">
+          <i class="bi bi-people"></i>
+          Panel de tutor
+        </a>
+
+        <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-check"></i>
+          Cuestionarios
+        </a>
+
+        <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history"></i>
+          Historial de pacientes
+        </a>
+      }
       <hr>
 
       <button

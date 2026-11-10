@@ -1,23 +1,30 @@
 
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 import { QuestionnaireService } from '../../services/questionnaire.service';
 import {
   AssignmentResponse,
   SubmitAnswerRequest
 } from '../../models/questionnaire.model';
+import { Auth } from '../../../Usuario/services/Auth/auth';
+import { TutorPatientSelector } from '../../../Tutor/components/tutor-patient-selector/tutor-patient-selector';
 
 @Component({
   selector: 'app-patient-questionnaires',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TutorPatientSelector],
   templateUrl: './patient-questionnaires.html',
   styleUrl: './patient-questionnaires.css'
 })
 export class PatientQuestionnaires implements OnInit {
 
   private readonly questionnaireService = inject(QuestionnaireService);
+  private readonly route = inject(ActivatedRoute);
+  readonly auth = inject(Auth);
+
+  readonly selectedPatientId = signal<number | null>(null);
 
   assignments = signal<AssignmentResponse[]>([]);
   loading = signal(false);
@@ -28,14 +35,38 @@ export class PatientQuestionnaires implements OnInit {
   answers: Record<number, string> = {};
 
   ngOnInit(): void {
+    if (this.auth.isTutor()) {
+      const initialPatientId = Number(
+        this.route.snapshot.queryParamMap.get('patientId')
+      );
+
+      if (Number.isFinite(initialPatientId) && initialPatientId > 0) {
+        this.selectedPatientId.set(initialPatientId);
+        this.loadAssignments();
+      }
+
+      return;
+    }
+
+    this.loadAssignments();
+  }
+
+  onPatientSelected(patientId: number): void {
+    this.selectedPatientId.set(patientId);
+    this.answers = {};
+    this.success.set(null);
     this.loadAssignments();
   }
 
   loadAssignments(): void {
+    if (this.auth.isTutor() && this.selectedPatientId() === null) {
+      return;
+    }
+
     this.loading.set(true);
     this.error.set(null);
 
-    this.questionnaireService.getMyAssignments().subscribe({
+    this.questionnaireService.getMyAssignments(this.selectedPatientId()).subscribe({
       next: (assignments) => {
         this.assignments.set(assignments ?? []);
         this.loading.set(false);
@@ -99,7 +130,11 @@ export class PatientQuestionnaires implements OnInit {
       answers: response
     }).subscribe({
       next: () => {
-        this.success.set('¡Tus respuestas se enviaron correctamente!');
+        this.success.set(
+          this.auth.isTutor()
+            ? 'Las respuestas del paciente se enviaron correctamente.'
+            : '¡Tus respuestas se enviaron correctamente!'
+        );
 
         this.answers = {};
 

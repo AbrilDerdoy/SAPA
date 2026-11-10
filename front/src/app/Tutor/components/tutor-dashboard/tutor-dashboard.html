@@ -1,0 +1,256 @@
+<main class="tutor-page">
+  <header class="tutor-header">
+    <span class="eyebrow">SAPA · Tutela</span>
+    <h1>Panel de tutor</h1>
+    <p>
+      Gestioná los pacientes a tu cargo, las invitaciones de tutela y el
+      acceso a su información clínica.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <section class="state-card">
+      <p>Cargando panel de tutor...</p>
+    </section>
+  } @else if (loadError()) {
+    <section class="state-card state-card--error">
+      <p>{{ loadError() }}</p>
+      <button type="button" (click)="loadDashboard()">Reintentar</button>
+    </section>
+  } @else {
+    @if (actionError()) {
+      <div class="notice notice--error" role="alert">{{ actionError() }}</div>
+    }
+
+    <nav class="tutor-tabs" aria-label="Secciones del panel">
+      <button type="button" (click)="scrollTo('perfil')">Perfil</button>
+      <button type="button" (click)="scrollTo('pacientes')">Pacientes</button>
+      <button type="button" (click)="scrollTo('invitaciones')">Invitaciones</button>
+    </nav>
+
+    @if (profile(); as tutor) {
+      <section class="panel" id="perfil">
+        <div class="panel-heading">
+          <div>
+            <span class="panel-label">Tu perfil</span>
+            <h2>{{ tutor.firstName }} {{ tutor.lastName }}</h2>
+          </div>
+          <div class="avatar" aria-hidden="true">
+            {{ getInitials(tutor.firstName, tutor.lastName) }}
+          </div>
+        </div>
+
+        <dl class="profile-grid">
+          <div>
+            <dt>Correo electrónico</dt>
+            <dd>{{ tutor.email }}</dd>
+          </div>
+          <div>
+            <dt>Teléfono</dt>
+            <dd>{{ tutor.phoneNumber }}</dd>
+          </div>
+          <div>
+            <dt>Vínculo</dt>
+            <dd>{{ tutor.relationship }}</dd>
+          </div>
+          <div>
+            <dt>Fecha de nacimiento</dt>
+            <dd>{{ tutor.birthDate | date: 'dd/MM/yyyy' }}</dd>
+          </div>
+        </dl>
+      </section>
+    }
+
+    <section class="panel" id="pacientes">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-label">Tutela activa</span>
+          <h2>Mis pacientes</h2>
+          <p>
+            Desde la ficha de cada paciente podés consultar su información y
+            responder cuestionarios en su nombre.
+          </p>
+        </div>
+        <span class="counter">{{ patients().length }}</span>
+      </div>
+
+      @if (patients().length === 0) {
+        <div class="empty-state">
+          <strong>Todavía no tenés pacientes vinculados.</strong>
+          <p>
+            Enviá una invitación con el correo de la persona que querés
+            tutelar. También podés aceptar una invitación recibida.
+          </p>
+        </div>
+      } @else {
+        <ul class="patient-list">
+          @for (patient of patients(); track patient.patientId) {
+            <li class="patient-card">
+              <div class="avatar avatar--small" aria-hidden="true">
+                {{ getInitials(patient.firstName, patient.lastName) }}
+              </div>
+
+              <div class="patient-card__info">
+                <h3>{{ getPatientName(patient) }}</h3>
+                <p>
+                  {{ patient.phoneNumber || 'Sin teléfono registrado' }}
+                  <span>·</span>
+                  Vinculado el {{ patient.linkedAt | date: 'dd/MM/yyyy' }}
+                </p>
+              </div>
+
+              <div class="patient-card__actions">
+                <a
+                  class="btn btn--primary"
+                  [routerLink]="['/patient-medical-record', patient.patientId]">
+                  Ficha médica
+                </a>
+                <a
+                  class="btn btn--outline"
+                  [routerLink]="['/mis-cuestionarios']"
+                  [queryParams]="{ patientId: patient.patientId }">
+                  Cuestionarios
+                </a>
+                <a
+                  class="btn btn--outline"
+                  [routerLink]="['/historial-cuestionarios']"
+                  [queryParams]="{ patientId: patient.patientId }">
+                  Historial
+                </a>
+                <a
+                  class="btn btn--outline"
+                  [routerLink]="['/mis-solicitudes']"
+                  [queryParams]="{ patientId: patient.patientId }">
+                  Seguimiento
+                </a>
+                <a
+                  class="btn btn--outline"
+                  [routerLink]="['/tutor/patients', patient.patientId, 'profile']">
+                  Editar datos
+                </a>
+                <button
+                  type="button"
+                  class="btn btn--danger"
+                  [disabled]="busyInvitationId() === patient.patientId"
+                  (click)="revokeLink(patient)">
+                  Revocar vínculo
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="panel" id="invitaciones">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-label">Invitaciones</span>
+          <h2>Invitar a un paciente</h2>
+          <p>
+            La persona recibirá un correo con un enlace para aceptar o rechazar
+            la tutela.
+          </p>
+        </div>
+      </div>
+
+      <form class="invite-form" (submit)="sendInvitation($event)">
+        <label for="invite-email">Correo electrónico del paciente</label>
+        <div class="invite-form__row">
+          <input
+            id="invite-email"
+            type="email"
+            autocomplete="email"
+            placeholder="paciente@correo.com"
+            [value]="inviteEmail()"
+            (input)="updateInviteEmail($event)"
+            [disabled]="inviting()">
+          <button type="submit" [disabled]="inviting() || !inviteEmail().trim()">
+            @if (inviting()) {
+              Enviando...
+            } @else {
+              Enviar invitación
+            }
+          </button>
+        </div>
+      </form>
+
+      <div class="invitations-grid">
+        <section class="invitations-column">
+          <div class="column-heading">
+            <h3>Recibidas</h3>
+            <span class="counter counter--small">{{ receivedInvitations().length }}</span>
+          </div>
+
+          @if (receivedInvitations().length === 0) {
+            <p class="muted">No tenés invitaciones pendientes para aceptar.</p>
+          } @else {
+            <ul class="invitation-list">
+              @for (invitation of receivedInvitations(); track invitation.id) {
+                <li class="invitation-card">
+                  <div>
+                    <strong>{{ getInvitationDirection(invitation) }}</strong>
+                    <p>{{ invitation.invitedEmail }}</p>
+                    <small>
+                      Recibida el {{ invitation.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                    </small>
+                  </div>
+                  <div class="invitation-card__actions">
+                    <button
+                      type="button"
+                      class="btn btn--outline"
+                      [disabled]="busyInvitationId() === invitation.id"
+                      (click)="rejectInvitation(invitation)">
+                      Rechazar
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--primary"
+                      [disabled]="busyInvitationId() === invitation.id"
+                      (click)="acceptInvitation(invitation)">
+                      Aceptar
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="invitations-column">
+          <div class="column-heading">
+            <h3>Enviadas</h3>
+            <span class="counter counter--small">{{ sentInvitations().length }}</span>
+          </div>
+
+          @if (sentInvitations().length === 0) {
+            <p class="muted">No tenés invitaciones enviadas pendientes.</p>
+          } @else {
+            <ul class="invitation-list">
+              @for (invitation of sentInvitations(); track invitation.id) {
+                <li class="invitation-card">
+                  <div>
+                    <strong>{{ getInvitationDirection(invitation) }}</strong>
+                    <p>{{ invitation.invitedEmail }}</p>
+                    <small>
+                      Enviada el {{ invitation.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                    </small>
+                  </div>
+                  <div class="invitation-card__actions">
+                    <button
+                      type="button"
+                      class="btn btn--danger"
+                      [disabled]="busyInvitationId() === invitation.id"
+                      (click)="cancelInvitation(invitation)">
+                      Cancelar
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+    </section>
+  }
+</main>

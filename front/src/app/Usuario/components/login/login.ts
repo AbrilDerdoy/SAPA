@@ -11,7 +11,7 @@ import {
   email
 } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 @Component({
@@ -23,6 +23,7 @@ import { AlertaService } from '../../../Common/alerta/alerta-service';
 export class Login {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly alerta = inject(AlertaService);
 
   readonly modelo = signal<loginRequest>({
@@ -66,6 +67,13 @@ export class Login {
             const usuario = { id: user.id, username: user.username, email: user.email, role: user.role }
             console.log('Usuario:', usuario);
             localStorage.setItem('usuario', JSON.stringify(usuario));
+
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+
+            if (returnUrl && returnUrl.startsWith('/')) {
+              void this.router.navigateByUrl(returnUrl);
+              return;
+            }
 
             this.router.navigate(['/home']);
           },

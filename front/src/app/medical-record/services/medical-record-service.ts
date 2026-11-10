@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MedicalRecord } from '../interfaces/medical-record';
@@ -13,24 +13,31 @@ export class MedicalRecordService {
   private readonly BASE_URL = 'http://localhost:8080/medical-records'
   private readonly http = inject(HttpClient)
 
-    // Obtener la ficha médica del paciente autenticado.
-  getMyMedicalRecord(): Observable<MedicalRecord>{
-    return this.http.get<MedicalRecord>(`${this.BASE_URL}/my`)
+  private buildParams(patientId?: number | null): HttpParams {
+    return patientId ? new HttpParams().set('patientId', patientId) : new HttpParams();
   }
 
-    // Obtener la ficha médica de un paciente desde la cuenta del médico.
+    // Obtener la ficha médica del paciente autenticado o del paciente tutelado.
+  getMyMedicalRecord(patientId?: number | null): Observable<MedicalRecord>{
+    return this.http.get<MedicalRecord>(`${this.BASE_URL}/my`, {
+      params: this.buildParams(patientId)
+    })
+  }
+
+    // Obtener la ficha médica de un paciente desde la cuenta del médico o tutor.
   getPatientMedicalRecord(patientId: number): Observable<MedicalRecord>{
     return this.http.get<MedicalRecord>(`${this.BASE_URL}/patient/${patientId}`)
   }
 
-    // Medicaciones del paciente autenticado
-  getMyMedications(): Observable<Medication[]> {
+    // Medicaciones del paciente autenticado o del paciente tutelado.
+  getMyMedications(patientId?: number | null): Observable<Medication[]> {
     return this.http.get<Medication[]>(
-      `${this.BASE_URL}/my/medications`
+      `${this.BASE_URL}/my/medications`,
+      { params: this.buildParams(patientId) }
     );
   }
 
-    // Medicaciones de un paciente desde la cuenta del médico
+    // Medicaciones de un paciente desde la cuenta del médico o tutor.
   getPatientMedications(patientId: number): Observable<Medication[]> {
     return this.http.get<Medication[]>(
       `${this.BASE_URL}/patient/${patientId}/medications`
