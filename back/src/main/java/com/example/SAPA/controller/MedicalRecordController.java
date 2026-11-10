@@ -40,8 +40,10 @@ public class MedicalRecordController {
             @ApiResponse(responseCode = "404", description = "No se encontró un historial clínico relacionado a este usuario.", content = @Content)
     })
     @GetMapping("/my")
-    public ResponseEntity<MedicalRecordResponseDTO> getMyMedicalRecord() {
-        return ResponseEntity.ok(medicalRecordService.getMyMedicalRecord());
+    public ResponseEntity<MedicalRecordResponseDTO> getMyMedicalRecord(
+            @Parameter(description = "ID del paciente tutelado (opcional para tutores)")
+            @RequestParam(required = false) Long patientId) {
+        return ResponseEntity.ok(medicalRecordService.getMyMedicalRecord(patientId));
     }
 
     @Operation(
@@ -62,8 +64,9 @@ public class MedicalRecordController {
     }
 
     @GetMapping("/my/medications")
-    public ResponseEntity<List<MedicationDetailResponseDTO>> getMyMedications() {
-        return ResponseEntity.ok(medicalRecordService.getMyMedications());
+    public ResponseEntity<List<MedicationDetailResponseDTO>> getMyMedications(
+            @RequestParam(required = false) Long patientId) {
+        return ResponseEntity.ok(medicalRecordService.getMyMedications(patientId));
     }
 
     @GetMapping("/patient/{patientId}/medications")

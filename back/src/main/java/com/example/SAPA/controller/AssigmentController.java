@@ -32,12 +32,13 @@ public class AssigmentController {
                 .body(assignmentService.assignQuestionnaire(id, request));
     }
 
-    // Obtener los cuestionarios pendientes del paciente.
+    // Obtener los cuestionarios pendientes del paciente o de un paciente tutelado.
     @GetMapping("/my-assignments")
-    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
-    public ResponseEntity<List<QuestionnaireDTO.AssignmentResponse>> getMyAssignments() {
+    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT', 'TUTOR', 'ROLE_TUTOR')")
+    public ResponseEntity<List<QuestionnaireDTO.AssignmentResponse>> getMyAssignments(
+            @RequestParam(required = false) Long patientId) {
 
-        return ResponseEntity.ok(assignmentService.getMyAssignments());
+        return ResponseEntity.ok(assignmentService.getMyAssignments(patientId));
     }
 
     // Consultar las respuestas de un cuestionario: solamente doctores.
@@ -60,18 +61,19 @@ public class AssigmentController {
                 assignmentService.getPatientResponses(patientId));
     }
 
-    // Consultar el historial propio: solamente pacientes.
+    // Consultar el historial propio o el de un paciente tutelado.
     @GetMapping("/my-responses")
-    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
-    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>> getMyResponses() {
+    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT', 'TUTOR', 'ROLE_TUTOR')")
+    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>> getMyResponses(
+            @RequestParam(required = false) Long patientId) {
 
         return ResponseEntity.ok(
-                assignmentService.getMyResponses());
+                assignmentService.getMyResponses(patientId));
     }
 
-    // Responder un cuestionario: solamente pacientes.
+    // Responder un cuestionario: pacientes y sus tutores.
     @PostMapping("/{assignmentId}/submit")
-    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
+    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT', 'TUTOR', 'ROLE_TUTOR')")
     public ResponseEntity<QuestionnaireDTO.QuestionnaireResponseDTO> submitResponse(
             @PathVariable Long assignmentId,
             @RequestBody QuestionnaireDTO.SubmitResponseRequest request) {

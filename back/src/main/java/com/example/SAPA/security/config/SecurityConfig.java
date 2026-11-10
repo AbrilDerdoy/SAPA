@@ -156,8 +156,10 @@ public class SecurityConfig {
 
                 // Medicamentos
                 .requestMatchers("/medications/search/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/medications/**")
+                    .hasAuthority("ROLE_DOCTOR")
                 .requestMatchers("/medications/patient/**")
-                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+                    .hasAuthority("ROLE_DOCTOR")
                 .requestMatchers(HttpMethod.PUT, "/medications/**")
                     .hasAuthority("ROLE_DOCTOR")
                 .requestMatchers(HttpMethod.DELETE, "/medications/**")

@@ -63,20 +63,7 @@ public class MedicalRecordService {
 
     @Transactional(readOnly = true)
     public MedicalRecordResponseDTO getPatientMedicalRecord(Long patientId) {
-        DoctorEntity doctor = userContext.getAuthenticatedDoctor();
-
-        boolean isAssignedDoctor = followRequestRepository.existsByDoctorIdAndPatientIdAndStatus(
-                doctor.getId(),
-                patientId,
-                FollowRequestStatus.APPROVED
-        );
-
-        if (!isAssignedDoctor) {
-            throw new AccessDeniedException("No tienes permiso para ver la ficha médica de este paciente porque no eres su médico asignado.");
-        }
-
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
+        PatientEntity patient = patientAccess.resolveClinical(patientId);
 
         if (patient.getMedicalRecord() == null) {
             throw new EntityNotFoundException("El paciente aún no tiene ficha médica.");
@@ -107,12 +94,7 @@ public class MedicalRecordService {
 
     @Transactional(readOnly = true)
     public List<MedicationDetailResponseDTO> getPatientMedications(Long patientId) {
-        DoctorEntity doctor = userContext.getAuthenticatedDoctor();
-
-        validateDoctorPatientRelationship(doctor, patientId);
-
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado."));
+        PatientEntity patient = patientAccess.resolveClinical(patientId);
 
         if (patient.getMedicalRecord() == null) {
             return List.of();

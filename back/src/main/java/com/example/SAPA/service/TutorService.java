@@ -323,6 +323,10 @@ public class TutorService {
                 .toList();
     }
 
+    /**
+     * Cancela una invitación pendiente. Pueden hacerlo tanto quien la envió
+     * como el destinatario.
+     */
     @Transactional
     public void cancelInvitation(Long invitationId) {
         UserEntity currentUser = userContext.getAuthenticatedUser();
@@ -331,24 +335,96 @@ public class TutorService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Invitación no encontrada con id: " + invitationId));
 
-        boolean isOwner =
-                (invitation.getTutor() != null
-                        && invitation.getTutor().getUser().getId().equals(currentUser.getId()))
-                        || (invitation.getPatient() != null
-                        && invitation.getPatient().getUser().getId().equals(currentUser.getId()));
-
-        if (!isOwner) {
-            throw new AccessDeniedException(
-                    "No tenés permiso para cancelar esta invitación.");
-        }
+        validateCanCancelInvitation(invitation, currentUser);
 
         if (invitation.getStatus() != TutorInvitationStatus.PENDING) {
             throw new IllegalStateException(
                     "Solo se pueden cancelar invitaciones pendientes.");
         }
 
+        revokeInvitation(invitation, currentUser);
+    }
+
+    /**
+     * Rechaza una invitación pendiente usando el token recibido por correo.
+     * Solo puede hacerlo el destinatario de la invitación.
+     */
+    @Transactional
+    public void rejectInvitation(String token) {
+        UserEntity currentUser = userContext.getAuthenticatedUser();
+
+        TutorInvitationEntity invitation = tutorInvitationRepository.findByToken(token)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "La invitación no existe."));
+
+        if (invitation.getStatus() != TutorInvitationStatus.PENDING) {
+            throw new IllegalStateException(
+                    "La invitación ya fue utilizada o cancelada.");
+        }
+
+        if (invitation.getInvitedEmail() == null
+                || !invitation.getInvitedEmail().equalsIgnoreCase(currentUser.getEmail())) {
+            throw new AccessDeniedException(
+                    "Solo el destinatario puede rechazar esta invitación.");
+        }
+
+        revokeInvitation(invitation, currentUser);
+    }
+
+    private void validateCanCancelInvitation(
+            TutorInvitationEntity invitation,
+            UserEntity currentUser
+    ) {
+        boolean isInviter =
+                (invitation.getTutor() != null
+                        && invitation.getTutor().getUser().getId().equals(currentUser.getId()))
+                        || (invitation.getPatient() != null
+                        && invitation.getPatient().getUser().getId().equals(currentUser.getId()));
+
+        boolean isRecipient = invitation.getInvitedEmail() != null
+                && invitation.getInvitedEmail().equalsIgnoreCase(currentUser.getEmail());
+
+        if (!isInviter && !isRecipient) {
+            throw new AccessDeniedException(
+                    "No tenés permiso para cancelar esta invitación.");
+        }
+    }
+
+    private void revokeInvitation(
+            TutorInvitationEntity invitation,
+            UserEntity actor
+    ) {
         invitation.setStatus(TutorInvitationStatus.REVOKED);
         tutorInvitationRepository.save(invitation);
+
+        UserEntity counterpart = resolveInvitationCounterpart(invitation, actor);
+
+        if (counterpart != null) {
+            notificationService.createNotification(
+                    counterpart,
+                    "Invitación de tutela cancelada",
+                    userContext.resolveName(actor)
+                            + " canceló la invitación de tutela.",
+                    NotificationType.TUTORSHIP
+            );
+        }
+    }
+
+    private UserEntity resolveInvitationCounterpart(
+            TutorInvitationEntity invitation,
+            UserEntity actor
+    ) {
+        if (invitation.getTutor() != null
+                && !invitation.getTutor().getUser().getId().equals(actor.getId())) {
+            return invitation.getTutor().getUser();
+        }
+
+        if (invitation.getPatient() != null
+                && !invitation.getPatient().getUser().getId().equals(actor.getId())) {
+            return invitation.getPatient().getUser();
+        }
+
+        return null;
     }
 
     // ---------------------------------------------------------------------

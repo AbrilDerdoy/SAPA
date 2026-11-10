@@ -34,9 +34,27 @@ public class PatientController {
             @ApiResponse(responseCode = "404", description = "No se encontró el registro del paciente asociado al usuario autenticado.", content = @Content)
     })
     @PutMapping("/profile")
-    public ResponseEntity<Void> updateProfile(@RequestBody UpdatePatientRequestDTO request) {
-        patientService.updatePatient(request);
+    public ResponseEntity<Void> updateProfile(
+            @RequestBody UpdatePatientRequestDTO request,
+            @RequestParam(required = false) Long patientId) {
+        patientService.updatePatient(patientId, request);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Obtener el perfil de un paciente",
+            description = "Devuelve los datos del paciente autenticado o, si quien consulta es su tutor, los del paciente tutelado indicado."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Perfil del paciente recuperado con éxito."),
+            @ApiResponse(responseCode = "401", description = "No autorizado - Token JWT inválido, expirado o ausente.", content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado para acceder a este paciente.", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado.", content = @Content)
+    })
+    @GetMapping("/profile")
+    public ResponseEntity<PatientResponseDTO> getProfile(
+            @RequestParam(required = false) Long patientId) {
+        return ResponseEntity.ok(patientService.getPatientProfile(patientId));
     }
 
     @GetMapping("/my-patients")
