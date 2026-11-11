@@ -1,0 +1,76 @@
+<form class="panel" (submit)="submit($event)" novalidate>
+  <h2 class="panel__title">{{ treatment() ? 'Editar tratamiento' : 'Nuevo tratamiento' }}</h2>
+
+  <div class="grid">
+    <div class="field field--wide">
+      <label for="tName">Nombre</label>
+      <input id="tName" type="text" autocomplete="off" [formField]="treatmentForm.name" />
+      @if (treatmentForm.name().touched() && treatmentForm.name().invalid()) {
+        <ul class="field__errors" role="alert">
+          @for (e of treatmentForm.name().errors(); track e.kind) {
+            <li>{{ e.message }}</li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="field field--wide">
+      <label for="tDescription">Descripción</label>
+      <textarea id="tDescription" rows="4" [formField]="treatmentForm.description"></textarea>
+      @if (treatmentForm.description().touched() && treatmentForm.description().invalid()) {
+        <ul class="field__errors" role="alert">
+          @for (e of treatmentForm.description().errors(); track e.kind) {
+            <li>{{ e.message }}</li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="field">
+      <label for="tFrequencyLength">Frecuencia: cada</label>
+      <div class="pair">
+        <input id="tFrequencyLength" type="number" [formField]="treatmentForm.frequencyLength" />
+        <select aria-label="Unidad de la frecuencia" [formField]="treatmentForm.frequencyUnit">
+          @for (u of frequencyUnits; track u.value) {
+            <option [value]="u.value">{{ u.label }}</option>
+          }
+        </select>
+      </div>
+      @if (treatmentForm.frequencyLength().touched() && treatmentForm.frequencyLength().invalid()) {
+        <ul class="field__errors" role="alert">
+          @for (e of treatmentForm.frequencyLength().errors(); track e.kind) {
+            <li>{{ e.message }}</li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="field">
+      <label for="tDurationLength">Duración</label>
+      <div class="pair" [class.pair--single]="model().durationUnit === 'INDETERMINATE'">
+        @if (model().durationUnit !== 'INDETERMINATE') {
+          <input id="tDurationLength" type="number" [formField]="treatmentForm.durationLength" />
+        }
+        <select aria-label="Unidad de la duración" [formField]="treatmentForm.durationUnit">
+          @for (u of durationUnits; track u.value) {
+            <option [value]="u.value">{{ u.label }}</option>
+          }
+        </select>
+      </div>
+      @if (treatmentForm.durationLength().touched() && treatmentForm.durationLength().invalid()) {
+        <ul class="field__errors" role="alert">
+          @for (e of treatmentForm.durationLength().errors(); track e.kind) {
+            <li>{{ e.message }}</li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+
+  <div class="panel__actions">
+    <button type="button" class="btn btn--outline" (click)="cancelled.emit()">Cancelar</button>
+    <button type="submit" [disabled]="saving()">
+      {{ saving() ? 'Guardando…' : treatment() ? 'Guardar cambios' : 'Crear tratamiento' }}
+    </button>
+  </div>
+</form>

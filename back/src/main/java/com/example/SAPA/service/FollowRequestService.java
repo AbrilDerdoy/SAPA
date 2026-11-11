@@ -126,6 +126,10 @@ public class FollowRequestService {
             );
         }
 
+        if (request.getStatus() != FollowRequestStatus.PENDING) {
+            throw new RuntimeException("Solo se pueden responder solicitudes pendientes");
+        }
+
         request.setStatus(FollowRequestStatus.APPROVED);
         request.setRespondedAt(LocalDateTime.now());
 
@@ -176,6 +180,7 @@ public class FollowRequestService {
         if (request.getStatus() != FollowRequestStatus.PENDING) {
             throw new RuntimeException("La solicitud ya fue respondida o no está pendiente.");
         }
+
         request.setStatus(FollowRequestStatus.REJECTED);
         request.setRespondedAt(LocalDateTime.now());
 

@@ -1,10 +1,10 @@
-import { Component, inject, linkedSignal, OnInit, signal } from '@angular/core';
+import { Component, inject, linkedSignal, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { applyWhen, form, required, validate, FormField, disabled } from '@angular/forms/signals';
-import { FormError } from '../../../Common/form-error/form-error';
+import { form, required, validate, FormField, disabled } from '@angular/forms/signals';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { Auth } from '../../services/Auth/auth';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
+import { FormError } from '../../../Common/form-error/form-error';
 
 export interface datosUsuario{
   firstName:string,
@@ -16,9 +16,9 @@ export interface datosUsuario{
 
 @Component({
   selector: 'app-profile',
-  imports: [FormField, FormError],
+  imports: [RouterLink, FormField, FormError],
   templateUrl: './profile.html',
-  styleUrl: '../../shared/form.css',
+  styleUrl: './profile.css',
 })
 export class Profile{
   readonly auth = inject(Auth);
@@ -52,6 +52,14 @@ export class Profile{
   toggleFormulario():void{
     this.modificarDatos.update(valor => !valor);
   }
+
+  cancelar(): void {
+  const datos = this.profile.value();
+  if (datos) {
+    this.modelo.set(datos);
+  }
+  this.modificarDatos.set(false);
+}
 
   toggleBotonEnviar(){
     if(this.modelo()!==this.profile.value()){

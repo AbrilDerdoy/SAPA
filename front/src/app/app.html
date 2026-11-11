@@ -1,4 +1,3 @@
-
 <header class="main-header">
   <nav class="navbar">
 
@@ -29,6 +28,8 @@
             Inicio
           </a>
         </li>
+
+        <li></li>
 
         <li>
           <a
@@ -68,36 +69,19 @@
           </a>
         </li>
 
-        <li>
-          <a
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact: true}"
-            #buscar="routerLinkActive">
+        @if (role() === 'PATIENT') {
+          <li class="nav-search">
+            <app-doctor-quick-search />
+          </li>
+        }
 
-            <img
-              [src]="buscar.isActive
-                ? '/images/magnifying-glass-t.png'
-                : '/images/magnifying-glass.png'">
-
-            Buscar
-          </a>
-        </li>
+        @if (role() === 'DOCTOR') {
+          <li>
+            <a routerLink="/perfil-medico" routerLinkActive="active">Mi perfil profesional</a>
+          </li>
+        }
 
         <li>
-
-          @if (role === 'DOCTOR') {
-            <a routerLink="/solicitudes">
-              Solicitudes de seguimiento
-            </a>
-          }
-
-          @if (role === 'PATIENT') {
-            <a routerLink="/mis-solicitudes">
-              Mis solicitudes
-            </a>
-          }
-
-        </li>
 
       }
 

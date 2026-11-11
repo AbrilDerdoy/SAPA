@@ -3,6 +3,7 @@ import { Routes } from '@angular/router';
 
 import { roleGuard } from './FollowRequest/guards/role-guard';
 import { adminGuard } from './Usuario/guards/admin-guard';
+import { doctorGuard, patientGuard } from './Doctor/guards/role-doctor-guard';
 
 import { Home } from './home/home';
 import { Forum } from './forum/forum-component/forum/forum';
@@ -126,6 +127,25 @@ export const routes: Routes = [
   {path: 'my-patients', canActivate: [roleGuard(['DOCTOR'])],
     loadComponent: () => import('./medical-record/components/doctor-patients/doctor-patients')
     .then(m => m.DoctorPatients)},
+
+  // Doctor
+  {path: 'perfil-medico', canActivate: [doctorGuard],loadComponent: () =>
+    import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)},
+  {path: 'medicos', canActivate: [patientGuard], loadComponent: () =>
+    import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)},
+
+  // Paciente
+{path: 'perfil-paciente', canActivate: [patientGuard], loadComponent: () =>
+    import('./Patient/components/patient-profile/patient-profile').then((m) => m.PatientProfile)},
+{path: 'mis-pacientes', canActivate: [doctorGuard], loadComponent: () =>
+    import('./Patient/components/my-patients/my-patients').then((m) => m.MyPatients)},
+
+  // Tratamientos
+{path: 'mis-tratamientos', canActivate: [patientGuard], loadComponent: () =>
+    import('./Treatment/components/treatments/treatments').then((m) => m.Treatments)},
+{path: 'pacientes/:patientId/tratamientos', canActivate: [doctorGuard], loadComponent: () =>
+    import('./Treatment/components/treatments/treatments').then((m) => m.Treatments)},
+
   // Ruta inexistente
   { path: '**', redirectTo: 'home' }
 ];

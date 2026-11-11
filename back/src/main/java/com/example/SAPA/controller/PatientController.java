@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class PatientController {
             @ApiResponse(responseCode = "404", description = "No se encontró el registro del paciente asociado al usuario autenticado.", content = @Content)
     })
     @PutMapping("/profile")
-    public ResponseEntity<Void> updateProfile(@RequestBody UpdatePatientRequestDTO request) {
+    public ResponseEntity<Void> updateProfile(@Valid @RequestBody UpdatePatientRequestDTO request) {
         patientService.updatePatient(request);
         return ResponseEntity.noContent().build();
     }
@@ -60,5 +61,10 @@ public class PatientController {
     })
     public ResponseEntity<List<PatientResponseDTO>> getMyPatients() {
         return ResponseEntity.ok(patientService.getAllPatientsOfDoctor());
+    }
+
+    @GetMapping("/my-profile")
+    public ResponseEntity<PatientResponseDTO> getMyProfile() {
+        return ResponseEntity.ok(patientService.getMyProfile());
     }
 }

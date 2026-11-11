@@ -1,0 +1,101 @@
+<section class="ds">
+  <header class="ds__header">
+    <h1 class="ds__title">Buscá un médico</h1>
+    <p class="ds__lead">
+      Encontrá profesionales por nombre o apellido y envialés una solicitud de seguimiento.
+    </p>
+  </header>
+
+  <form class="bar" (submit)="search($event)" novalidate>
+    <label class="sr-only" for="query">Nombre o apellido</label>
+    <input
+      id="query"
+      type="text"
+      placeholder="Nombre o apellido del médico"
+      autocomplete="off"
+      [formField]="searchForm.query"
+    />
+    @if (model().query) {
+      <button type="button" class="bar__clear" (click)="clear()" aria-label="Limpiar búsqueda">×</button>
+    }
+    <button type="submit" class="bar__btn" [disabled]="loadStatus() === 'loading'">Buscar</button>
+  </form>
+
+  <div class="results" aria-live="polite">
+    @if (loadStatus() === 'loading') {
+      <div class="skeleton">
+        <span class="skeleton__row"></span>
+        <span class="skeleton__row"></span>
+        <span class="skeleton__row"></span>
+      </div>
+    }
+
+    @if (loadStatus() === 'error') {
+      <div class="notice notice--error" role="alert">
+        <strong>No pudimos cargar los médicos</strong>
+        <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
+        <button type="button" class="btn btn--outline" (click)="load(model().query)">Reintentar</button>
+      </div>
+    }
+
+    @if (loadStatus() === 'success') {
+      @if (doctors().length === 0) {
+        <div class="notice">
+          <strong>
+            {{ lastQuery() ? 'No encontramos médicos para "' + lastQuery() + '"' : 'Todavía no hay médicos registrados' }}
+          </strong>
+          <p>Probá con otro nombre o apellido.</p>
+        </div>
+      }
+
+      <ul class="list">
+        @for (doctor of doctors(); track doctor.id) {
+          <li class="card">
+            <div class="card__row">
+              <div class="card__avatar" aria-hidden="true">
+                {{ initials(doctor.firstName, doctor.lastName) }}
+              </div>
+
+              <div class="card__info">
+                <h2 class="card__name">{{ doctor.firstName }} {{ doctor.lastName }}</h2>
+                <p class="card__meta">Matrícula {{ doctor.licenseNumber }}</p>
+              </div>
+
+              <div class="card__actions">
+                @if (hospitalUrls()[doctor.id]; as url) {
+                  <a class="btn btn--outline" [href]="url" target="_blank" rel="noopener noreferrer">
+                    Abrir sitio
+                  </a>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn--outline"
+                    [disabled]="isBusy(doctor.id, 'hospital')"
+                    (click)="showHospital(doctor.id)"
+                  >
+                    Ver hospital
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="btn btn--primary"
+                  [class.btn--sent]="locked(doctor.id)"
+                  [disabled]="isBusy(doctor.id, 'follow') || locked(doctor.id)"
+                  (click)="requestFollow(doctor.id)"
+                >
+                  {{ isBusy(doctor.id, 'follow') ? 'Enviando…' : lockedLabel(doctor.id) || 'Solicitar seguimiento' }}
+                </button>
+              </div>
+            </div>
+
+            @if (feedback()[doctor.id]; as fb) {
+              <p class="card__feedback" [class.card__feedback--error]="fb.kind === 'error'" role="status">
+                {{ fb.text }}
+              </p>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>

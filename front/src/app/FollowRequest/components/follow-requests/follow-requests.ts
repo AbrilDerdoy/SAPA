@@ -2,8 +2,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { FollowRequestService } from '../../service/follow-request.service';
-import { FollowRequest } from '../../interfaces/follow-request';
 import { FollowRequestStatus } from '../../interfaces/follow-request-status';
+import { FollowRequest } from '../../interfaces/follow-request';
 
 type ViewMode = 'doctor' | 'patient';
 type LoadStatus = 'loading' | 'success' | 'error';
@@ -14,8 +14,7 @@ type LoadStatus = 'loading' | 'success' | 'error';
   templateUrl: './follow-requests.html',
   styleUrl: './follow-requests.css',
 })
-export class FollowRequests implements OnInit{
-
+export class FollowRequests implements OnInit {
   private readonly service = inject(FollowRequestService);
   private readonly route = inject(ActivatedRoute);
 
@@ -102,6 +101,7 @@ export class FollowRequests implements OnInit{
     this.service.dissolve(id).subscribe({
       next: (updated) => {
         this.requests.update((list) => list.map((r) => (r.id === id ? updated : r)));
+        this.service.loadSent();
         this.busyId.set(null);
       },
       error: () => {
