@@ -8,8 +8,10 @@ import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.FollowRequestEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.FollowRequestRepository;
+import com.example.SAPA.Repositories.PatientRepository;
 import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.mappers.PatientMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ public class PatientService {
     private final UserContextService userContextService;
     private final FollowRequestRepository followRequestRepository;
     private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
 
 
     @Transactional
@@ -54,5 +57,13 @@ public class PatientService {
                 .map(FollowRequestEntity::getPatient)
                 .map(patientMapper::toResponseDTO)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getMyProfile() {
+        UserEntity currentUser = userContextService.getAuthenticatedUser();
+        PatientEntity patient = patientRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró un perfil de paciente asociado a este usuario."));
+        return patientMapper.toResponseDTO(patient);
     }
 }

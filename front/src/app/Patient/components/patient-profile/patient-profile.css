@@ -55,24 +55,6 @@
   color: var(--text-muted);
 }
 
-.field input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-  font-family: inherit;
-  color: var(--text);
-  background: var(--surface, #fff);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.field input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light, rgba(0, 128, 0, 0.15));
-}
-
 .is-invalid {
   border-color: var(--danger);
 }
@@ -98,6 +80,14 @@
   color: var(--text-muted);
 }
 
+.pp > .notice {
+  margin-bottom: 1rem;
+}
+
+.notice button {
+  margin-top: 0.8rem;
+}
+
 .notice--error {
   background: var(--danger-light);
   border-left-color: var(--danger);
@@ -106,19 +96,6 @@
 .form__actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.form__actions button {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  font-family: inherit;
-  color: #fff;
-  background-color: var(--primary);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
 .form__actions button:disabled {

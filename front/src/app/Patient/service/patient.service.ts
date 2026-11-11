@@ -10,15 +10,11 @@ export class PatientService {
   private readonly baseUrl = 'http://localhost:8080/patients';
 
   getProfile(): Observable<Patient> {
-    return this.http.get<Patient>(`${this.baseUrl}/profile`);
+    return this.http.get<Patient>(`${this.baseUrl}/my-profile`);
   }
 
   updateProfile(request: UpdatePatientRequest): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/profile`, request);
-  }
-
-  getMyProfile(): Observable<Patient> {
-    return this.http.get<Patient>(`${this.baseUrl}/profile`);
   }
 
   getMyPatients(): Observable<Patient[]> {

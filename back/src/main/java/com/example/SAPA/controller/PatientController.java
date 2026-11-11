@@ -62,4 +62,9 @@ public class PatientController {
     public ResponseEntity<List<PatientResponseDTO>> getMyPatients() {
         return ResponseEntity.ok(patientService.getAllPatientsOfDoctor());
     }
+
+    @GetMapping("/my-profile")
+    public ResponseEntity<PatientResponseDTO> getMyProfile() {
+        return ResponseEntity.ok(patientService.getMyProfile());
+    }
 }

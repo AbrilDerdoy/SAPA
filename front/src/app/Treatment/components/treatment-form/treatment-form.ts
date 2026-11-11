@@ -48,7 +48,7 @@ export class TreatmentForm {
   readonly treatmentForm = form(this.model, (path) => {
     required(path.name, { message: 'El nombre del tratamiento es obligatorio.' });
     maxLength(path.name, 100, { message: 'El nombre no puede superar los 100 caracteres.' });
- 
+
     required(path.description, { message: 'La descripción es obligatoria.' });
     maxLength(path.description, 1000, { message: 'La descripción no puede superar los 1000 caracteres.' });
 

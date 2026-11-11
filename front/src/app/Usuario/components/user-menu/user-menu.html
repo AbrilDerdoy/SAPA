@@ -1,6 +1,4 @@
-
 <div class="user-menu">
-
   <button
     type="button"
     class="menu-trigger"
@@ -8,134 +6,123 @@
     [attr.aria-expanded]="menuAbierto()"
     aria-controls="user-dropdown"
     aria-label="Menú de usuario">
-
-    <img
-      class="menu-icon"
-      src="/images/menu.svg"
-      alt=""
-      aria-hidden="true">
+    <img class="menu-icon" src="/images/menu.svg" alt="" aria-hidden="true">
   </button>
 
   @if (menuAbierto()) {
-  <div class="dropdown" id="user-dropdown">
+    <div class="dropdown" id="user-dropdown">
 
-    <!-- SECCIÓN DOCTOR -->
-    @if (auth.isDoctor() || role() === 'DOCTOR') {
-      <a [routerLink]="['/profile']" (click)="toggleMenu()">
-        <i class="bi bi-person"></i>
-        Mi perfil
-      </a>
-      <a [routerLink]="['/perfil-medico']" (click)="toggleMenu()">
-        <i class="bi bi-person-vcard"></i>
-        Perfil profesional
-      </a>
+      @if (auth.isDoctor() || role() === 'DOCTOR') {
+        <a [routerLink]="['/profile']" (click)="toggleMenu()">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          Mi perfil
+        </a>
+        <a [routerLink]="['/perfil-medico']" (click)="toggleMenu()">
+          <i class="bi bi-person-vcard" aria-hidden="true"></i>
+          Perfil profesional
+        </a>
+        <hr>
+        <a [routerLink]="['/mis-pacientes']" (click)="toggleMenu()">
+          <i class="bi bi-people" aria-hidden="true"></i>
+          Mis pacientes
+        </a>
+        <a [routerLink]="['/solicitudes']" (click)="toggleMenu()">
+          <i class="bi bi-person-check" aria-hidden="true"></i>
+          Solicitudes de seguimiento
+        </a>
+        <hr>
+        <a [routerLink]="['/gestionar-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>
+          Gestionar cuestionarios
+        </a>
+        <a [routerLink]="['/historial-cuestionarios-pacientes']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history" aria-hidden="true"></i>
+          Historial de pacientes
+        </a>
+        <hr>
+      }
+
+      @if (auth.isPatient() || role() === 'PATIENT') {
+        <a [routerLink]="['/perfil-paciente']" (click)="toggleMenu()">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          Mi perfil
+        </a>
+        <hr>
+        <a [routerLink]="['/mis-tratamientos']" (click)="toggleMenu()">
+          <i class="bi bi-heart-pulse" aria-hidden="true"></i>
+          Mis tratamientos
+        </a>
+        <a [routerLink]="['/mis-solicitudes']" (click)="toggleMenu()">
+          <i class="bi bi-person-check" aria-hidden="true"></i>
+          Mis solicitudes
+        </a>
+        <hr>
+        <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
+          Mis cuestionarios
+        </a>
+        <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history" aria-hidden="true"></i>
+          Mi historial
+        </a>
+        <hr>
+      }
+
+      @if (auth.isAdmin()) {
+        <a [routerLink]="['/admin']" (click)="toggleMenu()">
+          <i class="bi bi-shield-lock" aria-hidden="true"></i>
+          Panel de administración
+        </a>
+        <hr>
+      }
+
+      <button
+        type="button"
+        class="configuration-button"
+        (click)="toggleConfiguracion()"
+        [attr.aria-expanded]="configuracionAbierta()">
+        <i class="bi bi-gear" aria-hidden="true"></i>
+        Configuración
+        <i
+          class="bi"
+          aria-hidden="true"
+          [class.bi-chevron-down]="!configuracionAbierta()"
+          [class.bi-chevron-up]="configuracionAbierta()">
+        </i>
+      </button>
+
+      @if (configuracionAbierta()) {
+        <div class="configuration-options">
+          <button
+            type="button"
+            class="theme-toggle"
+            (click)="theme.toggleTheme()"
+            [attr.aria-pressed]="theme.theme() === 'dark'">
+            @if (theme.theme() === 'dark') {
+              <i class="bi bi-sun" aria-hidden="true"></i>
+              Tema claro
+            } @else {
+              <i class="bi bi-moon" aria-hidden="true"></i>
+              Tema oscuro
+            }
+          </button>
+
+          <label class="bubble-setting">
+            <input
+              type="checkbox"
+              [checked]="bubblePreference.enabled()"
+              (change)="cambiarPreferenciaBurbuja()">
+            <span>Mostrar burbuja de mensajes</span>
+          </label>
+        </div>
+      }
+
       <hr>
-      <a [routerLink]="['/gestionar-cuestionarios']" (click)="toggleMenu()">
-        <i class="bi bi-clipboard2-pulse"></i>
-        Gestionar cuestionarios
-      </a>
-      <a [routerLink]="['/historial-cuestionarios-pacientes']" (click)="toggleMenu()">
-        <i class="bi bi-clock-history"></i>
-        Historial de pacientes
-      </a>
-      <a [routerLink]="['/mis-pacientes']" (click)="toggleMenu()">
-        <i class="bi bi-people"></i>
-        Mis pacientes
-      </a>
-      <a [routerLink]="['/solicitudes']" (click)="toggleMenu()">
-        <i class="bi bi-person-check"></i>
-        Solicitudes de seguimiento
-      </a>
-      <hr>
-    }
 
-    <!-- SECCIÓN PACIENTE -->
-    @if (auth.isPatient() || role() === 'PATIENT') {
-      <a [routerLink]="['/perfil-paciente']" (click)="toggleMenu()">
-        <i class="bi bi-person"></i>
-        Mi perfil
-      </a>
-      <hr>
-      <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
-        <i class="bi bi-clipboard2-check"></i>
-        Mis cuestionarios
-      </a>
-      <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
-        <i class="bi bi-clock-history"></i>
-        Mi historial
-      </a>
-      <a [routerLink]="['/mis-solicitudes']" (click)="toggleMenu()">
-        <i class="bi bi-person-check"></i>
-        Mis solicitudes
-      </a>
-      <a [routerLink]="['/mis-tratamientos']" (click)="toggleMenu()">
-        <i class="bi bi-heart-pulse"></i>
-        Mis tratamientos
-      </a>
-      <hr>
-    }
-
-    <!-- CONFIGURACIÓN (Común para todos) -->
-    <button
-      type="button"
-      class="configuration-button"
-      (click)="toggleConfiguracion()"
-      [attr.aria-expanded]="configuracionAbierta()">
-      <i class="bi bi-gear"></i>
-      Configuración
-      <i
-        class="bi"
-        [class.bi-chevron-down]="!configuracionAbierta()"
-        [class.bi-chevron-up]="configuracionAbierta()">
-      </i>
-    </button>
-
-    @if (configuracionAbierta()) {
-      <div class="configuration-options">
-        <button
-          type="button"
-          class="theme-toggle"
-          (click)="theme.toggleTheme()"
-          [attr.aria-pressed]="theme.theme() === 'dark'">
-
-          @if (theme.theme() === 'dark') {
-            <i class="bi bi-sun"></i>
-            Tema claro
-          } @else {
-            <i class="bi bi-moon"></i>
-            Tema oscuro
-          }
-        </button>
-
-        <label class="bubble-setting">
-          <input
-            type="checkbox"
-            [checked]="bubblePreference.enabled()"
-            (change)="cambiarPreferenciaBurbuja()">
-          <span>Mostrar burbuja de mensajes</span>
-        </label>
-      </div>
-    }
-
-    <!-- SECCIÓN ADMIN -->
-    @if (auth.isAdmin()) {
-      <hr>
-      <a [routerLink]="['/admin']" (click)="toggleMenu()">
-        <i class="bi bi-shield-lock"></i>
-        Panel de administración
-      </a>
-    }
-
-    <hr>
-
-    <!-- ACCIÓN DE CIERRE DE SESIÓN -->
-    <button
-      type="button"
-      class="logout-button"
-      (click)="auth.logout()">
-      <i class="bi bi-box-arrow-right"></i>
-      Cerrar sesión
-    </button>
-  </div>
-}
+      <button type="button" class="logout-button" (click)="auth.logout()">
+        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+        Cerrar sesión
+      </button>
+    </div>
+  }
 </div>

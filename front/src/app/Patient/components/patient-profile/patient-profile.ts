@@ -3,7 +3,8 @@ import { FormField, form, maxLength, minLength, pattern, required } from '@angul
 import { PatientService } from '../../service/patient.service';
 import { UpdatePatientRequest } from '../../interfaces/update-patient-request';
 
-type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
+type LoadStatus = 'loading' | 'ready' | 'error';
+type SaveStatus ='idle' | 'saving' | 'success' | 'error';
 type ProfileField = 'firstName' | 'lastName' | 'birthDate' | 'phoneNumber';
 
 function todayLocal(): string {
@@ -49,15 +50,25 @@ export class PatientProfile {
     });
   });
 
+  readonly loadStatus = signal<LoadStatus>('loading');
+
   constructor() {
+    this.loadProfile();
+  }
+
+  loadProfile(): void {
+    this.loadStatus.set('loading');
     this.patientService.getProfile().subscribe({
-      next: (profile) =>
+      next: (profile) => {
         this.model.set({
           firstName: profile.firstName ?? '',
           lastName: profile.lastName ?? '',
           birthDate: profile.birthDate ?? '',
           phoneNumber: profile.phoneNumber ?? '',
-        }),
+        });
+        this.loadStatus.set('ready');
+      },
+      error: () => this.loadStatus.set('error'),
     });
   }
 

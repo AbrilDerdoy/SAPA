@@ -135,9 +135,9 @@ export const routes: Routes = [
     import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)},
 
   // Paciente
-  {path: 'perfil-paciente', canActivate: [patientGuard], loadComponent: () =>
+{path: 'perfil-paciente', canActivate: [patientGuard], loadComponent: () =>
     import('./Patient/components/patient-profile/patient-profile').then((m) => m.PatientProfile)},
-  {path: 'mis-pacientes', canActivate: [doctorGuard], loadComponent: () =>
+{path: 'mis-pacientes', canActivate: [doctorGuard], loadComponent: () =>
     import('./Patient/components/my-patients/my-patients').then((m) => m.MyPatients)},
 
   // Tratamientos
