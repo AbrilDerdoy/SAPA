@@ -207,6 +207,7 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // Médicos
+                .requestMatchers(HttpMethod.GET, "/doctors/profile").hasAuthority("ROLE_DOCTOR")
                 .requestMatchers(HttpMethod.GET, "/doctors/**").permitAll()
                 .requestMatchers("/doctors/**").hasAuthority("ROLE_DOCTOR")
 

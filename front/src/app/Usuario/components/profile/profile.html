@@ -1,13 +1,13 @@
 @if(auth.isAuthenticated()){
-    @if(profile.isLoading()){
-        <p>Cargando datos...</p>
-    }
-    @if(profile.error()){
-        <p>Ocurrio un error</p>
-    }
-    @if(profile.hasValue()){
-        <div class="container" style="padding:20px;">
-        <form novalidate (submit)="enviar($event)">
+    <section class="profile">
+        @if(profile.isLoading()){
+            <p>Cargando datos...</p>
+        }
+        @if(profile.error()){
+            <p>Ocurrio un error</p>
+        }
+        @if(profile.hasValue()){
+        <form class="card" novalidate (submit)="enviar($event)">
             <label>
                 Nombre:
                 <input type="text" [formField]="formulario.firstName">
@@ -33,11 +33,13 @@
                 <input type="number" [formField]="formulario.phoneNumber">
                 <app-form-error [field]="formulario.phoneNumber()" />
             </label>
-            <button type="button" (click)="toggleFormulario()">
-                {{ modificarDatos() ? 'Cancelar' : 'Editar datos' }}
-            </button>
-            <button class="btn-enviar" type="submit" [disabled]="toggleBotonEnviar()">Confirmar</button>
+            <div class="form__actions">
+                <button type="button" (click)="toggleFormulario()">
+                    {{ modificarDatos() ? 'Cancelar' : 'Editar datos' }}
+                </button>
+                <button class="btn-enviar" type="submit" [disabled]="!modificarDatos() || !hayCambios()">Confirmar</button>
+            </div>
         </form>
-    </div>
-    }
+        }
+    </section>
 }

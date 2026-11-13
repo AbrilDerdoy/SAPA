@@ -8,6 +8,6 @@ export interface PendingDoctorResponse {
     birthDate: Date,
     phoneNumber: number,
     licenseNumber: number,
-    specialty: string,
+    speciality: string,
     status: string
 }

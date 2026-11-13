@@ -1,8 +1,10 @@
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.Request.UpdateDoctorRequestDTO;
+import com.example.SAPA.DTOs.Response.DoctorProfileResponseDTO;
 import com.example.SAPA.DTOs.Response.DoctorResponseDTO;
 import com.example.SAPA.service.DoctorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,9 +21,14 @@ public class DoctorController {
 
     private final DoctorService doctorService;
 
+    @GetMapping("/profile")
+    public ResponseEntity<DoctorProfileResponseDTO> getProfile() {
+        return ResponseEntity.ok(doctorService.getCurrentDoctorProfile());
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<Void> updateProfile(@AuthenticationPrincipal UserDetails userDetails,
-                                              @RequestBody UpdateDoctorRequestDTO request) {
+                                              @Valid @RequestBody UpdateDoctorRequestDTO request) {
         doctorService.updateDoctor(userDetails.getUsername(), request);
         return ResponseEntity.noContent().build();
     }

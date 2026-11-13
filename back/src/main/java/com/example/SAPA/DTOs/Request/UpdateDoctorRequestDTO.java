@@ -1,11 +1,9 @@
 package com.example.SAPA.DTOs.Request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-
-import java.util.List;
 
 public record UpdateDoctorRequestDTO(
 
@@ -33,6 +31,6 @@ public record UpdateDoctorRequestDTO(
         @Size(min = 3, max = 30, message = "La matrícula debe tener entre 3 and 30 caracteres.")
         String licenseNumber,
 
-        @NotEmpty(message = "Debe seleccionar al menos una especialidad.")
-        List<Long> specialities
+        @NotNull(message = "Debe seleccionar una especialidad.")
+        Long speciality
 ) {}

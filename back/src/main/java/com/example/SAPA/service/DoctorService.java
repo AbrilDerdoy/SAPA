@@ -1,6 +1,7 @@
 package com.example.SAPA.service;
 
 import com.example.SAPA.DTOs.Request.UpdateDoctorRequestDTO;
+import com.example.SAPA.DTOs.Response.DoctorProfileResponseDTO;
 import com.example.SAPA.DTOs.Response.DoctorResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
@@ -37,7 +38,8 @@ public class DoctorService {
         doctor.setBio(request.bio());
         doctor.setHospitalUrl(request.hospitalUrl());
 
-        doctor.setSpecialities(specialityRepository.findAllById(request.specialities()));
+        doctor.setSpeciality(specialityRepository.findById(request.speciality())
+                .orElseThrow(() -> new EntityNotFoundException("Especialidad no encontrada")));
     }
 
 
@@ -77,4 +79,21 @@ public class DoctorService {
         doctor.getLicenseNumber()
     );
 }
+
+    @Transactional(readOnly = true)
+    public DoctorProfileResponseDTO getCurrentDoctorProfile() {
+        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+
+        return new DoctorProfileResponseDTO(
+                doctor.getId(),
+                doctor.getFirstName(),
+                doctor.getLastName(),
+                doctor.getUser().getEmail(),
+                doctor.getPhoneNumber(),
+                doctor.getLicenseNumber(),
+                doctor.getBio(),
+                doctor.getHospitalUrl(),
+                doctor.getSpeciality() == null ? null : doctor.getSpeciality().getId()
+        );
+    }
 }

@@ -5,5 +5,5 @@ export interface UpdateDoctorRequest {
     hospitalUrl: string | null;
     phoneNumber: string;
     licenseNumber: string;
-    specialities: number[];
+    speciality: number;
 }

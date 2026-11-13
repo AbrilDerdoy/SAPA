@@ -13,10 +13,6 @@
     <div class="dropdown" id="user-dropdown">
 
       @if (auth.isDoctor() || role() === 'DOCTOR') {
-        <a [routerLink]="['/profile']" (click)="toggleMenu()">
-          <i class="bi bi-person" aria-hidden="true"></i>
-          Mi perfil
-        </a>
         <a [routerLink]="['/perfil-medico']" (click)="toggleMenu()">
           <i class="bi bi-person-vcard" aria-hidden="true"></i>
           Perfil profesional
@@ -69,6 +65,11 @@
       }
 
       @if (auth.isAdmin()) {
+        <a [routerLink]="['/profile']">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          Mi perfil
+        </a>
+        <hr>
         <a [routerLink]="['/admin']" (click)="toggleMenu()">
           <i class="bi bi-shield-lock" aria-hidden="true"></i>
           Panel de administración
