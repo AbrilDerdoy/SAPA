@@ -8,9 +8,8 @@ import { Router } from '@angular/router';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
-type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'> & {
+type RegistroFormModel = Omit<registerRequest, 'licenseNumber'> & {
   licenseNumber: string;
-  speciality: number | null;
 };
 
 @Component({
@@ -97,9 +96,7 @@ export class Registro {
         phoneNumber:datos.phoneNumber,
         birthDate:datos.birthDate,
         licenseNumber: datos.role === 'ROLE_DOCTOR' ? datos.licenseNumber : null,
-        specialities: datos.role === 'ROLE_DOCTOR' && datos.speciality !== null
-          ? [datos.speciality]
-          : null
+        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null
       }
 
     this.errorRegistro.set(null);

@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public record RegisterRequest(
 
@@ -39,5 +38,5 @@ public record RegisterRequest(
 
         String licenseNumber,
 
-        List<Long> specialities
+        Long speciality
 ) {}

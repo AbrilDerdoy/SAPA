@@ -1,11 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormField, form, maxLength, minLength, pattern, required } from '@angular/forms/signals';
+import { FormField, disabled, form, maxLength, minLength, pattern, required, validate } from '@angular/forms/signals';
 import { PatientService } from '../../service/patient.service';
 import { UpdatePatientRequest } from '../../interfaces/update-patient-request';
+import { FormError } from '../../../Common/form-error/form-error';
 
 type LoadStatus = 'loading' | 'ready' | 'error';
 type SaveStatus ='idle' | 'saving' | 'success' | 'error';
 type ProfileField = 'firstName' | 'lastName' | 'birthDate' | 'phoneNumber';
+type ProfileModel = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  birthDate: string;
+  phoneNumber: string;
+};
 
 function todayLocal(): string {
   const now = new Date();
@@ -16,7 +24,7 @@ function todayLocal(): string {
 
 @Component({
   selector: 'app-patient-profile',
-  imports: [FormField],
+  imports: [FormField, FormError],
   templateUrl: './patient-profile.html',
   styleUrl: './patient-profile.css',
 })
@@ -25,13 +33,17 @@ export class PatientProfile {
 
   readonly today = todayLocal();
   readonly status = signal<SaveStatus>('idle');
+  readonly editing = signal(false);
+  readonly emailNoticeVisible = signal(false);
 
-  readonly model = signal({
+  readonly model = signal<ProfileModel>({
     firstName: '',
     lastName: '',
+    email: '',
     birthDate: '',
     phoneNumber: '',
   });
+  private readonly initialModel = signal<ProfileModel | null>(null);
 
   readonly profileForm = form(this.model, (path) => {
     required(path.firstName, { message: 'El nombre es obligatorio.' });
@@ -41,6 +53,11 @@ export class PatientProfile {
     maxLength(path.lastName, 50, { message: 'El apellido no puede superar los 50 caracteres.' });
 
     required(path.birthDate, { message: 'La fecha de nacimiento es obligatoria.' });
+    validate(path.birthDate, ({ value }) =>
+      value() >= this.today
+        ? { kind: 'past', message: 'La fecha de nacimiento debe ser una fecha pasada.' }
+        : undefined
+    );
 
     required(path.phoneNumber, { message: 'El número de teléfono es obligatorio.' });
     minLength(path.phoneNumber, 7, { message: 'El teléfono debe tener al menos 7 caracteres.' });
@@ -48,6 +65,18 @@ export class PatientProfile {
     pattern(path.phoneNumber, /^\+?[0-9\s\-\(]+$/, {
       message: 'Solo se permiten números, espacios, guiones o el signo +.',
     });
+
+    disabled(path, () => !this.editing());
+  });
+
+  readonly hasChanges = computed(() => {
+    const initial = this.initialModel();
+    return !!initial && (
+      initial.firstName !== this.profileForm.firstName().value() ||
+      initial.lastName !== this.profileForm.lastName().value() ||
+      initial.birthDate !== this.profileForm.birthDate().value() ||
+      initial.phoneNumber !== this.profileForm.phoneNumber().value()
+    );
   });
 
   readonly loadStatus = signal<LoadStatus>('loading');
@@ -60,44 +89,46 @@ export class PatientProfile {
     this.loadStatus.set('loading');
     this.patientService.getProfile().subscribe({
       next: (profile) => {
-        this.model.set({
+        const values = {
           firstName: profile.firstName ?? '',
           lastName: profile.lastName ?? '',
+          email: profile.email ?? '',
           birthDate: profile.birthDate ?? '',
           phoneNumber: profile.phoneNumber ?? '',
-        });
+        };
+        this.model.set(values);
+        this.initialModel.set({ ...values });
         this.loadStatus.set('ready');
       },
       error: () => this.loadStatus.set('error'),
     });
   }
 
-  readonly birthDateError = computed(() => {
-    const value = this.model().birthDate;
-    return value && value >= this.today ? 'La fecha de nacimiento debe ser una fecha pasada.' : '';
-  });
+  toggleEditing(): void {
+    if (this.editing()) {
+      const initial = this.initialModel();
+      if (initial) this.model.set(initial);
+      this.profileForm().reset();
+      this.status.set('idle');
+      this.editing.set(false);
+      return;
+    }
+
+    this.status.set('idle');
+    this.editing.set(true);
+  }
 
   invalid(field: ProfileField): boolean {
     const state = this.profileForm[field]();
-    const extra = field === 'birthDate' && !!this.birthDateError();
-    return state.touched() && (state.invalid() || extra);
-  }
-
-  errorsOf(field: ProfileField): string[] {
-    const messages = this.profileForm[field]()
-      .errors()
-      .map((e) => e.message)
-      .filter((m): m is string => !!m);
-    if (field === 'birthDate' && this.birthDateError()) {
-      messages.push(this.birthDateError());
-    }
-    return messages;
+    return state.touched() && state.invalid();
   }
 
   submit(event: Event): void {
     event.preventDefault();
 
-    if (this.profileForm().invalid() || this.birthDateError()) {
+    if (!this.editing() || !this.hasChanges()) return;
+
+    if (this.profileForm().invalid()) {
       this.profileForm().markAsTouched();
       this.status.set('idle');
       return;
@@ -113,7 +144,19 @@ export class PatientProfile {
 
     this.status.set('saving');
     this.patientService.updateProfile(request).subscribe({
-      next: () => this.status.set('success'),
+      next: () => {
+        const savedValues = {
+          firstName: request.firstName,
+          lastName: request.lastName,
+          email: this.model().email,
+          birthDate: request.birthDate,
+          phoneNumber: request.phoneNumber,
+        };
+        this.model.set(savedValues);
+        this.initialModel.set({ ...savedValues });
+        this.editing.set(false);
+        this.status.set('success');
+      },
       error: () => this.status.set('error'),
     });
   }

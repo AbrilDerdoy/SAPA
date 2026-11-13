@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface DoctorRepository extends JpaRepository<DoctorEntity, Long>{
+    boolean existsBySpeciality_Id(Long specialityId);
     Optional<DoctorEntity> findByUser(UserEntity user);
     Optional<DoctorEntity> findByUserId(Long userId);
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);

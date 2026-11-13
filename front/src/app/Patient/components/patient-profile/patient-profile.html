@@ -12,80 +12,74 @@
     </div>
   }
 
+  @if (loadStatus() === 'loading') {
+    <p class="hint" role="status">Cargando tus datos…</p>
+  }
+
   <form class="form" (submit)="submit($event)" novalidate>
-    <div class="grid">
-      <div class="field">
-        <label for="firstName">Nombre</label>
-        <input
-          id="firstName"
-          type="text"
-          autocomplete="given-name"
-          [formField]="profileForm.firstName"
-          [class.is-invalid]="invalid('firstName')"
-        />
-        @if (invalid('firstName')) {
-          <ul class="field__errors" role="alert">
-            @for (message of errorsOf('firstName'); track message) {
-              <li>{{ message }}</li>
-            }
-          </ul>
-        }
-      </div>
+    <div class="field">
+      <label for="firstName">Nombre</label>
+      <input
+        id="firstName"
+        type="text"
+        autocomplete="given-name"
+        [formField]="profileForm.firstName"
+        [class.is-invalid]="invalid('firstName')"
+      />
+      <app-form-error [field]="profileForm.firstName()" />
+    </div>
 
-      <div class="field">
-        <label for="lastName">Apellido</label>
-        <input
-          id="lastName"
-          type="text"
-          autocomplete="family-name"
-          [formField]="profileForm.lastName"
-          [class.is-invalid]="invalid('lastName')"
-        />
-        @if (invalid('lastName')) {
-          <ul class="field__errors" role="alert">
-            @for (message of errorsOf('lastName'); track message) {
-              <li>{{ message }}</li>
-            }
-          </ul>
-        }
-      </div>
+    <div class="field">
+      <label for="lastName">Apellido</label>
+      <input
+        id="lastName"
+        type="text"
+        autocomplete="family-name"
+        [formField]="profileForm.lastName"
+        [class.is-invalid]="invalid('lastName')"
+      />
+      <app-form-error [field]="profileForm.lastName()" />
+    </div>
 
-      <div class="field">
-        <label for="birthDate">Fecha de nacimiento</label>
-        <input
-          id="birthDate"
-          type="date"
-          autocomplete="bday"
+    <div class="field">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        class="email-input"
+        type="email"
+        autocomplete="email"
+        [value]="model().email"
+        readonly
+        (click)="emailNoticeVisible.set(true)"
+        (focus)="emailNoticeVisible.set(true)"
+      />
+      @if (emailNoticeVisible()) {
+        <p class="hint email-hint" role="status">No está permitido cambiar el email por razones de seguridad.</p>
+      }
+    </div>
 
-          [formField]="profileForm.birthDate"
-          [class.is-invalid]="invalid('birthDate')"
-        />
-        @if (invalid('birthDate')) {
-          <ul class="field__errors" role="alert">
-            @for (message of errorsOf('birthDate'); track message) {
-              <li>{{ message }}</li>
-            }
-          </ul>
-        }
-      </div>
+    <div class="field">
+      <label for="birthDate">Fecha de nacimiento</label>
+      <input
+        id="birthDate"
+        type="date"
+        autocomplete="bday"
+        [formField]="profileForm.birthDate"
+        [class.is-invalid]="invalid('birthDate')"
+      />
+      <app-form-error [field]="profileForm.birthDate()" />
+    </div>
 
-      <div class="field">
-        <label for="phoneNumber">Teléfono</label>
-        <input
-          id="phoneNumber"
-          type="tel"
-          autocomplete="tel"
-          [formField]="profileForm.phoneNumber"
-          [class.is-invalid]="invalid('phoneNumber')"
-        />
-        @if (invalid('phoneNumber')) {
-          <ul class="field__errors" role="alert">
-            @for (message of errorsOf('phoneNumber'); track message) {
-              <li>{{ message }}</li>
-            }
-          </ul>
-        }
-      </div>
+    <div class="field">
+      <label for="phoneNumber">Teléfono</label>
+      <input
+        id="phoneNumber"
+        type="tel"
+        autocomplete="tel"
+        [formField]="profileForm.phoneNumber"
+        [class.is-invalid]="invalid('phoneNumber')"
+      />
+      <app-form-error [field]="profileForm.phoneNumber()" />
     </div>
 
     @if (status() === 'success') {
@@ -103,8 +97,18 @@
     }
 
     <div class="form__actions">
-      <button type="submit" [disabled]="status() === 'saving' || loadStatus() === 'loading'">
-        {{ status() === 'saving' ? 'Guardando…' : 'Guardar cambios' }}
+      <button
+        type="button"
+        (click)="toggleEditing()"
+        [disabled]="loadStatus() !== 'ready' || status() === 'saving'"
+      >
+        {{ editing() ? 'Cancelar' : 'Editar datos' }}
+      </button>
+      <button
+        type="submit"
+        [disabled]="!editing() || !hasChanges() || status() === 'saving' || loadStatus() !== 'ready'"
+      >
+        {{ status() === 'saving' ? 'Guardando…' : 'Confirmar' }}
       </button>
     </div>
   </form>

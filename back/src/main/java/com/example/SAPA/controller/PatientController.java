@@ -2,6 +2,7 @@ package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.Request.UpdatePatientRequestDTO;
 import com.example.SAPA.DTOs.Response.PatientResponseDTO;
+import com.example.SAPA.DTOs.Response.PatientProfileResponseDTO;
 import com.example.SAPA.service.PatientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -64,7 +65,7 @@ public class PatientController {
     }
 
     @GetMapping("/my-profile")
-    public ResponseEntity<PatientResponseDTO> getMyProfile() {
+    public ResponseEntity<PatientProfileResponseDTO> getMyProfile() {
         return ResponseEntity.ok(patientService.getMyProfile());
     }
 }
