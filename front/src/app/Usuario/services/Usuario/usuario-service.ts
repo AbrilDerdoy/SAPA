@@ -50,4 +50,7 @@ export class UsuarioService {
   modificarEspecialidad(id:number,name:string){
     return this.http.put<{ message: string }>(`${this.BASE_URL}/specialities/modificar/${id}`, { name });
   }
+  eliminarCuenta(password: string) {
+  return this.http.patch(`${this.BASE_URL}/users`, { password }, { responseType: 'text' });
+  }
 }

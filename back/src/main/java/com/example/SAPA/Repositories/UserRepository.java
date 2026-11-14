@@ -5,6 +5,7 @@ import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.UserCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,4 +14,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     List<UserEntity> findByRoleAndStatus(UserCategory role, AccountStatus status);
     List<UserEntity> findByRole(UserCategory role);
     boolean existsByEmail(String email);
+    List<UserEntity> findByStatusAndDeletionRequestedAtBefore(AccountStatus status, LocalDateTime limit);
 }

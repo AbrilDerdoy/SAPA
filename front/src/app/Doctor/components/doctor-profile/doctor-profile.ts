@@ -4,13 +4,14 @@ import { httpResource } from '@angular/common/http';
 import { DoctorService } from '../../service/doctor.service';
 import { Speciality } from '../../interfaces/speciality';
 import { UpdateDoctorRequest } from '../../interfaces/update-doctor-request';
+import { DeleteAccount } from '../../../Usuario/components/delete-account/delete-account';
 
 type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
 type ProfileField = 'firstName' | 'lastName' | 'phoneNumber' | 'licenseNumber' | 'bio' | 'hospitalUrl';
 
 @Component({
   selector: 'app-doctor-profile',
-  imports: [FormField],
+  imports: [FormField, DeleteAccount],
   templateUrl: './doctor-profile.html',
   styleUrl: './doctor-profile.css',
 })

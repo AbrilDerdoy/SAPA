@@ -103,7 +103,7 @@ public class UserController {
     })
     @PatchMapping
     public ResponseEntity<String> deleteUser(
-            @RequestBody DeleteAccountRequest request,
+            @Valid @RequestBody DeleteAccountRequest request,
             @Parameter(hidden = true) Authentication authentication) {
         String email = authentication.getName();
         userService.deleteUser(email, request.password());

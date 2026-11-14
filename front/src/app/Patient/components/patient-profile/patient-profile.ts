@@ -2,6 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormField, form, maxLength, minLength, pattern, required } from '@angular/forms/signals';
 import { PatientService } from '../../service/patient.service';
 import { UpdatePatientRequest } from '../../interfaces/update-patient-request';
+import { DeleteAccount } from '../../../Usuario/components/delete-account/delete-account';
+import { FormError } from '../../../Common/form-error/form-error';
 
 type LoadStatus = 'loading' | 'ready' | 'error';
 type SaveStatus ='idle' | 'saving' | 'success' | 'error';
@@ -16,7 +18,7 @@ function todayLocal(): string {
 
 @Component({
   selector: 'app-patient-profile',
-  imports: [FormField],
+  imports: [FormField, FormError, DeleteAccount],
   templateUrl: './patient-profile.html',
   styleUrl: './patient-profile.css',
 })
