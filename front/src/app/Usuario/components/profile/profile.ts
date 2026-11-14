@@ -43,6 +43,8 @@ export class Profile{
     return datos ? { ...datos } : null;
   });
 
+  readonly esAdmin = computed(() => this.profile.value()?.role === 'ADMIN');
+
   readonly modelo = linkedSignal<datosUsuario>(()=>{
     const datos = this.profile.value();
 
@@ -57,7 +59,7 @@ export class Profile{
     required(ruta.phoneNumber,{message:'El telefono es obligatorio'});
     disabled(ruta,()=>!this.modificarDatos());
     validate(ruta.birthDate, ({value}) =>
-      value() >= new Date()
+      dateValue(value()) >= dateValue(new Date())
         ? {kind: 'past', message: 'La fecha de nacimiento debe ser anterior a hoy'}
         : undefined
     );
@@ -73,12 +75,12 @@ export class Profile{
   }
 
   cancelar(): void {
-  const datos = this.datosOriginales();
-  if (datos) {
-    this.modelo.set({ ...datos });
+    const datos = this.datosOriginales();
+    if (datos) {
+      this.modelo.set({ ...datos });
+    }
+    this.modificarDatos.set(false);
   }
-  this.modificarDatos.set(false);
-}
 
   hayCambios(): boolean {
     const original = this.datosOriginales();
@@ -92,9 +94,22 @@ export class Profile{
       || String(actual.phoneNumber) !== String(original.phoneNumber);
   }
 
+  private marcarCamposComoTocados(): void {
+    this.formulario.firstName().markAsTouched();
+    this.formulario.lastName().markAsTouched();
+    this.formulario.email().markAsTouched();
+    this.formulario.birthDate().markAsTouched();
+    this.formulario.phoneNumber().markAsTouched();
+  }
+
   enviar(evento:Event):void{
     evento.preventDefault();
-    if(!this.modificarDatos() || !this.hayCambios() || this.formulario().invalid())return;
+    if(this.esAdmin() || !this.modificarDatos() || !this.hayCambios())return;
+
+    if(this.formulario().invalid()){
+      this.marcarCamposComoTocados();
+      return;
+    }
 
     this.userService.modifyData(
       {firstName:this.modelo().firstName,
@@ -109,7 +124,8 @@ export class Profile{
             this.alerta.mostrarInfo('Se modificaron tus datos exitosamente','Cambios Registrados');
           },
           error:(err)=>{
-            this.alerta.mostrarError('','Ocurrio un error');  
+            const detalle = typeof err?.error === 'string' ? err.error : (err?.error?.message ?? '');
+            this.alerta.mostrarError(detalle,'Ocurrio un error');
             console.error('Error: ',err);
           }
         });

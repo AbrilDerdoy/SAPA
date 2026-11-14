@@ -23,6 +23,7 @@
                 <input type="email" [formField]="formulario.email">
                 <app-form-error [field]="formulario.email()" />
             </label>
+            @if(!esAdmin()){
             <label>
                 Fecha de nacimiento:
                 <input type="date" [formField]="formulario.birthDate">
@@ -39,6 +40,12 @@
                 </button>
                 <button class="btn-enviar" type="submit" [disabled]="!modificarDatos() || !hayCambios()">Confirmar</button>
             </div>
+            } @else {
+            <div class="notice" role="note">
+                <strong>Perfil de administrador</strong>
+                <p>Los datos de esta cuenta no se pueden modificar.</p>
+            </div>
+            }
         </form>
         }
     </section>
