@@ -3,8 +3,10 @@ package com.example.SAPA.service;
 import com.example.SAPA.DTOs.Request.UpdateDoctorRequestDTO;
 import com.example.SAPA.DTOs.Response.DoctorProfileResponseDTO;
 import com.example.SAPA.DTOs.Response.DoctorResponseDTO;
+import com.example.SAPA.DTOs.Response.PublicDoctorProfileResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
+import com.example.SAPA.Models.SpecialityEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.SpecialityRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -42,6 +44,25 @@ public class DoctorService {
                 .orElseThrow(() -> new EntityNotFoundException("Especialidad no encontrada")));
     }
 
+
+    @Transactional(readOnly = true)
+    public PublicDoctorProfileResponseDTO getPublicDoctorProfile(Long doctorId) {
+        DoctorEntity doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new EntityNotFoundException("Médico no encontrado con id: " + doctorId));
+
+        SpecialityEntity speciality = doctor.getSpeciality();
+
+        return new PublicDoctorProfileResponseDTO(
+                doctor.getId(),
+                doctor.getFirstName(),
+                doctor.getLastName(),
+                doctor.getLicenseNumber(),
+                doctor.getBio(),
+                doctor.getHospitalUrl(),
+                speciality == null ? null : speciality.getId(),
+                speciality == null ? null : speciality.getName()
+        );
+    }
 
     public String getHospitalUrl(Long doctorId) {
         DoctorEntity doctor = doctorRepository.findById(doctorId)

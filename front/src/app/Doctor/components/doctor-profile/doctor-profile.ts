@@ -76,8 +76,12 @@ export class DoctorProfile {
         this.initialSpeciality.set(selectedSpeciality);
         this.loadStatus.set('ready');
       },
-      error: () => this.loadStatus.set('error'),
-    });
+      error: (error) => {
+        this.loadStatus.set('error'); 
+        console.error(error);
+      }
+    }
+  );
   }
 
   toggleEditing(): void {
