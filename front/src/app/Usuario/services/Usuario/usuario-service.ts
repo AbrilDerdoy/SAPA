@@ -24,7 +24,9 @@ export class UsuarioService {
 
   readonly specialities = httpResource<especialidad[]>(()=>`${this.BASE_URL}/specialities`)
 
-  readonly pendingDoctors = httpResource<PendingDoctorResponse[]>(()=>`${this.BASE_URL}/admin/pending-doctors`)
+  getPendingDoctors(){
+    return httpResource<PendingDoctorResponse[]>(()=>`${this.BASE_URL}/admin/pending-doctors`);
+  }
 
   getMyProfile(){
     return httpResource<datosUsuario>(()=>`${this.BASE_URL}/users/me`)

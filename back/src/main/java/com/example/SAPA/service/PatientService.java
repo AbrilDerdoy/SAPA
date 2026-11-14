@@ -2,6 +2,7 @@ package com.example.SAPA.service;
 
 import com.example.SAPA.DTOs.Request.UpdatePatientRequestDTO;
 import com.example.SAPA.DTOs.Response.PatientResponseDTO;
+import com.example.SAPA.DTOs.Response.PatientProfileResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
@@ -60,10 +61,19 @@ public class PatientService {
     }
 
     @Transactional(readOnly = true)
-    public PatientResponseDTO getMyProfile() {
+    public PatientProfileResponseDTO getMyProfile() {
         UserEntity currentUser = userContextService.getAuthenticatedUser();
         PatientEntity patient = patientRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró un perfil de paciente asociado a este usuario."));
-        return patientMapper.toResponseDTO(patient);
+        return new PatientProfileResponseDTO(
+                patient.getId(),
+                currentUser.getId(),
+                patient.getFirstName(),
+                patient.getLastName(),
+                currentUser.getEmail(),
+                patient.getBirthDate(),
+                patient.getPhoneNumber(),
+                patient.getMedicalRecord() == null ? null : patient.getMedicalRecord().getId()
+        );
     }
 }

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DoctorSummary } from '../interfaces/doctor-summary';
+import { DoctorProfile } from '../interfaces/doctor-profile';
 import { UpdateDoctorRequest } from '../interfaces/update-doctor-request';
 
 @Injectable({
@@ -11,6 +12,10 @@ export class DoctorService {
 
   private readonly http = inject(HttpClient);
   private readonly baseUrl = 'http://localhost:8080/doctors';
+
+  getProfile(): Observable<DoctorProfile> {
+    return this.http.get<DoctorProfile>(`${this.baseUrl}/profile`);
+  }
 
   updateProfile(request: UpdateDoctorRequest): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/profile`, request);

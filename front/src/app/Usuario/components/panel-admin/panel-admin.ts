@@ -14,7 +14,7 @@ import { especialidad } from '../../services/Auth/auth';
 export class PanelAdmin {
   private readonly userService = inject(UsuarioService);
 
-  pendingDoctors = this.userService.pendingDoctors;
+  pendingDoctors = this.userService.getPendingDoctors();
   specialities = this.userService.specialities;
 
   cantidadPendientes = computed(()=> this.pendingDoctors.hasValue() ? this.pendingDoctors.value().length : 0);

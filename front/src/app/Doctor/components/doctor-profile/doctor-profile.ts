@@ -1,17 +1,28 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormField, form, maxLength, minLength, pattern, required } from '@angular/forms/signals';
+import { FormField, disabled, form, maxLength, minLength, pattern, required } from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
 import { DoctorService } from '../../service/doctor.service';
 import { Speciality } from '../../interfaces/speciality';
 import { UpdateDoctorRequest } from '../../interfaces/update-doctor-request';
 import { DeleteAccount } from '../../../Usuario/components/delete-account/delete-account';
+import { FormError } from '../../../Common/form-error/form-error';
 
+type LoadStatus = 'loading' | 'ready' | 'error';
 type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
 type ProfileField = 'firstName' | 'lastName' | 'phoneNumber' | 'licenseNumber' | 'bio' | 'hospitalUrl';
+type ProfileModel = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  licenseNumber: string;
+  bio: string;
+  hospitalUrl: string;
+};
 
 @Component({
   selector: 'app-doctor-profile',
-  imports: [FormField, DeleteAccount],
+  imports: [FormField, FormError, DeleteAccount],
   templateUrl: './doctor-profile.html',
   styleUrl: './doctor-profile.css',
 })
@@ -19,22 +30,73 @@ export class DoctorProfile {
   private readonly doctorService = inject(DoctorService);
 
   readonly specialities = httpResource<Speciality[]>(() => 'http://localhost:8080/specialities');
-  readonly selectedSpecialities = signal<number[]>([]);
-  readonly specialitiesTouched = signal(false);
+  readonly selectedSpeciality = signal<number | null>(null);
+  readonly specialityTouched = signal(false);
   readonly status = signal<SaveStatus>('idle');
+  readonly loadStatus = signal<LoadStatus>('loading');
+  readonly editing = signal(false);
+  readonly emailNoticeVisible = signal(false);
 
-  readonly specialitiesInvalid = computed(
-    () => this.specialitiesTouched() && this.selectedSpecialities().length === 0
+  readonly specialityInvalid = computed(
+    () => this.specialityTouched() && this.selectedSpeciality() === null
   );
 
-  readonly model = signal({
+  readonly model = signal<ProfileModel>({
     firstName: '',
     lastName: '',
+    email: '',
     phoneNumber: '',
     licenseNumber: '',
     bio: '',
     hospitalUrl: '',
   });
+  private readonly initialModel = signal<ProfileModel | null>(null);
+  private readonly initialSpeciality = signal<number | null>(null);
+
+  constructor() {
+    this.loadProfile();
+  }
+
+  loadProfile(): void {
+    this.loadStatus.set('loading');
+    this.doctorService.getProfile().subscribe({
+      next: (profile) => {
+        const values: ProfileModel = {
+          firstName: profile.firstName ?? '',
+          lastName: profile.lastName ?? '',
+          email: profile.email ?? '',
+          phoneNumber: profile.phoneNumber ?? '',
+          licenseNumber: profile.licenseNumber ?? '',
+          bio: profile.bio ?? '',
+          hospitalUrl: profile.hospitalUrl ?? '',
+        };
+        const selectedSpeciality = profile.speciality ?? null;
+        this.model.set(values);
+        this.initialModel.set({ ...values });
+        this.selectedSpeciality.set(selectedSpeciality);
+        this.initialSpeciality.set(selectedSpeciality);
+        this.loadStatus.set('ready');
+      },
+      error: () => this.loadStatus.set('error'),
+    });
+  }
+
+  toggleEditing(): void {
+    if (this.editing()) {
+      const initial = this.initialModel();
+      const initialSpeciality = this.initialSpeciality();
+      if (initial) this.model.set(initial);
+      this.selectedSpeciality.set(initialSpeciality);
+      this.profileForm().reset();
+      this.specialityTouched.set(false);
+      this.status.set('idle');
+      this.editing.set(false);
+      return;
+    }
+
+    this.status.set('idle');
+    this.editing.set(true);
+  }
 
   readonly profileForm = form(this.model, (path) => {
     required(path.firstName, { message: 'El nombre es obligatorio.' });
@@ -60,6 +122,23 @@ export class DoctorProfile {
     pattern(path.hospitalUrl, /^(https?:\/\/\S+\.\S+)?$/i, {
       message: 'Ingresá una URL válida que empiece con http:// o https://',
     });
+
+    disabled(path, () => !this.editing());
+  });
+
+  readonly hasChanges = computed(() => {
+    const initial = this.initialModel();
+    const initialSpeciality = this.initialSpeciality();
+
+    return !!initial && (
+      initial.firstName !== this.profileForm.firstName().value() ||
+      initial.lastName !== this.profileForm.lastName().value() ||
+      initial.phoneNumber !== this.profileForm.phoneNumber().value() ||
+      initial.licenseNumber !== this.profileForm.licenseNumber().value() ||
+      initial.bio !== this.profileForm.bio().value() ||
+      initial.hospitalUrl !== this.profileForm.hospitalUrl().value() ||
+      initialSpeciality !== this.selectedSpeciality()
+    );
   });
 
   invalid(field: ProfileField): boolean {
@@ -67,29 +146,24 @@ export class DoctorProfile {
     return state.touched() && state.invalid();
   }
 
-  errorsOf(field: ProfileField): string[] {
-    return this.profileForm[field]()
-      .errors()
-      .map((e) => e.message)
-      .filter((m): m is string => !!m);
-  }
-
   isSelected(id: number): boolean {
-    return this.selectedSpecialities().includes(id);
+    return this.selectedSpeciality() === id;
   }
 
-  toggleSpeciality(id: number): void {
-    this.specialitiesTouched.set(true);
-    this.selectedSpecialities.update((list) =>
-      list.includes(id) ? list.filter((x) => x !== id) : [...list, id]
-    );
+  selectSpeciality(event: Event): void {
+    this.specialityTouched.set(true);
+    const select = event.target as HTMLSelectElement;
+    this.selectedSpeciality.set(select.value ? Number(select.value) : null);
   }
 
   submit(event: Event): void {
     event.preventDefault();
-    this.specialitiesTouched.set(true);
+    if (!this.editing() || !this.hasChanges()) return;
 
-    if (this.profileForm().invalid() || this.selectedSpecialities().length === 0) {
+    this.specialityTouched.set(true);
+
+    const selectedSpeciality = this.selectedSpeciality();
+    if (this.profileForm().invalid() || selectedSpeciality === null) {
       this.profileForm().markAsTouched();
       this.status.set('idle');
       return;
@@ -103,12 +177,27 @@ export class DoctorProfile {
       licenseNumber: value.licenseNumber.trim(),
       bio: value.bio.trim() || null,
       hospitalUrl: value.hospitalUrl.trim() || null,
-      specialities: this.selectedSpecialities(),
+      speciality: selectedSpeciality,
     };
 
     this.status.set('saving');
     this.doctorService.updateProfile(request).subscribe({
-      next: () => this.status.set('success'),
+      next: () => {
+        const savedValues: ProfileModel = {
+          firstName: request.firstName,
+          lastName: request.lastName,
+          email: this.model().email,
+          phoneNumber: request.phoneNumber,
+          licenseNumber: request.licenseNumber,
+          bio: request.bio ?? '',
+          hospitalUrl: request.hospitalUrl ?? '',
+        };
+        this.model.set(savedValues);
+        this.initialModel.set({ ...savedValues });
+        this.initialSpeciality.set(selectedSpeciality);
+        this.editing.set(false);
+        this.status.set('success');
+      },
       error: () => this.status.set('error'),
     });
   }

@@ -100,11 +100,11 @@
   color: var(--text-muted);
 }
 
-.field input:disabled {
+.card input:disabled {
   background: var(--background);
   color: var(--text);
   border-color: transparent;
-  cursor: default;
+  cursor: not-allowed;
   opacity: 1;
   -webkit-text-fill-color: var(--text);
 }
@@ -114,18 +114,22 @@
   min-height: 2.75rem;
 }
 
-.field input[type='date']::-webkit-calendar-picker-indicator {
+.card input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.8;
 }
 
-.field input[type='number']::-webkit-outer-spin-button,
-.field input[type='number']::-webkit-inner-spin-button {
+.card input[type='date']:disabled::-webkit-calendar-picker-indicator {
+  cursor: not-allowed;
+}
+
+.card input[type='number']::-webkit-outer-spin-button,
+.card input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.field input[type='number'] {
+.card input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
 }

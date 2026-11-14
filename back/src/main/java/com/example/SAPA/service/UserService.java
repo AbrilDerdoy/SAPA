@@ -60,8 +60,8 @@ public class UserService {
             if (request.licenseNumber() == null || request.licenseNumber().isBlank()) {
                 throw new IllegalArgumentException("La matrícula es obligatoria para los médicos.");
             }
-            if (request.specialities() == null || request.specialities().isEmpty()) {
-                throw new IllegalArgumentException("El médico debe tener al menos una especialidad.");
+            if (request.speciality() == null) {
+                throw new IllegalArgumentException("El médico debe tener una especialidad.");
             }
         }
 
@@ -89,9 +89,8 @@ public class UserService {
                     .birthDate(request.birthDate())
                     .phoneNumber(request.phoneNumber())
                     .licenseNumber(request.licenseNumber())
-                    .specialities(
-                            specialityRepository.findAllById(request.specialities())
-                    )
+                    .speciality(specialityRepository.findById(request.speciality())
+                            .orElseThrow(() -> new IllegalArgumentException("La especialidad no existe.")))
                     .build();
 
             doctor = doctorRepository.save(doctor);
