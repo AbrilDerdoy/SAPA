@@ -21,6 +21,8 @@ import { PanelAdmin } from './Usuario/components/panel-admin/panel-admin';
 import { DoctorQuestionnaires } from './Questionnaire/components/doctor-questionnaires/doctor-questionnaires';
 import { PatientQuestionnaires } from './Questionnaire/components/patient-questionnaires/patient-questionnaires';
 import { QuestionnaireHistory } from './Questionnaire/components/questionnaire-history/questionnaire-history';
+import { MyMedicalRecord } from './medical-record/components/my-medical-record/my-medical-record';
+import { PatientMedicalRecord } from './medical-record/components/patient-medical-record/patient-medical-record';
 
 export const routes: Routes = [
 
@@ -118,21 +120,15 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     component: PanelAdmin
   },
-  {path: 'medical-record', canActivate: [roleGuard(['PATIENT'])],
-    loadComponent: () => import('./medical-record/components/my-medical-record/my-medical-record')
-    .then(m => m.MyMedicalRecord)},
-  {path: 'patient-medical-record/:patientId', canActivate: [roleGuard(['DOCTOR'])],
-    loadComponent: () => import('./medical-record/components/patient-medical-record/patient-medical-record')
-    .then(m => m.PatientMedicalRecord)},
-  {path: 'my-patients', canActivate: [roleGuard(['DOCTOR'])],
-    loadComponent: () => import('./medical-record/components/doctor-patients/doctor-patients')
-    .then(m => m.DoctorPatients)},
-
+  
   // Doctor
   {path: 'perfil-medico', canActivate: [doctorGuard],loadComponent: () =>
     import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)},
   {path: 'medicos', canActivate: [patientGuard], loadComponent: () =>
     import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)},
+
+  {path: 'medical-record', canActivate: [roleGuard(['PATIENT'])], component: MyMedicalRecord},
+  {path: 'patient-medical-record/:patientId', canActivate: [roleGuard(['DOCTOR'])], component:PatientMedicalRecord},
 
   // Paciente
 {path: 'perfil-paciente', canActivate: [patientGuard], loadComponent: () =>
