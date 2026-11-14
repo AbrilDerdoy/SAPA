@@ -70,6 +70,34 @@
             <p class="card__empty">Este médico todavía no registró un sitio web.</p>
           }
         </section>
+
+        <section class="card__section">
+          <h3 class="card__heading">Ubicación del hospital o consultorio</h3>
+          @if (hospitalMapUrl(); as mapUrl) {
+            <iframe
+              class="card__map"
+              [src]="mapUrl"
+              title="Ubicación del hospital o consultorio"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+            <div class="card__map-meta">
+              @if (hospitalAddress()) {
+                <p class="card__address">{{ hospitalAddress() }}</p>
+              }
+              @if (hospitalMapLink(); as mapLink) {
+                <a class="card__map-link" [href]="mapLink" target="_blank" rel="noopener noreferrer">
+                  Ver mapa ampliado
+                  <span aria-hidden="true">↗</span>
+                </a>
+              }
+            </div>
+          } @else if (hospitalAddress()) {
+            <p class="card__address">{{ hospitalAddress() }}</p>
+          } @else {
+            <p class="card__empty">Este médico todavía no registró una ubicación.</p>
+          }
+        </section>
       </article>
     }
   }

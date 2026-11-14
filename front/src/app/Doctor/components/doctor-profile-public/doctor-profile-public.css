@@ -129,6 +129,47 @@
   background: var(--primary-dark);
 }
 
+.card__map {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.card__map-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.card__map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--primary-dark);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.card__map-link:hover {
+  text-decoration: underline;
+}
+
+.card__map-meta .card__address {
+  margin: 0;
+}
+
+.card__address {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
 .notice {
   padding: 1rem 1.2rem;
   background: var(--primary-light);

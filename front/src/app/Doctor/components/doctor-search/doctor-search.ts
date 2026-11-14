@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormField, form } from '@angular/forms/signals';
 import { DoctorService } from '../../service/doctor.service';
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
@@ -11,7 +11,7 @@ type LoadStatus = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-doctor-search',
-  imports: [FormField],
+  imports: [FormField, RouterLink],
   templateUrl: './doctor-search.html',
   styleUrl: './doctor-search.css',
 })
@@ -29,7 +29,6 @@ export class DoctorSearch {
   readonly lastQuery = signal('');
   readonly busyKey = signal<string | null>(null);
   readonly feedback = signal<Record<number, Feedback>>({});
-  readonly hospitalUrls = signal<Record<number, string>>({});
 
   constructor() {
     this.followService.loadSent();
@@ -60,35 +59,12 @@ export class DoctorSearch {
     this.loadStatus.set('loading');
     this.lastQuery.set(query.trim());
     this.feedback.set({});
-    this.hospitalUrls.set({});
     this.doctorService.search(query).subscribe({
       next: (list) => {
         this.doctors.set(list);
         this.loadStatus.set('success');
       },
       error: () => this.loadStatus.set('error'),
-    });
-  }
-
-  showHospital(id: number): void {
-    this.busyKey.set(`${id}:hospital`);
-    this.doctorService.getHospitalUrl(id).subscribe({
-      next: (url) => {
-        const clean = url.trim();
-        if (/^https?:\/\//i.test(clean)) {
-          this.hospitalUrls.update((map) => ({ ...map, [id]: clean }));
-        } else {
-          this.setFeedback(id, { kind: 'error', text: 'El enlace registrado no es válido.' });
-        }
-        this.busyKey.set(null);
-      },
-      error: () => {
-        this.setFeedback(id, {
-          kind: 'error',
-          text: 'Este médico no tiene un enlace de hospital registrado.',
-        });
-        this.busyKey.set(null);
-      },
     });
   }
 
@@ -113,7 +89,7 @@ export class DoctorSearch {
     });
   }
 
-  isBusy(id: number, action: 'hospital' | 'follow'): boolean {
+  isBusy(id: number, action: 'follow'): boolean {
     return this.busyKey() === `${id}:${action}`;
   }
 
