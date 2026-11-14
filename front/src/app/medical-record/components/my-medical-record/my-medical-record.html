@@ -1,5 +1,40 @@
 <main class="medical-record-page">
-  <header class="page-header">
+  <header class="header">
+
+    <section class="personal-info-card">
+      <div class="heading">
+        <h2>Mis datos personales</h2>
+      </div>
+
+      @if (cargandoPerfil()) {
+      <p>Cargando datos personales...</p>
+
+      } @else if (errorPerfil()) {
+      <div class="error">
+        <p>{{ errorPerfil() }}</p>
+        <button type="button" (click)="cargarPerfil()">Reintentar</button>
+      </div>
+
+      } @else if (perfil(); as paciente) {
+      <div class="record-info">
+        <div class="info-item">
+          <span>Nombre</span>
+          <strong>{{ paciente.firstName }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span>Apellido</span>
+          <strong>{{ paciente.lastName }}</strong>
+        </div>
+
+        <div class="info-item">
+          <span>Teléfono</span>
+          <strong>{{ paciente.phoneNumber || 'No registrado' }}</strong>
+        </div>
+      </div>
+      }
+    </section>
+
     <div>
       <h1>Mi ficha médica</h1>
       <p>Consultá tu información médica en un solo lugar.</p>
@@ -11,37 +46,17 @@
     <div class="spinner"></div>
     <p>Cargando ficha médica...</p>
   </section>
+
   } @else if (error()) {
   <section class="error">
     <p>{{ error() }}</p>
     <button type="button" (click)="cargarFichaMedica()">Reintentar</button>
   </section>
+
   } @else if (fichaMedica(); as ficha) {
-  <section class="record-card">
-    <div class="record-card-header">
-      <div class="record-icon">
-        <i class="bi bi-clipboard2-pulse"></i>
-      </div>
-      <div>
-        <h2>Ficha médica</h2>
-        <p>Tu registro de información médica</p>
-      </div>
-
-      <span class="status-badge">Disponible</span>
-    </div>
-
-    <div class="record-info">
-      <div class="info-item">
-        <span>Identificador de ficha</span>
-        <strong>#{{ ficha.medicalRecordId }}</strong>
-      </div>
-    </div>
-  </section>
-
   <section class="information-card">
     <div class="section-heading">
-      <i class="bi bi-info-circle"></i>
-      <h2>Información</h2>
+      <h2>Información médica</h2>
     </div>
     <p>
       Desde esta sección vas a poder consultar y gestionar la información
@@ -49,15 +64,30 @@
     </p>
   </section>
 
+  <section class="record-actions">
+    <button type="button" class="record-action" [class.active]="medicacionesVisibles()" (click)="toggleMedicaciones()">
+      <span>Mis medicaciones</span>
+      <span class="action-description">Consultá tus medicamentos registrados</span>
+      <span class="action-arrow">
+        {{ medicacionesVisibles() ? 'Cerrar' : 'Consultar' }}
+      </span>
+    </button>
+
+    <a routerLink="/mis-tratamientos" class="record-action">
+      <span>Mis tratamientos</span>
+      <span class="action-description">Consultá tus tratamientos actuales</span>
+      <span class="action-arrow">Consultar</span>
+    </a>
+  </section>
+
+  @if (medicacionesVisibles()) {
   <section class="medications-card">
     <div class="section-heading">
-      <i class="bi bi-capsule"></i>
       <h2>Mis medicaciones</h2>
     </div>
 
     @if (cargandoMedicaciones()) {
     <p>Cargando medicaciones...</p>
-
     } @else if (errorMedicaciones()) {
     <div class="error">
       <p>{{ errorMedicaciones() }}</p>
@@ -65,10 +95,8 @@
     </div>
     } @else if (medicaciones().length === 0) {
     <div class="empty-state">
-      <i class="bi bi-capsule"></i>
       <p>No tenés medicaciones registradas actualmente.</p>
     </div>
-
     } @else {
     <div class="medications-list">
       @for (medicacion of medicaciones(); track medicacion.medicationId) {
@@ -98,5 +126,7 @@
     </div>
     }
   </section>
+  }
+
   }
 </main>
