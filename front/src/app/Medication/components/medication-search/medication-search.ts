@@ -1,5 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { Field, form, FormField, minLength, required } from '@angular/forms/signals';
+import { Component, computed, inject, output, signal } from '@angular/core';
+import { form, FormField, minLength, required } from '@angular/forms/signals';
 import { FdaResponse } from '../../interfaces/fda-response';
 import { FdaResult } from '../../interfaces/fda-result';
 import { LeafletSection } from '../../interfaces/leaflet-section';
@@ -28,8 +28,10 @@ export class MedicationSearch {
   readonly errorMessage = signal('');
   readonly lastSearch = signal('');
 
+  medicationSelected = output<string>()
+
   readonly brandNames = computed(() => this.result()?.openfda?.brand_name?.join(', ') ?? 'Sin nombre comercial');
-  
+
   readonly genericNames = computed(() => this.result()?.openfda?.generic_name?.join(', ') ?? 'No informado');
 
   readonly sections = computed<LeafletSection[]>(() => {
@@ -58,7 +60,7 @@ export class MedicationSearch {
     this.status.set('loading');
     this.result.set(null);
     this.errorMessage.set('');
-    
+
     this.fdaService.searchMedication(name).pipe(finalize(() => undefined)).subscribe({
       next: (response: FdaResponse | null) => {
         const first = response?.results?.[0] ?? null;
@@ -81,5 +83,13 @@ export class MedicationSearch {
     this.searchForm().reset();
     this.status.set('idle');
     this.result.set(null);
+  }
+
+  seleccionarMedicamento(): void {
+    const medicamento = this.brandNames();
+
+    if (medicamento !== 'Sin nombre comercial') {
+      this.medicationSelected.emit(medicamento);
+    }
   }
 }

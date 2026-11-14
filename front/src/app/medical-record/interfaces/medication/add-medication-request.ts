@@ -1,6 +1,6 @@
 export interface AddMedicationRequest {
     fdaDrugName: string;
-    notes?: string;
+    notes: string;
     startDate: string;
-    endDate?: string;
+    endDate: string;
 }

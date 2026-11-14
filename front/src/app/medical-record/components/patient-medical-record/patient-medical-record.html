@@ -1,5 +1,5 @@
 <section class="medical-record-container">
-  <a routerLink="/my-patients" class="back-link">Volver a mis pacientes</a>
+  <a routerLink="/mis-pacientes" class="back-link">Volver a mis pacientes</a>
 
   <header class="page-header">
     <h1>Ficha médica del paciente</h1>
@@ -7,53 +7,125 @@
   </header>
 
   @if (cargandoFicha()) {
-    <p>Cargando ficha médica...</p>
+  <p>Cargando ficha médica...</p>
   } @else if (errorFicha()) {
-    <div class="error">
-      {{ errorFicha() }}
-      <button (click)="cargarFichaMedica()">Reintentar</button>
-    </div>
+  <div class="error">
+    {{ errorFicha() }}
+    <button (click)="cargarFichaMedica()">Reintentar</button>
+  </div>
   } @else if (fichaMedica(); as ficha) {
-    <section class="record-card">
-      <h2>Información de la ficha médica</h2>
-      <p>Identificador: {{ ficha.medicalRecordId }}</p>
-    </section>
+  <section class="record-card">
+    <h2>Información de la ficha médica</h2>
+    <p>Identificador: {{ ficha.medicalRecordId }}</p>
+  </section>
   }
 
   <section class="medications-card">
     <h2>Medicación</h2>
+
+    <button type="button" class="add-button" (click)="mostrarForm.set(true)">+ Agregar medicamento</button>
+
+    <app-medication-search #buscador (medicationSelected)="seleccionarMedicamento($event)">
+    </app-medication-search>
+
+    @if (mostrarForm()) {
+    <form class="medication-form" (submit)="$event.preventDefault(); agregarMedicamento()">
+      <h3>Nueva medicación</h3>
+
+      <label for="fdaDrugName">Nombre del medicamento</label>
+      <input id="fdaDrugName" type="text" [value]="modeloMedicacion().fdaDrugName" readonly
+        placeholder="Ej. Paracetamol" />
+
+      @if (formularioMedicacion.fdaDrugName().touched() && formularioMedicacion.fdaDrugName().errors()) {
+      @for (error of formularioMedicacion.fdaDrugName().errors(); track error) {
+      <span class="field-error">
+        {{ error.message }}
+      </span>
+      }
+      }
+
+      <label for="notes">Notas médicas</label>
+      <textarea id="notes" [formField]="formularioMedicacion.notes"
+        placeholder="Indicaciones u observaciones..."></textarea>
+      @if (formularioMedicacion.notes().errors()) {
+      @for (error of formularioMedicacion.notes().errors(); track error) {
+      <span class="field-error">
+        {{ error.message }}
+      </span>
+      }
+      }
+
+      <label for="startDate">Fecha de inicio</label>
+      <input id="startDate" type="date" [formField]="formularioMedicacion.startDate" />
+
+      @if ( formularioMedicacion.startDate().touched() && formularioMedicacion.startDate().errors()) {
+      @for (error of formularioMedicacion.startDate().errors(); track error) {
+      <span class="field-error">
+        {{ error.message }}
+      </span>
+      }
+      }
+
+      <label for="endDate">Fecha de finalización</label>
+      <input id="endDate" type="date" [formField]="formularioMedicacion.endDate" />
+      @if (formularioMedicacion.endDate().errors()) {
+      @for (error of formularioMedicacion.endDate().errors(); track error) {
+      <span class="field-error">
+        {{ error.message }}
+      </span>
+      }
+      }
+
+      @if (errorForm()) {
+      <p class="error">{{ errorForm() }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="button" class="cancel-button" (click)="cancelarForm()" [disabled]="guardandoMedicacion()">Cancelar
+        </button>
+
+        <button type="submit" class="add-button" [disabled]="guardandoMedicacion()">
+          {{ guardandoMedicacion() ? 'Guardando...' : 'Guardar medicación' }}
+        </button>
+      </div>
+    </form>
+    }
+
     @if (cargandoMedicaciones()) {
-      <p>Cargando medicaciones...</p>
+    <p>Cargando medicaciones...</p>
+
     } @else if (errorMedicaciones()) {
-      <div class="error">
-        {{ errorMedicaciones() }}
-        <button (click)="cargarMedicaciones()">Reintentar</button>
-      </div>
+    <div class="error">
+      {{ errorMedicaciones() }}
+      <button (click)="cargarMedicaciones()">Reintentar</button>
+    </div>
+
     } @else if (medicaciones().length === 0) {
-      <p>Este paciente todavía no tiene medicaciones registradas.</p>
+    <p>Este paciente todavía no tiene medicaciones registradas.</p>
+
     } @else {
-      <div class="medications-list">
-        @for (medicacion of medicaciones(); track medicacion.medicationId) {
-          <article class="medication-item">
-            <h3>{{ medicacion.fdaDrugName }}</h3>
+    <div class="medications-list">
+      @for (medicacion of medicaciones(); track medicacion.medicationId) {
+      <article class="medication-item">
+        <h3>{{ medicacion.fdaDrugName }}</h3>
 
-            <p>
-              <strong>Notas:</strong>
-              {{ medicacion.notes || 'Sin notas médicas' }}
-            </p>
+        <p>
+          <strong>Notas:</strong>
+          {{ medicacion.notes || 'Sin notas médicas' }}
+        </p>
 
-            <p>
-              <strong>Fecha de inicio:</strong>
-              {{ medicacion.startDate }}
-            </p>
+        <p>
+          <strong>Fecha de inicio:</strong>
+          {{ medicacion.startDate }}
+        </p>
 
-            <p>
-              <strong>Fecha de finalización:</strong>
-              {{ medicacion.endDate || 'Sin fecha de finalización' }}
-            </p>
-          </article>
-        }
-      </div>
+        <p>
+          <strong>Fecha de finalización:</strong>
+          {{ medicacion.endDate || 'Sin fecha de finalización' }}
+        </p>
+      </article>
+      }
+    </div>
     }
   </section>
 </section>
