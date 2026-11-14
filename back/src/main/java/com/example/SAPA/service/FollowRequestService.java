@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.SAPA.enums.AccountStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +40,10 @@ public class FollowRequestService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró el médico con id: " + doctorId
                 ));
+
+        if (targetDoctor.getUser().getStatus() != AccountStatus.ACTIVE) {
+            throw new RuntimeException("Este médico todavía no está habilitado para recibir solicitudes.");
+        }
 
         FollowRequestEntity request;
 

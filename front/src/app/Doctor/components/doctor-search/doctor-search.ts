@@ -29,7 +29,6 @@ export class DoctorSearch {
   readonly lastQuery = signal('');
   readonly busyKey = signal<string | null>(null);
   readonly feedback = signal<Record<number, Feedback>>({});
-  readonly hospitalUrls = signal<Record<number, string>>({});
 
   constructor() {
     this.followService.loadSent();
@@ -60,7 +59,6 @@ export class DoctorSearch {
     this.loadStatus.set('loading');
     this.lastQuery.set(query.trim());
     this.feedback.set({});
-    this.hospitalUrls.set({});
     this.doctorService.search(query).subscribe({
       next: (list) => {
         this.doctors.set(list);
@@ -70,26 +68,9 @@ export class DoctorSearch {
     });
   }
 
-  showHospital(id: number): void {
-    this.busyKey.set(`${id}:hospital`);
-    this.doctorService.getHospitalUrl(id).subscribe({
-      next: (url) => {
-        const clean = url.trim();
-        if (/^https?:\/\//i.test(clean)) {
-          this.hospitalUrls.update((map) => ({ ...map, [id]: clean }));
-        } else {
-          this.setFeedback(id, { kind: 'error', text: 'El enlace registrado no es válido.' });
-        }
-        this.busyKey.set(null);
-      },
-      error: () => {
-        this.setFeedback(id, {
-          kind: 'error',
-          text: 'Este médico no tiene un enlace de hospital registrado.',
-        });
-        this.busyKey.set(null);
-      },
-    });
+  hospitalLink(url: string | null | undefined): string | null {
+    const clean = url?.trim() ?? '';
+    return /^https?:\/\//i.test(clean) ? clean : null;
   }
 
   requestFollow(id: number): void {

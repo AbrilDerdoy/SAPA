@@ -62,18 +62,18 @@
               </div>
 
               <div class="card__actions">
-                @if (hospitalUrls()[doctor.id]; as url) {
-                  <a class="btn btn--outline" [href]="url" target="_blank" rel="noopener noreferrer">
-                    Abrir sitio
+                @if (hospitalLink(doctor.hospitalUrl); as link) {
+                  <a class="btn btn--outline" [href]="link" target="_blank" rel="noopener noreferrer">
+                    Ver hospital
                   </a>
                 } @else {
                   <button
                     type="button"
-                    class="btn btn--outline"
-                    [disabled]="isBusy(doctor.id, 'hospital')"
-                    (click)="showHospital(doctor.id)"
+                    class="btn btn--outline btn--unavailable"
+                    disabled
+                    title="Este médico no cargó un sitio web"
                   >
-                    Ver hospital
+                    Sin sitio web
                   </button>
                 }
                 <button

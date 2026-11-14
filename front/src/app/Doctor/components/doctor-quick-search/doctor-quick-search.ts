@@ -10,7 +10,7 @@ import { Feedback } from '../../interfaces/feedback';
 
 type PanelStatus = 'idle' | 'loading' | 'success' | 'error';
 
-const MIN_CHARS = 2;
+const MIN_CHARS = 1;
 const MAX_VISIBLE = 5;
 
 @Component({

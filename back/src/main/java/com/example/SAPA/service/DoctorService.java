@@ -3,10 +3,12 @@ package com.example.SAPA.service;
 import com.example.SAPA.DTOs.Request.UpdateDoctorRequestDTO;
 import com.example.SAPA.DTOs.Response.DoctorProfileResponseDTO;
 import com.example.SAPA.DTOs.Response.DoctorResponseDTO;
+import com.example.SAPA.DTOs.Response.DoctorSearchResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.SpecialityRepository;
+import com.example.SAPA.enums.AccountStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -54,31 +56,35 @@ public class DoctorService {
         return doctor.getHospitalUrl();
     }
 
-    public List<DoctorResponseDTO> searchDoctors(String query) {
+    @Transactional(readOnly = true)
+    public List<DoctorSearchResponseDTO> searchDoctors(String query) {
         List<DoctorEntity> doctors = (query == null || query.isBlank())
-                ? doctorRepository.findAll()
-                : doctorRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(query, query);
+                ? doctorRepository.findByUserStatus(AccountStatus.ACTIVE)
+                : doctorRepository.searchByStatusAndName(AccountStatus.ACTIVE, query.trim());
 
         return doctors.stream()
-                .map(d -> new DoctorResponseDTO(
+                .map(d -> new DoctorSearchResponseDTO(
                         d.getId(),
                         d.getFirstName(),
                         d.getLastName(),
-                        d.getLicenseNumber()
+                        d.getLicenseNumber(),
+                        d.getHospitalUrl() == null || d.getHospitalUrl().isBlank()
+                                ? null
+                                : d.getHospitalUrl().trim()
                 ))
                 .toList();
     }
 
     public DoctorResponseDTO getCurrentDoctor() {
-    DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
 
-    return new DoctorResponseDTO(
-        doctor.getId(),
-        doctor.getFirstName(),
-        doctor.getLastName(),
-        doctor.getLicenseNumber()
-    );
-}
+        return new DoctorResponseDTO(
+                doctor.getId(),
+                doctor.getFirstName(),
+                doctor.getLastName(),
+                doctor.getLicenseNumber()
+        );
+    }
 
     @Transactional(readOnly = true)
     public DoctorProfileResponseDTO getCurrentDoctorProfile() {
