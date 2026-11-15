@@ -68,7 +68,11 @@
         >
           Cancelar
         </button>
-        <button type="submit" class="btn btn--danger" [disabled]="status() === 'deleting'">
+        <button
+          type="submit"
+          class="btn btn--danger"
+          [disabled]="status() === 'deleting' || !model().password || !model().confirm"
+        >
           {{ status() === 'deleting' ? 'Eliminando…' : 'Eliminar mi cuenta' }}
         </button>
       </div>

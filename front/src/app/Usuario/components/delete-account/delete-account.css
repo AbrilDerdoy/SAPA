@@ -141,14 +141,20 @@
 }
 
 .btn--danger:disabled {
-  opacity: 0.6;
-  cursor: wait;
+  background: var(--border);
+  color: var(--text-muted);
+  cursor: not-allowed;
 }
 
 :host-context([data-theme='dark']) .btn--danger,
 :host-context([data-theme='dark']) .btn--danger:hover:not(:disabled) {
   background: var(--danger);
   color: #1a0a09;
+}
+
+:host-context([data-theme='dark']) .btn--danger:disabled {
+  background: var(--border);
+  color: var(--text-muted);
 }
 
 .btn--outline {

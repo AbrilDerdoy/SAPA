@@ -19,4 +19,27 @@ describe('DeleteAccount', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('disables the submit button until password and confirmation are provided', () => {
+    component.openPanel();
+    fixture.detectChanges();
+
+    const submitButton = fixture.nativeElement.querySelector(
+      '#delete-panel button[type="submit"]',
+    ) as HTMLButtonElement;
+
+    expect(submitButton.disabled).toBe(true);
+
+    component.model.set({ password: 'secret', confirm: false });
+    fixture.detectChanges();
+    expect(submitButton.disabled).toBe(true);
+
+    component.model.set({ password: '', confirm: true });
+    fixture.detectChanges();
+    expect(submitButton.disabled).toBe(true);
+
+    component.model.set({ password: 'secret', confirm: true });
+    fixture.detectChanges();
+    expect(submitButton.disabled).toBe(false);
+  });
 });
