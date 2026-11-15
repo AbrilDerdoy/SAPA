@@ -1,27 +1,27 @@
 :host {
   display: block;
   min-height: 100%;
-  background: var(--background, #f4f7f7);
+  background: var(--background);
 }
 
 .medical-record-page {
   max-width: 1100px;
   margin: 0 auto;
   padding: 32px 24px;
-  color: var(--text, #222);
+  color: var(--text);
 }
 
 .state-card {
-  background: var(--surface, #fff);
-  border: 1px solid var(--border, #dce7e5);
-  border-radius: var(--radius, 12px);
-  box-shadow: var(--shadow, 0 4px 16px rgba(0, 80, 73, 0.08));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 .personal-info-card {
-  background: white;
-  border: 1px solid #e0e8e7;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 24px;
   margin-bottom: 24px;
 }
@@ -32,7 +32,7 @@
 
 .heading h2 {
   margin: 0;
-  color: var(--text, #222);
+  color: var(--text);
   font-size: 1.2rem;
   font-weight: 700;
 }
@@ -48,17 +48,17 @@
   flex-direction: column;
   gap: 6px;
   padding: 14px;
-  background: var(--primary-light, #ecf8f6);
+  background: var(--primary-light);
   border-radius: 8px;
 }
 
 .info-item span {
-  color: #687575;
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
 .info-item strong {
-  color: var(--text, #222);
+  color: var(--text);
   font-size: 1rem;
   font-weight: 600;
   overflow-wrap: anywhere;
@@ -69,11 +69,11 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
-  color: var(--primary, #02968c);
+  color: var(--primary);
 }
 
 .section-heading h2 {
-  color: var(--text, #222);
+  color: var(--text);
   margin: 0;
   font-size: 19px;
   font-weight: 600;
@@ -85,10 +85,10 @@
 
 .information-card {
   padding: 20px 24px;
-  background: white;
-  border: 1px solid #e0e8e7;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 80, 73, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 .information-card .section-heading {
@@ -97,7 +97,7 @@
 
 .information-card p {
   margin: 0;
-  color: var(--text-muted, #687574);
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
@@ -114,14 +114,14 @@
 
 .state-card p {
   margin: 0;
-  color: var(--text-muted, #687574);
+  color: var(--text-muted);
 }
 
 .spinner {
   width: 34px;
   height: 34px;
-  border: 3px solid var(--border, #dce7e5);
-  border-top-color: var(--primary, #02968c);
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -130,8 +130,8 @@
   padding: 10px 18px;
   border: none;
   border-radius: 8px;
-  background: var(--primary, #02968c);
-  color: white;
+  background: var(--primary);
+  color: var(--on-primary);
   cursor: pointer;
 }
 
@@ -142,8 +142,8 @@
   margin-top: 16px;
   padding: 10px 16px;
   border-radius: 8px;
-  background: var(--primary, #02968c);
-  color: white;
+  background: var(--primary);
+  color: var(--on-primary);
   text-decoration: none;
   font-weight: 600;
 }
@@ -165,11 +165,11 @@
   align-items: flex-start;
   gap: 10px;
   padding: 22px;
-  background: white;
-  border: 1px solid #e0e8e7;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   text-decoration: none;
-  color: var(--text, #222);
+  color: var(--text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -183,8 +183,8 @@
 
 .record-action:hover,
 .record-action.active {
-  border-color: var(--primary, #02968c);
-  background: var(--primary-light, #ecf8f6);
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .record-action:hover {
@@ -192,13 +192,13 @@
 }
 
 .action-description {
-  color: #687575;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
 .action-arrow {
   margin-top: 6px;
-  color: var(--primary, #02968c);
+  color: var(--primary);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -206,9 +206,9 @@
 .medications-card {
   margin-top: 20px;
   padding: 24px;
-  background: white;
-  border: 1px solid #e0e8e7;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .medications-card .section-heading {
@@ -223,9 +223,9 @@
 
 .medication-item {
   padding: 18px;
-  border: 1px solid var(--border, #dce7e5);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface-alt);
 }
 
 .medication-header {
@@ -239,21 +239,21 @@
 .medication-header h3 {
   margin: 0;
   font-size: 17px;
-  color: var(--text, #222);
+  color: var(--text);
 }
 
 .medication-badge {
   padding: 5px 10px;
   border-radius: 20px;
-  background: var(--primary-light, #ecf8f6);
-  color: var(--primary-dark, #02776f);
+  background: var(--primary-light);
+  color: var(--primary-dark);
   font-size: 12px;
   font-weight: 600;
 }
 
 .medication-item>p {
   margin: 0 0 16px;
-  color: var(--text-muted, #687574);
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -262,7 +262,7 @@
   flex-wrap: wrap;
   gap: 24px;
   padding-top: 14px;
-  border-top: 1px solid var(--border, #dce7e5);
+  border-top: 1px solid var(--border);
 }
 
 .medication-dates div {
@@ -272,14 +272,14 @@
 }
 
 .medication-dates span {
-  color: var(--text-muted, #687574);
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .medication-dates strong {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text, #222);
+  color: var(--text);
 }
 
 .empty-state {
@@ -289,25 +289,26 @@
   justify-content: center;
   gap: 12px;
   padding: 36px 20px;
-  border: 1px dashed var(--border, #dce7e5);
+  border: 1px dashed var(--border);
   border-radius: 10px;
   text-align: center;
 }
 
 .empty-state p {
   margin: 0;
-  color: var(--text-muted, #687574);
+  color: var(--text-muted);
 }
 
 .medications-card .error {
   padding: 16px;
   border-radius: 8px;
-  background: var(--danger-light, #fff0ef);
+  background: var(--danger-light);
+  border: 1px solid var(--danger-border);
 }
 
 .medications-card .error p {
   margin: 0 0 12px;
-  color: var(--danger, #d9534f);
+  color: var(--danger-strong);
 }
 
 @media (max-width: 600px) {
