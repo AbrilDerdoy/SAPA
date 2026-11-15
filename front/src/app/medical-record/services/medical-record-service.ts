@@ -38,10 +38,7 @@ export class MedicalRecordService {
   }
 
     // Agregar medicación
-  addMedication(
-    patientId: number,
-    medication: AddMedicationRequest
-  ): Observable<Medication> {
+  addMedication(patientId: number, medication: AddMedicationRequest): Observable<Medication> {
     return this.http.post<Medication>(
       `${this.BASE_URL}/patient/${patientId}/medications`,
       medication
@@ -49,10 +46,7 @@ export class MedicalRecordService {
   }
 
     // Modificar medicación
-  updateMedication(
-    medicationId: number,
-    medication: UpdateMedicationRequest
-  ): Observable<Medication> {
+  updateMedication(medicationId: number, medication: UpdateMedicationRequest): Observable<Medication> {
     return this.http.put<Medication>(
       `${this.BASE_URL}/medications/${medicationId}`,
       medication
