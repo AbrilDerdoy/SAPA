@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter @Setter @ToString
 @AllArgsConstructor
@@ -38,6 +40,11 @@ public class PostEntity {
 
     @Column(nullable = false)
     private boolean active;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private List<PostAttachmentEntity> attachments = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

@@ -1,6 +1,7 @@
 package com.example.SAPA.DTOs.Response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record PostResponseDTO(
         Long postId,
@@ -11,5 +12,6 @@ public record PostResponseDTO(
         String title,
         String content,
         boolean active,
+        List<PostAttachmentResponseDTO> attachments,
         LocalDateTime createdAt
 ) {}

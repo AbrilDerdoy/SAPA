@@ -4,6 +4,7 @@ import com.example.SAPA.DTOs.Request.ForumRequestDTO;
 import com.example.SAPA.DTOs.Response.PostResponseDTO;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.Forum.ForumEntity;
+import com.example.SAPA.Models.Forum.PostAttachmentEntity;
 import com.example.SAPA.Models.Forum.PostEntity;
 import com.example.SAPA.Repositories.*;
 import com.example.SAPA.mappers.PostMapper;
@@ -12,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -23,10 +26,11 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserContextService userContextService;
+    private final FileStorageService fileStorageService;
 
 
     @Transactional
-    public PostResponseDTO createPost(Long forumId, ForumRequestDTO request) {
+    public PostResponseDTO createPost(Long forumId, ForumRequestDTO request, List<MultipartFile> files) throws IOException {
         UserEntity user = userContextService.getAuthenticatedUser();
 
         ForumEntity forum = forumRepository.findById(forumId)
@@ -43,17 +47,36 @@ public class PostService {
                 .content(request.content())
                 .build();
 
+        addAttachments(post, files);
+
         PostEntity saved = postRepository.save(post);
         return postMapper.toPostResponse(saved, userContextService.resolveName(user));
     }
 
+    private void addAttachments(PostEntity post, List<MultipartFile> files) throws IOException {
+        if (files == null || files.isEmpty()) return;
+
+        for (MultipartFile file : files) {
+            FileStorageService.StoredFile storedFile =
+                    fileStorageService.storePostAttachment(file);
+
+            PostAttachmentEntity attachment = PostAttachmentEntity.builder()
+                    .fileName(storedFile.fileName())
+                    .fileUrl(storedFile.fileUrl())
+                    .contentType(storedFile.contentType())
+                    .size(storedFile.size())
+                    .post(post)
+                    .build();
+
+            post.getAttachments().add(attachment);
+        }
+    }
 
     @Transactional
-    public PostResponseDTO updatePost(Long postId, ForumRequestDTO request) {
+    public PostResponseDTO updatePost(Long postId, ForumRequestDTO request, List<MultipartFile> files) throws IOException {
         UserEntity user = userContextService.getAuthenticatedUser();
 
-        PostEntity post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post no encontrado con id: " + postId));
+        PostEntity post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post no encontrado con id: " + postId));
 
         if (!post.getAuthor().getId().equals(user.getId())) {
             throw new AccessDeniedException("No tenés permiso para modificar este post");
@@ -61,6 +84,8 @@ public class PostService {
 
         post.setTitle(request.title());
         post.setContent(request.content());
+
+        addAttachments(post, files);
 
         PostEntity updated = postRepository.save(post);
         return postMapper.toPostResponse(updated, userContextService.resolveName(user));
@@ -71,8 +96,7 @@ public class PostService {
     public void deletePost(Long postId) {
         UserEntity user = userContextService.getAuthenticatedUser();
 
-        PostEntity post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post no encontrado con id: " + postId));
+        PostEntity post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post no encontrado con id: " + postId));
 
         if (!post.getAuthor().getId().equals(user.getId())) {
             throw new AccessDeniedException("No tenés permiso para eliminar este post");
@@ -89,8 +113,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public List<PostResponseDTO> getPostsByForum(Long forumId) {
-        ForumEntity forum = forumRepository.findById(forumId)
-                .orElseThrow(() -> new EntityNotFoundException("Foro no encontrado con id: " + forumId));
+        ForumEntity forum = forumRepository.findById(forumId).orElseThrow(() -> new EntityNotFoundException("Foro no encontrado con id: " + forumId));
 
         return postRepository.findByForumAndActiveTrue(forum)
                 .stream()
@@ -101,8 +124,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public List<PostResponseDTO> filterPosts(Long forumId, String title) {
-        ForumEntity forum = forumRepository.findById(forumId)
-                .orElseThrow(() -> new EntityNotFoundException("Foro no encontrado con id: " + forumId));
+        ForumEntity forum = forumRepository.findById(forumId).orElseThrow(() -> new EntityNotFoundException("Foro no encontrado con id: " + forumId));
 
         return postRepository.findByForumAndActiveTrueAndTitleContainingIgnoreCase(forum, title)
                 .stream()

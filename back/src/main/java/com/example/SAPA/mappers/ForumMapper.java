@@ -14,6 +14,7 @@ public interface ForumMapper {
     @Mapping(source = "forum.title", target = "title")
     @Mapping(source = "forum.description", target = "content")
     @Mapping(source = "forum.active", target = "active")
+    @Mapping(source = "forum.imageUrl", target = "imageUrl")
     @Mapping(source = "forum.createdAt", target = "createdAt")
     ForumResponseDTO toForumResponse(ForumEntity forum, String createdByName);
 }
