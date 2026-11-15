@@ -9,6 +9,9 @@ public record DoctorProfileResponseDTO(
         String licenseNumber,
         String bio,
         String hospitalUrl,
+        String hospitalAddress,
+        Double hospitalLatitude,
+        Double hospitalLongitude,
         Long speciality
 ) {
 }
