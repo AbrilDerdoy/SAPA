@@ -11,4 +11,5 @@ import java.util.List;
 public interface PatientMedicationRepository extends JpaRepository<PatientMedicationEntity, Long> {
 
     List<PatientMedicationEntity> findByMedicalRecord(MedicalRecordEntity medicalRecord);
+    boolean existsByMedicalRecordAndFdaDrugNameIgnoreCase(MedicalRecordEntity medicalRecord, String fdaDrugName);
 }
