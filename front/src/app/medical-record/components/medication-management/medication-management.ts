@@ -5,6 +5,7 @@ import { Medication } from '../../interfaces/medication/medication';
 import { UpdateMedicationRequest } from '../../interfaces/medication/update-medication-request';
 import { MedicationSearch } from '../../../Medication/components/medication-search/medication-search';
 import { MedicalRecordService } from '../../services/medical-record-service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-medication-management',
@@ -155,9 +156,16 @@ export class MedicationManagement {
       next: () => {
         this.finalizarGuardado()
       },
-      error: () => {
+      error: (error: HttpErrorResponse) => {
         this.guardandoMedicacion.set(false)
-        this.errorForm.set('No se pudo registrar la medicación.')
+
+        const mensaje = error.error?.message
+
+        this.errorForm.set(
+          mensaje?.includes('409 CONFLICT')
+            ? 'Este medicamento ya está registrado. Si está suspendido, podés volver a recetarlo desde Medicaciones suspendidas.'
+            : 'No se pudo registrar la medicación.'
+        )
       }
     })
   }
