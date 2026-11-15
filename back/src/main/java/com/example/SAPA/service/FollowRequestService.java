@@ -253,4 +253,13 @@ public class FollowRequestService {
                 FollowRequestStatus.APPROVED
         );
     }
+
+    @Transactional(readOnly = true)
+    public List<FollowRequestEntity> getApprovedDoctorFollowers() {
+        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+        return followRequestRepository.findByDoctorAndDoctorFollowerIsNotNullAndStatus(
+                doctor,
+                FollowRequestStatus.APPROVED
+        );
+    }
 }

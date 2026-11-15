@@ -69,7 +69,7 @@
           </a>
         </li>
 
-        @if (role() === 'PATIENT') {
+        @if (role() === 'PATIENT' || role() === 'DOCTOR') {
           <li class="nav-search">
             <app-doctor-quick-search />
           </li>

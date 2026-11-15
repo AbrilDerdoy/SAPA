@@ -67,8 +67,16 @@ export const routes: Routes = [
   },
   {
     path: 'mis-solicitudes',
-    canActivate: [roleGuard(['PATIENT'])],
+    canActivate: [roleGuard(['PATIENT', 'DOCTOR'])],
     data: { mode: 'patient' },
+    loadComponent: () =>
+      import('./FollowRequest/components/follow-requests/follow-requests')
+        .then(m => m.FollowRequests)
+  },
+  {
+    path: 'mis-seguidores',
+    canActivate: [roleGuard(['DOCTOR'])],
+    data: { mode: 'followers' },
     loadComponent: () =>
       import('./FollowRequest/components/follow-requests/follow-requests')
         .then(m => m.FollowRequests)
@@ -131,7 +139,7 @@ export const routes: Routes = [
   // Doctor
   {path: 'perfil-medico', canActivate: [doctorGuard],loadComponent: () =>
     import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)},
-  {path: 'medicos', canActivate: [patientGuard], loadComponent: () =>
+  {path: 'medicos', canActivate: [roleGuard(['PATIENT', 'DOCTOR'])], loadComponent: () =>
     import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)},
 
   // Paciente

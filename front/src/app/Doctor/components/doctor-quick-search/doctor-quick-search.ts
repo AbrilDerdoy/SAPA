@@ -32,7 +32,10 @@ export class DoctorQuickSearch {
   readonly query = computed(() => this.model().query.trim());
   readonly open = signal(false);
   readonly status = signal<PanelStatus>('idle');
-  readonly results = signal<DoctorSummary[]>([]);
+  private readonly rawResults = signal<DoctorSummary[]>([]);
+  readonly results = computed(() =>
+    this.rawResults().filter((d) => d.id !== this.doctorService.myId())
+  );
   readonly busyId = signal<number | null>(null);
   readonly feedback = signal<Record<number, Feedback>>({});
 
@@ -40,6 +43,7 @@ export class DoctorQuickSearch {
   readonly showPanel = computed(() => this.open() && this.query().length >= MIN_CHARS);
 
   constructor() {
+    this.doctorService.loadMyId();
     toObservable(this.query)
       .pipe(
         debounceTime(300),
@@ -47,7 +51,7 @@ export class DoctorQuickSearch {
         tap((q) => {
           this.feedback.set({});
           if (q.length < MIN_CHARS) {
-            this.results.set([]);
+            this.rawResults.set([]);
             this.status.set('idle');
           } else {
             this.status.set('loading');
@@ -66,7 +70,7 @@ export class DoctorQuickSearch {
         takeUntilDestroyed()
       )
       .subscribe((list) => {
-        this.results.set(list);
+        this.rawResults.set(list);
         this.status.set('success');
       });
   }

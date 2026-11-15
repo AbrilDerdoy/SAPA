@@ -1,8 +1,7 @@
-
 <section class="fr">
   <header class="fr__header">
-    <h1 class="fr__title">{{ title() }}</h1>
-    <p class="fr__lead">{{ subtitle() }}</p>
+    <h1 class="fr__title">{{ title }}</h1>
+    <p class="fr__lead">{{ subtitle }}</p>
   </header>
 
   @if (actionError()) {
@@ -29,25 +28,23 @@
     @if (sorted().length === 0) {
       <div class="notice">
         <strong>No hay solicitudes por ahora</strong>
-        <p>
-          {{ mode === 'doctor' ? 'Cuando un paciente te envíe una solicitud, va a aparecer acá.' : 'Todavía no enviaste ninguna solicitud.' }}
-        </p>
+        <p>{{ emptyMessage }}</p>
       </div>
     }
 
     <ul class="list">
       @for (req of sorted(); track req.id) {
         <li class="card">
-          @if (mode === 'doctor') {
+          @if (mode !== 'patient') {
             <div class="card__avatar" aria-hidden="true">
-              {{ initials(req.patient.firstName, req.patient.lastName) }}
+              {{ followerInitials(req) }}
             </div>
           }
 
           <div class="card__info">
             <h2 class="card__name">
-              @if (mode === 'doctor') {
-                {{ req.patient.firstName }} {{ req.patient.lastName }}
+              @if (mode !== 'patient') {
+                {{ followerName(req) }}
               } @else if (req.doctor) {
                 Dr/a. {{ req.doctor.firstName }} {{ req.doctor.lastName }}
               } @else {
@@ -55,8 +52,8 @@
               }
             </h2>
             <p class="card__meta">
-              @if (mode === 'doctor' && req.patient.phoneNumber) {
-                <span>{{ req.patient.phoneNumber }}</span>
+              @if (mode !== 'patient' && followerPhone(req)) {
+                <span>{{ followerPhone(req) }}</span>
               }
               <span>Enviada el {{ req.requestedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
               @if (req.respondedAt) {
@@ -91,7 +88,7 @@
               </div>
             }
 
-            @if (mode === 'patient' && req.status === 'APPROVED') {
+            @if ((mode === 'patient' || mode === 'followers') && req.status === 'APPROVED') {
               <div class="card__actions">
                 <button
                   type="button"

@@ -1,85 +1,125 @@
-<div class="container">
+<div class="reg">
+  <aside class="reg-brand">
+    <img class="reg-brand__logo" src="/images/logo.png" alt="Logo SAPA">
+  </aside>
 
-    <aside class="left">
-        <img src="/images/logo.png" alt="Logo SAPA">
-    </aside>
+  <div class="reg-side">
+    <form class="reg-form" novalidate (submit)="enviar($event)">
+      <header class="reg-form__head">
+        <h1 class="reg-form__title">Creá tu cuenta</h1>
+        <p class="reg-form__lead">Elegí cómo vas a usar SAPA y completá tus datos.</p>
+      </header>
 
-    <div class="right">
-        <form novalidate (submit)="enviar($event)">
-            <h2>Informacion Personal</h2>
-            <div class="botones-tipo-usuario">
-                <button type="button" class="botones-usuario" (click)="cambiarPaciente()">Paciente</button>
-                <button type="button" class="botones-usuario" (click)="cambiarMedico()">Medico</button>                
-            </div>
-            @if (errorRegistro()) {
-            <p class="server-error" role="alert">{{errorRegistro()}}</p>
+      <div class="reg-switch" role="group" aria-label="Tipo de usuario">
+        <button
+          type="button"
+          [class.is-active]="modelo().role === 'ROLE_PATIENT'"
+          [attr.aria-pressed]="modelo().role === 'ROLE_PATIENT'"
+          (click)="cambiarPaciente()"
+        >
+          Paciente
+        </button>
+        <button
+          type="button"
+          [class.is-active]="modelo().role === 'ROLE_DOCTOR'"
+          [attr.aria-pressed]="modelo().role === 'ROLE_DOCTOR'"
+          (click)="cambiarMedico()"
+        >
+          Médico
+        </button>
+      </div>
+
+      @if (errorRegistro()) {
+        <p class="reg-notice reg-notice--error" role="alert">{{ errorRegistro() }}</p>
+      }
+
+      <div class="reg-row">
+        <label class="reg-field">
+          <span class="reg-label">Nombre</span>
+          <input type="text" autocomplete="given-name" [formField]="formulario.firstName">
+          <app-form-error [field]="formulario.firstName()" />
+        </label>
+        <label class="reg-field">
+          <span class="reg-label">Apellido</span>
+          <input type="text" autocomplete="family-name" [formField]="formulario.lastName">
+          <app-form-error [field]="formulario.lastName()" />
+        </label>
+      </div>
+
+      <label class="reg-field">
+        <span class="reg-label">Email</span>
+        <input type="email" autocomplete="email" [formField]="formulario.email">
+        <app-form-error [field]="formulario.email()" />
+      </label>
+
+      <label class="reg-field">
+        <span class="reg-label">Contraseña</span>
+        <span class="reg-password">
+          <input
+            [type]="mostrarPassword() ? 'text' : 'password'"
+            autocomplete="new-password"
+            placeholder="Mínimo 8 caracteres"
+            [formField]="formulario.password"
+          >
+          <button
+            class="reg-password__toggle"
+            type="button"
+            [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="mostrarPassword()"
+            (click)="alternarVisibilidadPassword()"
+          >
+            <img [src]="mostrarPassword() ? '/images/eye-off.svg' : '/images/eye.svg'" alt="">
+          </button>
+        </span>
+        <app-form-error [field]="formulario.password()" />
+      </label>
+
+      <div class="reg-row">
+        <label class="reg-field">
+          <span class="reg-label">Fecha de nacimiento</span>
+          <input type="date" autocomplete="bday" [formField]="formulario.birthDate">
+          <app-form-error [field]="formulario.birthDate()" />
+        </label>
+        <label class="reg-field">
+          <span class="reg-label">Teléfono</span>
+          <input type="tel" inputmode="tel" autocomplete="tel" [formField]="formulario.phoneNumber">
+          <app-form-error [field]="formulario.phoneNumber()" />
+        </label>
+      </div>
+
+      @if (modelo().role === 'ROLE_DOCTOR') {
+        <div class="reg-row">
+          <label class="reg-field">
+            <span class="reg-label">Matrícula</span>
+            <input type="text" autocomplete="off" [formField]="formulario.licenseNumber">
+            <app-form-error [field]="formulario.licenseNumber()" />
+          </label>
+          <label class="reg-field">
+            <span class="reg-label">Especialidad</span>
+            @if (especialidades.isLoading()) {
+              <span class="reg-help">Cargando especialidades…</span>
             }
-            <label>
-                Nombre:
-                <input type="text" [formField]="formulario.firstName">
-                <app-form-error [field]="formulario.firstName()" />
-            </label>
-            <label>
-                Apellido:
-                <input type="text" [formField]="formulario.lastName">
-                <app-form-error [field]="formulario.lastName()" />
-            </label>
-            <label>
-                Email
-                <input type="email" [formField]="formulario.email">
-                <app-form-error [field]="formulario.email()" />
-            </label>
-            <label>
-                Contraseña
-                <div class="password-input">
-                    <input [type]="mostrarPassword() ? 'text' : 'password'" [formField]="formulario.password">
-                    <button
-                        class="btn-toggle-password"
-                        type="button"
-                        [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                        [attr.aria-pressed]="mostrarPassword()"
-                        (click)="alternarVisibilidadPassword()">
-                        <img [src]="mostrarPassword() ? '/images/eye-off.svg' : '/images/eye.svg'" alt="">
-                    </button>
-                </div>
-                <app-form-error [field]="formulario.password()" />
-            </label>
-            <label>
-                Fecha de nacimiento
-                <input type="date" [formField]="formulario.birthDate">
-                <app-form-error [field]="formulario.birthDate()" />
-            </label>
-            <label>
-                Telefono:
-                <input type="tel" [formField]="formulario.phoneNumber">
-                <app-form-error [field]="formulario.phoneNumber()" />
-            </label>
-            @if(modelo().role === 'ROLE_DOCTOR'){
-            <label>
-                Matricula:
-                <input type="text" [formField]="formulario.licenseNumber">
-                <app-form-error [field]="formulario.licenseNumber()" />
-            </label>
-            <label>
-                Especialidad:
-                @if(especialidades.isLoading()){
-                <p>Cargando especialidades...</p>
-                }
-                @if(especialidades.error()){
-                <p class="error">Hubo un error cargando las especialidades</p>
-                }
-                <select id="speciality" [value]="modelo().speciality ?? ''" (change)="seleccionarEspecialidad($event)">
-                    <option value="">Selecciona una especialidad</option>
-                    @for(es of especialidades.value(); track es.id){
-                    <option [value]="es.id">{{es.name}}</option>
-                    }
-                </select>
-                <app-form-error [field]="formulario.speciality()" />
-            </label>
+            @if (especialidades.error()) {
+              <span class="reg-help reg-help--error">No pudimos cargar las especialidades.</span>
             }
+            <select id="speciality" [value]="modelo().speciality ?? ''" (change)="seleccionarEspecialidad($event)">
+              <option value="">Seleccioná una especialidad</option>
+              @if (especialidades.hasValue()) {
+                @for (es of especialidades.value(); track es.id) {
+                  <option [value]="es.id">{{ es.name }}</option>
+                }
+              }
+            </select>
+            <app-form-error [field]="formulario.speciality()" />
+          </label>
+        </div>
 
-            <button type="submit">Enviar</button>
-        </form>
-    </div>
+        <p class="reg-notice" role="note">
+          Los médicos pasan por una revisión de la administración antes de poder ingresar.
+        </p>
+      }
 
+      <button class="reg-submit" type="submit">Crear cuenta</button>
+    </form>
+  </div>
 </div>

@@ -53,7 +53,8 @@ public class PatientService {
             return List.of();
         }
 
-        return followRequestRepository.findByDoctorAndStatus(doctorOpt.get(), FollowRequestStatus.APPROVED)
+        return followRequestRepository
+                .findByDoctorAndPatientIsNotNullAndStatus(doctorOpt.get(), FollowRequestStatus.APPROVED)
                 .stream()
                 .map(FollowRequestEntity::getPatient)
                 .map(patientMapper::toResponseDTO)

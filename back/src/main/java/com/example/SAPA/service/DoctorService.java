@@ -10,6 +10,7 @@ import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.SpecialityRepository;
 import com.example.SAPA.enums.AccountStatus;
 import jakarta.persistence.EntityNotFoundException;
+import com.example.SAPA.enums.UserCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

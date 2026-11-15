@@ -18,7 +18,7 @@ import { AlertaService } from '../../../Common/alerta/alerta-service';
   selector: 'app-login',
   imports: [FormField, FormError, RouterLink],
   templateUrl: './login.html',
-  styleUrl: '../../shared/form.css',
+  styleUrls: ['./login.css', '../../shared/form.css']
 })
 export class Login {
   private readonly auth = inject(Auth);
