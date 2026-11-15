@@ -25,6 +25,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/chat/**")
                 .addResourceLocations("file:uploads/chat/");
+        registry.addResourceHandler("/uploads/forums/**")
+                .addResourceLocations("file:uploads/forums/");
     }
 
     public void configureClientInboundChannel(ChannelRegistration registration) {
