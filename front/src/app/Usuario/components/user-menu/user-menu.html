@@ -7,31 +7,39 @@
   @if (menuAbierto()) {
   <div class="dropdown" id="user-dropdown">
 
-    @if (auth.isDoctor() || role() === 'DOCTOR') {
-    <a [routerLink]="['/perfil-medico']" (click)="toggleMenu()">
-      <i class="bi bi-person-vcard" aria-hidden="true"></i>
-      Perfil profesional
-    </a>
-    <hr>
-    <a [routerLink]="['/mis-pacientes']" (click)="toggleMenu()">
-      <i class="bi bi-people" aria-hidden="true"></i>
-      Mis pacientes
-    </a>
-    <a [routerLink]="['/solicitudes']" (click)="toggleMenu()">
-      <i class="bi bi-person-check" aria-hidden="true"></i>
-      Solicitudes de seguimiento
-    </a>
-    <hr>
-    <a [routerLink]="['/gestionar-cuestionarios']" (click)="toggleMenu()">
-      <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>
-      Gestionar cuestionarios
-    </a>
-    <a [routerLink]="['/historial-cuestionarios-pacientes']" (click)="toggleMenu()">
-      <i class="bi bi-clock-history" aria-hidden="true"></i>
-      Historial de pacientes
-    </a>
-    <hr>
-    }
+      @if (auth.isDoctor() || role() === 'DOCTOR') {
+        <a [routerLink]="['/perfil-medico']" (click)="toggleMenu()">
+          <i class="bi bi-person-vcard" aria-hidden="true"></i>
+          Perfil profesional
+        </a>
+        <hr>
+        <a [routerLink]="['/mis-pacientes']" (click)="toggleMenu()">
+          <i class="bi bi-people" aria-hidden="true"></i>
+          Mis pacientes
+        </a>
+        <a [routerLink]="['/solicitudes']" (click)="toggleMenu()">
+          <i class="bi bi-person-check" aria-hidden="true"></i>
+          Solicitudes de seguimiento
+        </a>
+        <a [routerLink]="['/mis-seguidores']" (click)="toggleMenu()">
+          <i class="bi bi-people-fill" aria-hidden="true"></i>
+          Médicos que me siguen
+        </a>
+        <a [routerLink]="['/mis-solicitudes']" (click)="toggleMenu()">
+          <i class="bi bi-send-check" aria-hidden="true"></i>
+          Mis solicitudes enviadas
+        </a>
+        <hr>
+        <a [routerLink]="['/gestionar-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-pulse" aria-hidden="true"></i>
+          Gestionar cuestionarios
+        </a>
+        <a [routerLink]="['/historial-cuestionarios-pacientes']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history" aria-hidden="true"></i>
+          Historial de pacientes
+        </a>
+        <hr>
+      }
 
     @if (auth.isPatient() || role() === 'PATIENT') {
     <a [routerLink]="['/perfil-paciente']" (click)="toggleMenu()">

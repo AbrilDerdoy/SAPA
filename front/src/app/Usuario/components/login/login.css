@@ -1,0 +1,195 @@
+:host {
+  display: block;
+  color: var(--text);
+}
+
+.login {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100%;
+}
+
+.login-brand {
+  display: grid;
+  place-items: center;
+  padding: 1.25rem 1rem;
+  background: var(--primary-light);
+}
+
+.login-brand__logo {
+  display: block;
+  width: auto;
+  max-width: 70%;
+  height: 56px;
+  object-fit: contain;
+}
+
+.login-side {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  padding: 2rem 1rem 3rem;
+}
+
+.login-form {
+  display: grid;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 440px;
+  margin: 0;
+  padding: 1.5rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.login-form__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.6rem, 4.5vw, 2rem);
+  line-height: 1.15;
+}
+
+.login-form__lead {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.login-field {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.login-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.login-field input {
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.login-password {
+  position: relative;
+  display: block;
+}
+
+.login-password input {
+  padding-right: 3rem;
+}
+
+.login-password__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  transform: translateY(-50%);
+}
+
+.login-password__toggle:hover {
+  background: var(--surface-hover);
+}
+
+.login-password__toggle img {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  opacity: 0.75;
+}
+
+:host-context([data-theme='dark']) .login-password__toggle img {
+  filter: brightness(0) invert(1);
+}
+
+.login-field app-form-error {
+  display: block;
+  min-height: 1rem;
+}
+
+:host ::ng-deep .login-field .error {
+  margin: 0;
+  max-width: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1rem;
+  color: var(--danger-strong);
+}
+
+.login-notice {
+  margin: 0;
+  max-width: none;
+  padding: 0.8rem 1rem;
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.login-notice--error {
+  background: var(--danger-light);
+  border-left-color: var(--danger);
+}
+
+.login-forgot {
+  justify-self: start;
+  margin-top: -0.2rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.login-submit {
+  width: 100%;
+  min-height: 2.9rem;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  .login {
+    grid-template-columns: minmax(280px, 5fr) minmax(0, 7fr);
+  }
+
+  .login-brand {
+    align-items: start;
+    padding: 14vh 2rem 3rem;
+  }
+
+  .login-brand__logo {
+    position: sticky;
+    top: 14vh;
+    width: min(100%, 280px);
+    max-width: none;
+    height: auto;
+  }
+
+  .login-side {
+    padding: 14vh 2rem 4rem;
+  }
+
+  .login-form {
+    padding: 2rem;
+  }
+}

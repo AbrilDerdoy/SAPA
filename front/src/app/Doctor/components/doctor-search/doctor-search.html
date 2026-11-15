@@ -62,6 +62,20 @@
               </div>
 
               <div class="card__actions">
+                @if (hospitalLink(doctor.hospitalUrl); as link) {
+                  <a class="btn btn--outline" [href]="link" target="_blank" rel="noopener noreferrer">
+                    Ver hospital
+                  </a>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn--outline btn--unavailable"
+                    disabled
+                    title="Este médico no cargó un sitio web"
+                  >
+                    Sin sitio web
+                  </button>
+                }
                 <a class="btn btn--outline" [routerLink]="['/perfil-medico-publico', doctor.id]">
                   Ver perfil
                 </a>

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormField, form } from '@angular/forms/signals';
@@ -24,13 +24,17 @@ export class DoctorSearch {
   readonly model = signal({ query: '' });
   readonly searchForm = form(this.model);
 
-  readonly doctors = signal<DoctorSummary[]>([]);
+  private readonly rawDoctors = signal<DoctorSummary[]>([]);
+  readonly doctors = computed(() =>
+    this.rawDoctors().filter((d) => d.id !== this.doctorService.myId())
+  );
   readonly loadStatus = signal<LoadStatus>('loading');
   readonly lastQuery = signal('');
   readonly busyKey = signal<string | null>(null);
   readonly feedback = signal<Record<number, Feedback>>({});
 
   constructor() {
+    this.doctorService.loadMyId();
     this.followService.loadSent();
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const query = params.get('query') ?? '';
@@ -61,11 +65,16 @@ export class DoctorSearch {
     this.feedback.set({});
     this.doctorService.search(query).subscribe({
       next: (list) => {
-        this.doctors.set(list);
+        this.rawDoctors.set(list);
         this.loadStatus.set('success');
       },
       error: () => this.loadStatus.set('error'),
     });
+  }
+
+  hospitalLink(url: string | null | undefined): string | null {
+    const clean = url?.trim() ?? '';
+    return /^https?:\/\//i.test(clean) ? clean : null;
   }
 
   requestFollow(id: number): void {

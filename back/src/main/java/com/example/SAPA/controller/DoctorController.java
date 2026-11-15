@@ -3,6 +3,7 @@ package com.example.SAPA.controller;
 import com.example.SAPA.DTOs.Request.UpdateDoctorRequestDTO;
 import com.example.SAPA.DTOs.Response.DoctorProfileResponseDTO;
 import com.example.SAPA.DTOs.Response.DoctorResponseDTO;
+import com.example.SAPA.DTOs.Response.DoctorSearchResponseDTO;
 import com.example.SAPA.DTOs.Response.PublicDoctorProfileResponseDTO;
 import com.example.SAPA.service.DoctorService;
 import jakarta.validation.Valid;
@@ -44,13 +45,14 @@ public class DoctorController {
     public ResponseEntity<String> getHospitalUrl(@PathVariable Long doctorId) {
         return ResponseEntity.ok(doctorService.getHospitalUrl(doctorId));
     }
+
     @GetMapping("/search")
-    public ResponseEntity<List<DoctorResponseDTO>> search(@RequestParam(required = false) String query) {
+    public ResponseEntity<List<DoctorSearchResponseDTO>> search(@RequestParam(required = false) String query) {
         return ResponseEntity.ok(doctorService.searchDoctors(query));
     }
 
     @GetMapping("/me")
-public ResponseEntity<DoctorResponseDTO> getCurrentDoctor() {
-    return ResponseEntity.ok(doctorService.getCurrentDoctor());
-}
+    public ResponseEntity<DoctorResponseDTO> getCurrentDoctor() {
+        return ResponseEntity.ok(doctorService.getCurrentDoctor());
+    }
 }

@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @Table(name = "user")
 public class UserEntity {
 
+    public static final long GRACE_DAYS = 30;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,9 +38,34 @@ public class UserEntity {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private LocalDateTime deletionRequestedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private AccountStatus statusBeforeDeletion;
+
 
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void markForDeletion() {
+        this.statusBeforeDeletion = this.status;
+        this.status = AccountStatus.INACTIVE;
+        this.deletionRequestedAt = LocalDateTime.now();
+    }
+
+    public boolean canBeRecovered() {
+        return this.status == AccountStatus.INACTIVE
+                && this.deletionRequestedAt != null
+                && this.deletionRequestedAt.isAfter(LocalDateTime.now().minusDays(GRACE_DAYS));
+    }
+
+    public void recover() {
+        this.status = this.statusBeforeDeletion != null ? this.statusBeforeDeletion : AccountStatus.ACTIVE;
+        this.statusBeforeDeletion = null;
+        this.deletionRequestedAt = null;
     }
 }

@@ -20,6 +20,7 @@ import {
 } from '../../service/location-map.service';
 import { Speciality } from '../../interfaces/speciality';
 import { UpdateDoctorRequest } from '../../interfaces/update-doctor-request';
+import { DeleteAccount } from '../../../Usuario/components/delete-account/delete-account';
 import { FormError } from '../../../Common/form-error/form-error';
 
 type LoadStatus = 'loading' | 'ready' | 'error';
@@ -56,7 +57,7 @@ const ADDRESS_MAX_LENGTH = 255;
 
 @Component({
   selector: 'app-doctor-profile',
-  imports: [FormField, FormError],
+  imports: [FormField, FormError, DeleteAccount],
   templateUrl: './doctor-profile.html',
   styleUrl: './doctor-profile.css',
 })

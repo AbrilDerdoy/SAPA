@@ -207,6 +207,10 @@
   background: var(--primary-light);
 }
 
+.btn--unavailable:disabled {
+  cursor: not-allowed;
+}
+
 .notice {
   margin-bottom: 1rem;
   padding: 1rem 1.2rem;

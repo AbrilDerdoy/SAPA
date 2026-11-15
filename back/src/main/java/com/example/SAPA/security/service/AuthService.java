@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.example.SAPA.Repositories.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,7 @@ public class AuthService {
     private final JWTService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final UserRepository userRepository;
 
 
     public UserDetails authenticate(AuthRequest input) {
@@ -47,6 +49,14 @@ public class AuthService {
                 .orElseThrow(() -> new BadCredentialsException("Email o contraseña incorrectos"));
 
         UserEntity userEntity = credentialEntity.getUser();
+
+        if (userEntity.getStatus() == AccountStatus.INACTIVE) {
+            if (!userEntity.canBeRecovered()) {
+                throw new DisabledException("Tu cuenta se encuentra dada de baja.");
+            }
+            userEntity.recover();
+            userRepository.save(userEntity);
+        }
 
         if (userEntity.getStatus() == AccountStatus.PENDING) {
             throw new DisabledException("Tu perfil de médico está siendo revisado por la administración. Te notificaremos por correo.");

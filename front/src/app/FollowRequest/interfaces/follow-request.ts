@@ -4,7 +4,8 @@ import { FollowRequestDoctor } from "./follow-request-doctor";
 
 export interface FollowRequest {
     id: number;
-    patient: PatientSummary;
+    patient: PatientSummary | null;
+    doctorFollower: FollowRequestDoctor | null;
     doctor: FollowRequestDoctor;
     status: FollowRequestStatus;
     requestedAt: string;

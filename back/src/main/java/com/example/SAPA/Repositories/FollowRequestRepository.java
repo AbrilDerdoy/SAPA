@@ -46,4 +46,9 @@ public interface FollowRequestRepository extends JpaRepository<FollowRequestEnti
             DoctorEntity doctor,
             FollowRequestStatus status
     );
+
+    List<FollowRequestEntity> findByDoctorAndDoctorFollowerIsNotNullAndStatus(
+            DoctorEntity doctor,
+            FollowRequestStatus status
+    );
 }

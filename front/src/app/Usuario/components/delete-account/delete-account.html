@@ -1,0 +1,77 @@
+<section class="danger-zone" aria-labelledby="dz-title">
+  <header class="danger-zone__head">
+    <div class="danger-zone__text">
+      <span class="danger-zone__eyebrow">Zona de peligro</span>
+      <h2 id="dz-title" class="danger-zone__title">Dar de baja tu cuenta</h2>
+      <p class="danger-zone__lead">
+        Si ya no querés usar SAPA, podés dar de baja tu cuenta. Tenés 30 días para arrepentirte.
+      </p>
+    </div>
+
+    @if (!open()) {
+      <button
+        type="button"
+        class="btn btn--danger"
+        aria-expanded="false"
+        aria-controls="delete-panel"
+        (click)="openPanel()"
+      >
+        Eliminar cuenta
+      </button>
+    }
+  </header>
+
+  @if (open()) {
+    <form id="delete-panel" class="danger-zone__panel" (submit)="submit($event)" novalidate>
+      <div class="warning" role="note">
+        <strong>Antes de continuar</strong>
+        <ul>
+          <li>Tu cuenta quedará inactiva y no vas a poder usarla.</li>
+          <li>Si volvés a iniciar sesión dentro de los 30 días, la recuperás.</li>
+          <li>Pasado ese plazo se eliminan tus datos personales y no se puede volver atrás.</li>
+          <li>Se cerrará tu sesión en este dispositivo.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <label for="delete-password">Contraseña</label>
+        <input
+          id="delete-password"
+          type="password"
+          autocomplete="current-password"
+          [formField]="deleteForm.password"
+          [class.is-invalid]="invalid('password')"
+        />
+        <app-form-error [field]="deleteForm.password()" />
+      </div>
+
+      <div class="field">
+        <label class="check" for="delete-confirm">
+          <input id="delete-confirm" type="checkbox" [formField]="deleteForm.confirm" />
+          <span>Entiendo que mi cuenta se dará de baja.</span>
+        </label>
+        <app-form-error [field]="deleteForm.confirm()" />
+      </div>
+
+      @if (status() === 'error') {
+        <div class="notice notice--error" role="alert">
+          <strong>{{ errorMessage() }}</strong>
+        </div>
+      }
+
+      <div class="actions">
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="cancel()"
+          [disabled]="status() === 'deleting'"
+        >
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn--danger" [disabled]="status() === 'deleting'">
+          {{ status() === 'deleting' ? 'Eliminando…' : 'Eliminar mi cuenta' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>
