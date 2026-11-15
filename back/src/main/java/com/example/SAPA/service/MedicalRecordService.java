@@ -167,7 +167,8 @@ public class MedicalRecordService {
                 medication.getNotes(),
                 medication.getStartDate(),
                 medication.getEndDate(),
-                medication.getAddedAt()
+                medication.getAddedAt(),
+                medication.getStatus()
         );
     }
 
@@ -205,6 +206,10 @@ public class MedicalRecordService {
             throw new IllegalArgumentException(
                     "La fecha de finalización no puede ser anterior a la fecha de inicio."
             );
+        }
+
+        if (request.status() != null) {
+            medication.setStatus(request.status());
         }
 
         return toMedicationResponse(patientMedicationRepository.save(medication));

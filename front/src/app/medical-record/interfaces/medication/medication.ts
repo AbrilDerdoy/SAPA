@@ -1,3 +1,4 @@
+export type MedicationStatus = 'PRESCRIBED' | 'SUSPENDED';
 export interface Medication {
     medicationId: number;
     fdaDrugName: string;
@@ -5,4 +6,5 @@ export interface Medication {
     startDate: string;
     endDate: string | null;
     addedAt: string;
+    status: MedicationStatus;
 }

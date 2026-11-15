@@ -151,7 +151,8 @@ public class PatientMedicationService {
                             med.getFdaDrugName(),
                             med.getStartDate(),
                             med.getEndDate(),
-                            med.getAddedAt()
+                            med.getAddedAt(),
+                            med.getStatus()
                     );
                 })
                 .toList();
