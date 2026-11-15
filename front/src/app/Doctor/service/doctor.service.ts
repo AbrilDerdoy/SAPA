@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DoctorSummary } from '../interfaces/doctor-summary';
 import { DoctorProfile } from '../interfaces/doctor-profile';
+import { PublicDoctorProfile } from '../interfaces/public-doctor-profile';
 import { UpdateDoctorRequest } from '../interfaces/update-doctor-request';
 import { Auth } from '../../Usuario/services/Auth/auth';
 
@@ -47,5 +48,9 @@ export class DoctorService {
 
   getHospitalUrl(doctorId: number): Observable<string> {
     return this.http.get(`${this.baseUrl}/${doctorId}/hospital-url`, { responseType: 'text' });
+  }
+
+  getPublicProfile(doctorId: number): Observable<PublicDoctorProfile> {
+    return this.http.get<PublicDoctorProfile>(`${this.baseUrl}/${doctorId}/profile`);
   }
 }

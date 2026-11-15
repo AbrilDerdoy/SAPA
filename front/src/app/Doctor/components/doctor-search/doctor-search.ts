@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormField, form } from '@angular/forms/signals';
 import { DoctorService } from '../../service/doctor.service';
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
@@ -11,7 +11,7 @@ type LoadStatus = 'loading' | 'success' | 'error';
 
 @Component({
   selector: 'app-doctor-search',
-  imports: [FormField],
+  imports: [FormField, RouterLink],
   templateUrl: './doctor-search.html',
   styleUrl: './doctor-search.css',
 })
@@ -98,7 +98,7 @@ export class DoctorSearch {
     });
   }
 
-  isBusy(id: number, action: 'hospital' | 'follow'): boolean {
+  isBusy(id: number, action: 'follow'): boolean {
     return this.busyKey() === `${id}:${action}`;
   }
 

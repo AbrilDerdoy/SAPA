@@ -91,6 +91,73 @@
     font-size: 0.85rem;
 }
 
+.location-field {
+    gap: 0.6rem;
+}
+
+.map-picker {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-sunken);
+}
+
+.map-picker:focus-visible {
+    outline: none;
+}
+
+.suggestions {
+    z-index: 1;
+    margin: 0;
+    padding: 0.3rem;
+    list-style: none;
+    display: grid;
+    gap: 0.15rem;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.suggestion {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+}
+
+.suggestion:hover,
+.suggestion:focus-visible {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.map-clear {
+    justify-self: start;
+    background: var(--neutral-bg);
+    color: var(--text);
+}
+
+.map-clear:hover {
+    background: var(--neutral-hover);
+}
+
 .counter {
     justify-self: end;
     font-size: 0.78rem;

@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, finalize, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { Auth } from '../services/Auth/auth';
+import { AlertaService } from '../../Common/alerta/alerta-service';
 
 let refreshRequest: ReturnType<Auth['refreshToken']> | null = null;
 let sessionExpiredNoticeShown = false;
@@ -10,6 +11,7 @@ let sessionExpiredNoticeShown = false;
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(Auth);
+  const alerta = inject(AlertaService);
 
   const jwtData = localStorage.getItem('jwt');
   let authReq = req;
@@ -65,7 +67,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             localStorage.removeItem('usuario');
             if (!sessionExpiredNoticeShown) {
               sessionExpiredNoticeShown = true;
-              window.alert('Tu sesión expiró. Iniciá sesión nuevamente.');
+              alerta.mostrarError(
+                'Tu sesión expiró. Iniciá sesión nuevamente.',
+                'Sesión expirada'
+              );
             }
             void router.navigate(['/login']);
             return throwError(() => refreshError);

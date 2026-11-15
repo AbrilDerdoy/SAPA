@@ -166,4 +166,17 @@
     align-items: stretch;
     gap: 0.5rem;
   }
+
+  .card {
+    flex-wrap: wrap;
+  }
+
+  .card__actions {
+    width: 100%;
+  }
+
+  .card__actions .btn {
+    flex: 1;
+    text-align: center;
+  }
 }

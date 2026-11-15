@@ -70,6 +70,52 @@
         [class.is-invalid]="invalid('hospitalUrl')"/>
         <app-form-error [field]="profileForm.hospitalUrl()" />
     </div>
+
+    <div class="field location-field">
+        <label for="hospitalAddress">Ubicación del hospital o consultorio <span class="optional">(opcional)</span></label>
+        <input
+            id="hospitalAddress"
+            type="text"
+            autocomplete="off"
+            placeholder="Buscá el hospital o consultorio"
+            [formField]="profileForm.hospitalAddress"
+            [class.is-invalid]="invalid('hospitalAddress')"
+            (input)="onAddressInput($event)"/>
+        <app-form-error [field]="profileForm.hospitalAddress()" />
+        <p class="hint">
+            Buscá el hospital y elegí una sugerencia, o hacé clic sobre la ubicación exacta en el mapa.
+        </p>
+
+        @if (searchStatus() === 'searching') {
+            <p class="hint" role="status">Buscando…</p>
+        }
+        @if (searchStatus() === 'empty') {
+            <p class="hint" role="status">No encontramos resultados. Probá con otro nombre o marcá el punto en el mapa.</p>
+        }
+        @if (searchStatus() === 'error') {
+            <p class="field__errors" role="alert">No pudimos buscar la dirección. Marcá el punto directamente en el mapa.</p>
+        }
+        @if (placeSuggestions().length > 0) {
+            <ul class="suggestions" aria-label="Resultados de búsqueda">
+                @for (place of placeSuggestions(); track place.label + place.lat + place.lng) {
+                    <li>
+                        <button type="button" class="suggestion" (click)="selectPlace(place)">
+                            {{ place.label }}
+                        </button>
+                    </li>
+                }
+            </ul>
+        }
+
+        <div #mapContainer class="map-picker"></div>
+
+        @if (locationStatus() === 'error') {
+            <p class="field__errors" role="alert">No pudimos cargar el mapa. Podés escribir la dirección manualmente.</p>
+        }
+        @if (hasLocation() && editing()) {
+            <button type="button" class="map-clear" (click)="clearLocation()">Quitar ubicación</button>
+        }
+    </div>
     
     <div class="field">
         <label for="bio">Biografía <span class="optional">(opcional)</span></label>

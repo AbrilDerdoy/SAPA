@@ -6,10 +6,12 @@ import { vi } from 'vitest';
 
 import { authInterceptor } from './auth-interceptor';
 import { Auth } from '../services/Auth/auth';
+import { AlertaService } from '../../Common/alerta/alerta-service';
 
 describe('authInterceptor', () => {
   const auth = { refreshToken: vi.fn() };
   const router = { navigate: vi.fn().mockResolvedValue(true) };
+  const alerta = { mostrarError: vi.fn(), mostrarInfo: vi.fn() };
   const interceptor: HttpInterceptorFn = (req, next) =>
     TestBed.runInInjectionContext(() => authInterceptor(req, next));
 
@@ -17,10 +19,13 @@ describe('authInterceptor', () => {
     localStorage.clear();
     auth.refreshToken.mockReset();
     router.navigate.mockClear();
+    alerta.mostrarError.mockReset();
+    alerta.mostrarInfo.mockReset();
     TestBed.configureTestingModule({
       providers: [
         { provide: Auth, useValue: auth },
-        { provide: Router, useValue: router }
+        { provide: Router, useValue: router },
+        { provide: AlertaService, useValue: alerta }
       ]
     });
   });
@@ -42,15 +47,13 @@ describe('authInterceptor', () => {
       .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 401 })))
       .mockReturnValueOnce(of(new HttpResponse({ status: 200 })));
     const request = new HttpRequest('GET', 'http://localhost:8080/users/me');
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
 
     interceptor(request, next).subscribe();
 
     expect(auth.refreshToken).toHaveBeenCalledOnce();
     expect(next).toHaveBeenCalledTimes(2);
     expect(JSON.parse(localStorage.getItem('jwt') ?? '{}').AccessToken).toBe('new-access-token');
-    expect(alert).not.toHaveBeenCalled();
-    alert.mockRestore();
+    expect(alerta.mostrarError).not.toHaveBeenCalled();
   });
 
   it('shows a session-expired notice when the refresh token is rejected', () => {
@@ -65,16 +68,15 @@ describe('authInterceptor', () => {
       throwError(() => new HttpErrorResponse({ status: 401 }))
     );
     const request = new HttpRequest('GET', 'http://localhost:8080/users/me');
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
 
     interceptor(request, next).subscribe({ error: () => undefined });
 
     expect(localStorage.getItem('jwt')).toBeNull();
     expect(localStorage.getItem('usuario')).toBeNull();
-    expect(alert).toHaveBeenCalledWith(
-      'Tu sesión se cerró porque el token expiró o es inválido. Iniciá sesión nuevamente.'
+    expect(alerta.mostrarError).toHaveBeenCalledWith(
+      'Tu sesión expiró. Iniciá sesión nuevamente.',
+      'Sesión expirada'
     );
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
-    alert.mockRestore();
   });
 });
