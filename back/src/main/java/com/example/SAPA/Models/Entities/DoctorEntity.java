@@ -40,6 +40,13 @@ public class DoctorEntity {
 
     private String hospitalUrl;
 
+    @Column(length = 255)
+    private String hospitalAddress;
+
+    private Double hospitalLatitude;
+
+    private Double hospitalLongitude;
+
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 

@@ -1,5 +1,8 @@
 package com.example.SAPA.DTOs.Request;
 
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -22,6 +25,17 @@ public record UpdateDoctorRequestDTO(
         @Size(max = 255, message = "La URL del hospital no puede superar los 255 caracteres.")
         String hospitalUrl,
 
+        @Size(max = 255, message = "La dirección del hospital no puede superar los 255 caracteres.")
+        String hospitalAddress,
+
+        @DecimalMin(value = "-90.0", message = "La latitud debe estar entre -90 y 90.")
+        @DecimalMax(value = "90.0", message = "La latitud debe estar entre -90 y 90.")
+        Double hospitalLatitude,
+
+        @DecimalMin(value = "-180.0", message = "La longitud debe estar entre -180 y 180.")
+        @DecimalMax(value = "180.0", message = "La longitud debe estar entre -180 y 180.")
+        Double hospitalLongitude,
+
         @NotBlank(message = "El número de teléfono es obligatorio.")
         @Size(min = 7, max = 20, message = "El número de teléfono debe tener entre 7 y 20 caracteres.")
         @Pattern(regexp = "^\\+?[0-9\\s\\-\\(]+$", message = "El número de teléfono solo puede contener números, espacios, guiones o el signo +.")
@@ -33,4 +47,10 @@ public record UpdateDoctorRequestDTO(
 
         @NotNull(message = "Debe seleccionar una especialidad.")
         Long speciality
-) {}
+) {
+
+    @AssertTrue(message = "Debe indicar la latitud y la longitud juntas.")
+    public boolean isLocationComplete() {
+        return (hospitalLatitude == null) == (hospitalLongitude == null);
+    }
+}

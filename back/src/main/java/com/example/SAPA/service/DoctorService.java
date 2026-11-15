@@ -42,6 +42,9 @@ public class DoctorService {
 
         doctor.setBio(request.bio());
         doctor.setHospitalUrl(request.hospitalUrl());
+        doctor.setHospitalAddress(request.hospitalAddress());
+        doctor.setHospitalLatitude(request.hospitalLatitude());
+        doctor.setHospitalLongitude(request.hospitalLongitude());
 
         doctor.setSpeciality(specialityRepository.findById(request.speciality())
                 .orElseThrow(() -> new EntityNotFoundException("Especialidad no encontrada")));
@@ -62,6 +65,9 @@ public class DoctorService {
                 doctor.getLicenseNumber(),
                 doctor.getBio(),
                 doctor.getHospitalUrl(),
+                doctor.getHospitalAddress(),
+                doctor.getHospitalLatitude(),
+                doctor.getHospitalLongitude(),
                 speciality == null ? null : speciality.getId(),
                 speciality == null ? null : speciality.getName()
         );
@@ -121,6 +127,9 @@ public class DoctorService {
                 doctor.getLicenseNumber(),
                 doctor.getBio(),
                 doctor.getHospitalUrl(),
+                doctor.getHospitalAddress(),
+                doctor.getHospitalLatitude(),
+                doctor.getHospitalLongitude(),
                 doctor.getSpeciality() == null ? null : doctor.getSpeciality().getId()
         );
     }
