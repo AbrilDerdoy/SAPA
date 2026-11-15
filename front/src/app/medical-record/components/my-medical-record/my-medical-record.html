@@ -89,41 +89,57 @@
     @if (cargandoMedicaciones()) {
     <p>Cargando medicaciones...</p>
     } @else if (errorMedicaciones()) {
-    <div class="error">
-      <p>{{ errorMedicaciones() }}</p>
-      <button type="button" (click)="cargarMedicaciones()">Reintentar</button>
-    </div>
-    } @else if (medicaciones().length === 0) {
-    <div class="empty-state">
-      <p>No tenés medicaciones registradas actualmente.</p>
-    </div>
+    <p class="error-message">{{ errorMedicaciones() }}</p>
     } @else {
-    <div class="medications-list">
-      @for (medicacion of medicaciones(); track medicacion.medicationId) {
-      <article class="medication-item">
-        <div class="medication-header">
-          <h3>{{ medicacion.fdaDrugName }}</h3>
-          <span class="medication-badge">Registrada</span>
-        </div>
 
-        @if (medicacion.notes) {
-        <p>{{ medicacion.notes }}</p>
+    <div class="medication-section">
+      <h3>Medicaciones actuales</h3>
+
+      @if (medicacionesActivas().length === 0) {
+      <p class="empty-message">No tenés medicaciones recetadas actualmente.</p>
+      } @else {
+      <div class="medications-list">
+        @for (medicacion of medicacionesActivas(); track medicacion.medicationId) {
+        <article class="medication-item">
+          <div class="medication-item-header">
+            <h3>{{ medicacion.fdaDrugName }}</h3>
+            <span class="status-badge status-prescribed">Recetado</span>
+          </div>
+
+          <p><strong>Notas:</strong> {{ medicacion.notes || 'Sin notas médicas' }}</p>
+          <p><strong>Fecha de inicio:</strong> {{ medicacion.startDate }}</p>
+          <p><strong>Fecha de finalización:</strong> {{ medicacion.endDate || 'Sin fecha de finalización' }}</p>
+        </article>
         }
-
-        <div class="medication-dates">
-          <div>
-            <span>Fecha de inicio</span>
-            <strong>{{ medicacion.startDate }}</strong>
-          </div>
-
-          <div>
-            <span>Fecha de finalización</span>
-            <strong>{{ medicacion.endDate || 'Sin fecha de finalización' }}</strong>
-          </div>
-        </div>
-      </article>
+      </div>
       }
     </div>
+
+    <details class="suspended-section">
+      <summary>
+        Medicaciones suspendidas
+        <span class="suspended-count">{{ medicacionesSuspendidas().length }}</span>
+      </summary>
+
+      @if (medicacionesSuspendidas().length === 0) {
+      <p class="empty-message">No tenés medicaciones suspendidas.</p>
+      } @else {
+      <div class="medications-list">
+        @for (medicacion of medicacionesSuspendidas(); track medicacion.medicationId) {
+        <article class="medication-item">
+          <div class="medication-item-header">
+            <h3>{{ medicacion.fdaDrugName }}</h3>
+            <span class="status-badge status-suspended">Suspendido</span>
+          </div>
+
+          <p><strong>Notas:</strong> {{ medicacion.notes || 'Sin notas médicas' }}</p>
+          <p><strong>Fecha de inicio:</strong> {{ medicacion.startDate }}</p>
+          <p><strong>Fecha de finalización:</strong> {{ medicacion.endDate || 'Sin fecha de finalización' }}</p>
+        </article>
+        }
+      </div>
+      }
+    </details>
     }
   </section>
   }

@@ -1,5 +1,6 @@
 package com.example.SAPA.Models.MedicalRecord;
 
+import com.example.SAPA.enums.MedicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,6 +33,10 @@ public class PatientMedicationEntity {
     private LocalDate startDate;
 
     private LocalDate endDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MedicationStatus status = MedicationStatus.PRESCRIBED;
 
     @Column(nullable = false, updatable = false)
     private LocalDate addedAt;

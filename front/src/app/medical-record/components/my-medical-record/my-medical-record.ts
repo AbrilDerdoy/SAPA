@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MedicalRecordService } from '../../services/medical-record-service';
 import { MedicalRecord } from '../../interfaces/medical-record';
 import { Medication } from '../../interfaces/medication/medication';
@@ -16,7 +16,7 @@ export class MyMedicalRecord implements OnInit {
   private readonly medicalRecordService = inject(MedicalRecordService)
   private readonly patientService = inject(PatientService)
 
-  perfil =signal<Patient | null>(null)
+  perfil = signal<Patient | null>(null)
   cargandoPerfil = signal(true)
   errorPerfil = signal<string | null>(null)
 
@@ -30,8 +30,12 @@ export class MyMedicalRecord implements OnInit {
   error = signal<string | null>(null)
   errorMedicaciones = signal<string | null>(null)
 
+  medicacionesActivas = computed(() => this.medicaciones().filter(m => m.status === 'PRESCRIBED'))
+
+  medicacionesSuspendidas = computed(() => this.medicaciones().filter(m => m.status === 'SUSPENDED'))
+
   cargarPerfil(): void {
-    this,this.cargandoPerfil.set(true)
+    this, this.cargandoPerfil.set(true)
     this.errorPerfil.set(null)
 
     this.patientService.getProfile().subscribe({
@@ -79,13 +83,13 @@ export class MyMedicalRecord implements OnInit {
   }
 
   toggleMedicaciones(): void {
-  const mostrar = !this.medicacionesVisibles();
-  this.medicacionesVisibles.set(mostrar);
+    const mostrar = !this.medicacionesVisibles();
+    this.medicacionesVisibles.set(mostrar);
 
-  if (mostrar && !this.medicaciones().length) {
-    this.cargarMedicaciones();
+    if (mostrar && !this.medicaciones().length) {
+      this.cargarMedicaciones();
+    }
   }
-}
 
   ngOnInit(): void {
     this.cargarPerfil()

@@ -311,6 +311,118 @@
   color: var(--danger-strong);
 }
 
+.medication-section {
+  margin-bottom: 24px;
+}
+
+.medication-section > h3 {
+  margin-bottom: 16px;
+}
+
+.medication-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.medication-item-header h3 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-prescribed {
+  background: var(--tone-teal-bg);
+  color: var(--tone-teal-text);
+}
+
+.status-suspended {
+  background: var(--tone-red-bg);
+  color: var(--tone-red-text);
+}
+
+.suspended-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  margin-top: 20px;
+  box-shadow: var(--shadow);
+}
+
+.suspended-section summary {
+  list-style: none;
+  padding: 17px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.suspended-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.suspended-section summary::before {
+  content: '💊';
+  font-size: 1.15rem;
+}
+
+.suspended-section summary::after {
+  content: '⌄';
+  margin-left: auto;
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.suspended-section[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.suspended-section summary:hover {
+  background: var(--surface-hover);
+}
+
+.suspended-count {
+  background: var(--tone-red-bg);
+  color: var(--tone-red-text);
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.suspended-section[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.suspended-section > .medications-list,
+.suspended-section > .empty-message {
+  padding: 16px 20px;
+}
+
+.empty-message {
+  color: var(--text-muted);
+  padding: 12px 0;
+}
+
+
 @media (max-width: 600px) {
   .medications-card {
     padding: 18px;
@@ -344,5 +456,11 @@
 
   .information-card {
     padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .medication-item-header {
+    gap: 8px;
   }
 }

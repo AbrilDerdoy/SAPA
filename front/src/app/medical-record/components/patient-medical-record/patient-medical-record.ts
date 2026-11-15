@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MedicalRecordService } from '../../services/medical-record-service';
 import { MedicalRecord } from '../../interfaces/medical-record';
-import { Medication } from '../../interfaces/medication/medication';
+import { Medication, MedicationStatus } from '../../interfaces/medication/medication';
 import { Patient } from '../../../Patient/interfaces/patient';
 import { PatientService } from '../../../Patient/service/patient.service';
 import { MedicationManagement } from '../medication-management/medication-management';
@@ -34,6 +34,12 @@ export class PatientMedicalRecord implements OnInit {
   errorPerfil = signal<string | null>(null)
 
   gestionVisible = signal(false)
+
+  cambiandoEstadoId = signal<number | null>(null)
+  errorEstado = signal<string | null>(null)
+
+  medicacionesActivas = computed(() => this.medicaciones().filter(m => m.status === 'PRESCRIBED'))
+  medicacionesSuspendidas = computed(() => this.medicaciones().filter(m => m.status === 'SUSPENDED'))
 
   ngOnInit(): void {
     this.patientId = Number(this.route.snapshot.paramMap.get('patientId'))
@@ -118,6 +124,26 @@ export class PatientMedicalRecord implements OnInit {
 
   actualizarLista(): void {
     this.cargarMedicaciones()
+  }
+
+  cambiarEstado(medicacion: Medication): void {
+    if (this.cambiandoEstadoId() !== null) return
+
+    const nuevoEstado: MedicationStatus = medicacion.status === 'PRESCRIBED' ? 'SUSPENDED' : 'PRESCRIBED'
+
+    this.cambiandoEstadoId.set(medicacion.medicationId)
+    this.errorEstado.set(null)
+
+    this.medicalRecordService.updateMedication(medicacion.medicationId, { status: nuevoEstado }).subscribe({
+      next: () => {
+        this.cambiandoEstadoId.set(null)
+        this.actualizarLista()
+      },
+      error: () => {
+        this.cambiandoEstadoId.set(null)
+        this.errorEstado.set('No se pudo modificar el estado de la medicación.')
+      }
+    })
   }
 
 }
