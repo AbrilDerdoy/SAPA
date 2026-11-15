@@ -7,5 +7,8 @@ export interface DoctorProfile {
   licenseNumber: string;
   bio: string | null;
   hospitalUrl: string | null;
+  hospitalAddress: string | null;
+  hospitalLatitude: number | null;
+  hospitalLongitude: number | null;
   speciality: number | null;
 }

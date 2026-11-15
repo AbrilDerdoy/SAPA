@@ -23,6 +23,7 @@ import { PatientQuestionnaires } from './Questionnaire/components/patient-questi
 import { QuestionnaireHistory } from './Questionnaire/components/questionnaire-history/questionnaire-history';
 import { MyMedicalRecord } from './medical-record/components/my-medical-record/my-medical-record';
 import { PatientMedicalRecord } from './medical-record/components/patient-medical-record/patient-medical-record';
+import { DoctorProfilePublic } from './Doctor/components/doctor-profile-public/doctor-profile-public';
 
 export const routes: Routes = [
 
@@ -122,6 +123,7 @@ export const routes: Routes = [
   },
   
   // Doctor
+  {path:'perfil-medico-publico/:doctorId',component:DoctorProfilePublic},
   {path: 'perfil-medico', canActivate: [doctorGuard],loadComponent: () =>
     import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)},
   {path: 'medicos', canActivate: [patientGuard], loadComponent: () =>

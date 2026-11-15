@@ -1,14 +1,39 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormField, disabled, form, maxLength, minLength, pattern, required } from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
+import * as L from 'leaflet';
 import { DoctorService } from '../../service/doctor.service';
+import {
+  LocationMapService,
+  MapCoordinates,
+  PlaceSuggestion,
+} from '../../service/location-map.service';
 import { Speciality } from '../../interfaces/speciality';
 import { UpdateDoctorRequest } from '../../interfaces/update-doctor-request';
 import { FormError } from '../../../Common/form-error/form-error';
 
 type LoadStatus = 'loading' | 'ready' | 'error';
 type SaveStatus = 'idle' | 'saving' | 'success' | 'error';
-type ProfileField = 'firstName' | 'lastName' | 'phoneNumber' | 'licenseNumber' | 'bio' | 'hospitalUrl';
+type LocationStatus = 'idle' | 'ready' | 'error';
+type SearchStatus = 'idle' | 'searching' | 'ready' | 'empty' | 'error';
+type ProfileField =
+  | 'firstName'
+  | 'lastName'
+  | 'phoneNumber'
+  | 'licenseNumber'
+  | 'bio'
+  | 'hospitalUrl'
+  | 'hospitalAddress';
 type ProfileModel = {
   firstName: string;
   lastName: string;
@@ -17,7 +42,17 @@ type ProfileModel = {
   licenseNumber: string;
   bio: string;
   hospitalUrl: string;
+  hospitalAddress: string;
+  hospitalLatitude: string;
+  hospitalLongitude: string;
 };
+
+const DEFAULT_MAP_CENTER: MapCoordinates = { lat: -34.6037, lng: -58.3816 };
+const MAP_ZOOM_WITH_LOCATION = 16;
+const MAP_ZOOM_DEFAULT = 12;
+const SEARCH_DEBOUNCE_MS = 450;
+const ADDRESS_MAX_LENGTH = 255;
+
 
 @Component({
   selector: 'app-doctor-profile',
@@ -27,18 +62,34 @@ type ProfileModel = {
 })
 export class DoctorProfile {
   private readonly doctorService = inject(DoctorService);
+  private readonly locationMap = inject(LocationMapService);
+  private readonly injector = inject(Injector);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly mapContainer = viewChild<ElementRef<HTMLDivElement>>('mapContainer');
+
+  private map: L.Map | null = null;
+  private marker: L.Marker | null = null;
+  private searchTimeoutId: number | null = null;
+  private searchController: AbortController | null = null;
+  private reverseController: AbortController | null = null;
 
   readonly specialities = httpResource<Speciality[]>(() => 'http://localhost:8080/specialities');
   readonly selectedSpeciality = signal<number | null>(null);
   readonly specialityTouched = signal(false);
   readonly status = signal<SaveStatus>('idle');
   readonly loadStatus = signal<LoadStatus>('loading');
+  readonly locationStatus = signal<LocationStatus>('idle');
+  readonly searchStatus = signal<SearchStatus>('idle');
+  readonly placeSuggestions = signal<PlaceSuggestion[]>([]);
   readonly editing = signal(false);
   readonly emailNoticeVisible = signal(false);
 
   readonly specialityInvalid = computed(
     () => this.specialityTouched() && this.selectedSpeciality() === null
   );
+
+  readonly hasLocation = computed(() => this.currentLocation() !== null);
 
   readonly model = signal<ProfileModel>({
     firstName: '',
@@ -48,12 +99,35 @@ export class DoctorProfile {
     licenseNumber: '',
     bio: '',
     hospitalUrl: '',
+    hospitalAddress: '',
+    hospitalLatitude: '',
+    hospitalLongitude: '',
   });
   private readonly initialModel = signal<ProfileModel | null>(null);
   private readonly initialSpeciality = signal<number | null>(null);
 
   constructor() {
     this.loadProfile();
+    afterNextRender(() => this.initLocationMap(), { injector: this.injector });
+
+    this.destroyRef.onDestroy(() => {
+      this.searchController?.abort();
+      this.reverseController?.abort();
+      if (this.searchTimeoutId !== null) window.clearTimeout(this.searchTimeoutId);
+      this.map?.remove();
+      this.map = null;
+      this.marker = null;
+    });
+  }
+
+  onAddressInput(event: Event): void {
+    this.queueSearch((event.target as HTMLInputElement).value);
+  }
+
+  selectPlace(place: PlaceSuggestion): void {
+    this.placeSuggestions.set([]);
+    this.searchStatus.set('idle');
+    this.setLocation(place.lat, place.lng, place.label, 17);
   }
 
   loadProfile(): void {
@@ -68,6 +142,9 @@ export class DoctorProfile {
           licenseNumber: profile.licenseNumber ?? '',
           bio: profile.bio ?? '',
           hospitalUrl: profile.hospitalUrl ?? '',
+          hospitalAddress: profile.hospitalAddress ?? '',
+          hospitalLatitude: profile.hospitalLatitude?.toString() ?? '',
+          hospitalLongitude: profile.hospitalLongitude?.toString() ?? '',
         };
         const selectedSpeciality = profile.speciality ?? null;
         this.model.set(values);
@@ -75,9 +152,14 @@ export class DoctorProfile {
         this.selectedSpeciality.set(selectedSpeciality);
         this.initialSpeciality.set(selectedSpeciality);
         this.loadStatus.set('ready');
+        this.syncMapWithModel();
       },
-      error: () => this.loadStatus.set('error'),
-    });
+      error: (error) => {
+        this.loadStatus.set('error'); 
+        console.error(error);
+      }
+    }
+  );
   }
 
   toggleEditing(): void {
@@ -89,12 +171,17 @@ export class DoctorProfile {
       this.profileForm().reset();
       this.specialityTouched.set(false);
       this.status.set('idle');
+      this.placeSuggestions.set([]);
+      this.searchStatus.set('idle');
       this.editing.set(false);
+      this.syncMapWithModel();
       return;
     }
 
     this.status.set('idle');
     this.editing.set(true);
+    this.syncMapWithModel();
+    window.setTimeout(() => this.map?.invalidateSize(), 0);
   }
 
   readonly profileForm = form(this.model, (path) => {
@@ -122,6 +209,10 @@ export class DoctorProfile {
       message: 'Ingresá una URL válida que empiece con http:// o https://',
     });
 
+    maxLength(path.hospitalAddress, 255, {
+      message: 'La dirección no puede superar los 255 caracteres.',
+    });
+
     disabled(path, () => !this.editing());
   });
 
@@ -136,6 +227,9 @@ export class DoctorProfile {
       initial.licenseNumber !== this.profileForm.licenseNumber().value() ||
       initial.bio !== this.profileForm.bio().value() ||
       initial.hospitalUrl !== this.profileForm.hospitalUrl().value() ||
+      initial.hospitalAddress !== this.profileForm.hospitalAddress().value() ||
+      initial.hospitalLatitude !== this.model().hospitalLatitude ||
+      initial.hospitalLongitude !== this.model().hospitalLongitude ||
       initialSpeciality !== this.selectedSpeciality()
     );
   });
@@ -169,6 +263,9 @@ export class DoctorProfile {
     }
 
     const value = this.model();
+    const latitude = value.hospitalLatitude.trim();
+    const longitude = value.hospitalLongitude.trim();
+
     const request: UpdateDoctorRequest = {
       firstName: value.firstName.trim(),
       lastName: value.lastName.trim(),
@@ -176,6 +273,9 @@ export class DoctorProfile {
       licenseNumber: value.licenseNumber.trim(),
       bio: value.bio.trim() || null,
       hospitalUrl: value.hospitalUrl.trim() || null,
+      hospitalAddress: value.hospitalAddress.trim() || null,
+      hospitalLatitude: latitude === '' ? null : Number(latitude),
+      hospitalLongitude: longitude === '' ? null : Number(longitude),
       speciality: selectedSpeciality,
     };
 
@@ -190,14 +290,203 @@ export class DoctorProfile {
           licenseNumber: request.licenseNumber,
           bio: request.bio ?? '',
           hospitalUrl: request.hospitalUrl ?? '',
+          hospitalAddress: request.hospitalAddress ?? '',
+          hospitalLatitude: request.hospitalLatitude?.toString() ?? '',
+          hospitalLongitude: request.hospitalLongitude?.toString() ?? '',
         };
         this.model.set(savedValues);
         this.initialModel.set({ ...savedValues });
         this.initialSpeciality.set(selectedSpeciality);
         this.editing.set(false);
         this.status.set('success');
+        this.syncMapWithModel();
       },
       error: () => this.status.set('error'),
+    });
+  }
+
+  clearLocation(): void {
+    this.model.update((current) => ({
+      ...current,
+      hospitalAddress: '',
+      hospitalLatitude: '',
+      hospitalLongitude: '',
+    }));
+    this.syncMapWithModel();
+  }
+
+  private currentLocation(): MapCoordinates | null {
+    const latitude = this.model().hospitalLatitude.trim();
+    const longitude = this.model().hospitalLongitude.trim();
+    if (!latitude || !longitude) return null;
+
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+    return { lat, lng };
+  }
+
+  private syncMapWithModel(): void {
+    if (!this.map) return;
+
+    const location = this.currentLocation();
+    if (location) {
+      this.map.setView(
+        [location.lat, location.lng],
+        Math.max(this.map.getZoom(), MAP_ZOOM_WITH_LOCATION)
+      );
+      this.marker?.setLatLng([location.lat, location.lng]);
+      this.marker?.addTo(this.map);
+      return;
+    }
+
+    this.marker?.remove();
+    this.map.setView(
+      [DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng],
+      MAP_ZOOM_DEFAULT
+    );
+  }
+
+  private initLocationMap(): void {
+    const container = this.mapContainer()?.nativeElement;
+    if (!container || this.map) return;
+
+    const location = this.currentLocation();
+
+    try {
+      this.map = L.map(container, {
+        center: location
+          ? [location.lat, location.lng]
+          : [DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng],
+        zoom: location ? MAP_ZOOM_WITH_LOCATION : MAP_ZOOM_DEFAULT,
+        scrollWheelZoom: false,
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(this.map);
+
+      this.marker = L.marker(
+        [
+          location?.lat ?? DEFAULT_MAP_CENTER.lat,
+          location?.lng ?? DEFAULT_MAP_CENTER.lng,
+        ],
+        { icon: this.buildMarkerIcon(), keyboard: false }
+      );
+
+      this.map.on('click', (event: L.LeafletMouseEvent) => {
+        if (!this.editing()) return;
+
+        const { lat, lng } = event.latlng;
+        this.setLocation(lat, lng);
+        void this.resolveAddress({ lat, lng });
+      });
+
+      this.locationStatus.set('ready');
+      this.syncMapWithModel();
+    } catch (error) {
+      console.error('No se pudo inicializar el mapa', error);
+      this.locationStatus.set('error');
+    }
+  }
+
+  private setLocation(lat: number, lng: number, address?: string, zoom?: number): void {
+    this.model.update((current) => ({
+      ...current,
+      hospitalAddress: address?.slice(0, ADDRESS_MAX_LENGTH) ?? current.hospitalAddress,
+      hospitalLatitude: lat.toString(),
+      hospitalLongitude: lng.toString(),
+    }));
+
+    const location: L.LatLngExpression = [lat, lng];
+    this.marker?.setLatLng(location);
+
+    if (this.map) {
+      this.marker?.addTo(this.map);
+      if (zoom === undefined) {
+        this.map.panTo(location);
+      } else {
+        this.map.setView(location, zoom);
+      }
+    }
+  }
+
+  private async resolveAddress(location: MapCoordinates): Promise<void> {
+    this.reverseController?.abort();
+    const controller = new AbortController();
+    this.reverseController = controller;
+
+    try {
+      const address = await this.locationMap.reverseGeocode(location, controller.signal);
+      if (!address || controller.signal.aborted || !this.editing()) return;
+
+      const current = this.currentLocation();
+      if (!current || current.lat !== location.lat || current.lng !== location.lng) return;
+
+      this.model.update((model) => ({
+        ...model,
+        hospitalAddress: address.slice(0, ADDRESS_MAX_LENGTH),
+      }));
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        console.error('No se pudo obtener la dirección del punto seleccionado', error);
+      }
+    }
+  }
+
+  private queueSearch(query: string): void {
+    this.searchController?.abort();
+    this.searchController = null;
+
+    if (this.searchTimeoutId !== null) {
+      window.clearTimeout(this.searchTimeoutId);
+      this.searchTimeoutId = null;
+    }
+
+    const term = query.trim();
+    if (term.length < 3) {
+      this.placeSuggestions.set([]);
+      this.searchStatus.set('idle');
+      return;
+    }
+
+    this.searchTimeoutId = window.setTimeout(() => {
+      this.searchTimeoutId = null;
+      void this.runSearch(term);
+    }, SEARCH_DEBOUNCE_MS);
+  }
+
+  private async runSearch(term: string): Promise<void> {
+    this.searchController?.abort();
+    const controller = new AbortController();
+    this.searchController = controller;
+    this.searchStatus.set('searching');
+
+    try {
+      const results = await this.locationMap.searchPlaces(term, controller.signal);
+      if (controller.signal.aborted) return;
+
+      this.placeSuggestions.set(results);
+      this.searchStatus.set(results.length > 0 ? 'ready' : 'empty');
+    } catch (error) {
+      if (controller.signal.aborted) return;
+
+      console.error('No se pudo buscar la dirección', error);
+      this.placeSuggestions.set([]);
+      this.searchStatus.set('error');
+    }
+  }
+
+  private buildMarkerIcon(): L.DivIcon {
+    return L.divIcon({
+      className: 'sapa-map-pin',
+      html: '<span style="display:block;width:20px;height:20px;border-radius:50%;background:var(--primary, #02968c);border:3px solid #ffffff;box-shadow:0 1px 4px rgba(15,23,42,0.45);"></span>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
   }
 }

@@ -3,6 +3,7 @@ package com.example.SAPA.controller;
 import com.example.SAPA.DTOs.Request.UpdateDoctorRequestDTO;
 import com.example.SAPA.DTOs.Response.DoctorProfileResponseDTO;
 import com.example.SAPA.DTOs.Response.DoctorResponseDTO;
+import com.example.SAPA.DTOs.Response.PublicDoctorProfileResponseDTO;
 import com.example.SAPA.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,11 @@ public class DoctorController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @GetMapping("/{doctorId}/profile")
+    public ResponseEntity<PublicDoctorProfileResponseDTO> getPublicProfile(@PathVariable Long doctorId) {
+        return ResponseEntity.ok(doctorService.getPublicDoctorProfile(doctorId));
+    }
 
     @GetMapping("/{doctorId}/hospital-url")
     public ResponseEntity<String> getHospitalUrl(@PathVariable Long doctorId) {
