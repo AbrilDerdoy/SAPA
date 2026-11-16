@@ -23,7 +23,9 @@
   </div>
 
   @if (formVisible()) {
-  <app-post-form [post]="editingPost()" (save)="savePost($event)" (cancel)="closeForm()" />
+  <div id="post-form">
+    <app-post-form [post]="editingPost()" (save)="savePost($event)" (cancel)="closeForm()" />
+  </div>
   }
 
   <div class="posts-list">

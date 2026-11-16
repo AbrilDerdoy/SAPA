@@ -6,7 +6,7 @@ import { PostAttachments } from '../post-attachments/post-attachments';
 
 @Component({
   selector: 'app-post-form',
-  imports: [FormField, PostAttachments],
+  imports: [FormField],
   templateUrl: './post-form.html',
   styleUrl: './post-form.css',
 })

@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { afterNextRender, Component, ElementRef, inject, Injector, input, signal, viewChild } from '@angular/core';
 import { PostService } from '../../post-service/post-service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { PostResponse } from '../../post-DTOs/post-response';
@@ -21,6 +21,7 @@ export class Post {
   private forumService = inject(ForumService)
   private authService = inject(Auth)
   private savedPostService = inject(SavedPostService)
+  private injector = inject(Injector)
 
   error = signal('')
 
@@ -42,6 +43,15 @@ export class Post {
   ngOnInit(): void {
     this.loadForum()
     this.loadSavedPosts()
+  }
+
+  private scrollToForm(): void {
+    afterNextRender(() => {
+      document.getElementById('post-form')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }, { injector: this.injector });
   }
 
   loadForum(): void {
@@ -112,11 +122,13 @@ export class Post {
   newPost(): void {
     this.editingPost.set(null)
     this.formVisible.set(true)
+    this.scrollToForm()
   }
 
   editPost(post: PostResponse): void {
     this.editingPost.set(post)
     this.formVisible.set(true)
+    this.scrollToForm()
   }
 
   closeForm(): void {
@@ -129,7 +141,7 @@ export class Post {
     request: ForumRequest
     files: File[]
     removedAttachmentIds: number[]
-    }): void {
+  }): void {
     const post = this.editingPost()
 
     if (post) {
