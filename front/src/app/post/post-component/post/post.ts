@@ -1,17 +1,18 @@
-import { Component, effect, inject, input, numberAttribute, signal } from '@angular/core';
+import { Component, effect, inject, input, signal } from '@angular/core';
 import { PostService } from '../../post-service/post-service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { PostResponse } from '../../post-DTOs/post-response';
 import { ForumRequest } from '../../../forum/forum-DTOs/forum-request';
-import { form, FormField, minLength, required } from '@angular/forms/signals';
-import { DatePipe } from '@angular/common';
 import { ForumResponse } from '../../../forum/forum-DTOs/forum-response';
 import { ForumService } from '../../../forum/forum-service/forum-service';
 import { SavedPostService } from '../../../saved-post/saved-post-service/saved-post-service';
+import { PostForm } from '../post-form/post-form';
+import { PostAttachments } from '../post-attachments/post-attachments';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-post',
-  imports: [FormField, DatePipe],
+  imports: [DatePipe, PostForm, PostAttachments],
   templateUrl: './post.html',
   styleUrl: './post.css',
 })
@@ -20,15 +21,28 @@ export class Post {
   private forumService = inject(ForumService)
   private authService = inject(Auth)
   private savedPostService = inject(SavedPostService)
-  error = signal<string>('')
 
-    // Infromación de publicaciones guardadas.
+  error = signal('')
+
   savedPostsId = signal<Set<number>>(new Set())
 
-    // Información de foros relacionados con publicaciones.
-  forum = signal<ForumResponse | null>(null);
+  forum = signal<ForumResponse | null>(null)
   forumId: number | null = null
+
   titleForum = input.required<string>()
+
+  posts = signal<PostResponse[]>([])
+  filteredPosts = signal<PostResponse[]>([])
+
+  titleFilter = ''
+
+  formVisible = signal(false)
+  editingPost = signal<PostResponse | null>(null)
+
+  ngOnInit(): void {
+    this.loadForum()
+    this.loadSavedPosts()
+  }
 
   loadForum(): void {
     this.forumService.filterForums(this.titleForum()).subscribe({
@@ -36,9 +50,11 @@ export class Post {
         const foroEncontrado = datos.find(
           f => f.title.toLowerCase() === this.titleForum().toLowerCase()
         )
+
         this.forum.set(foroEncontrado ?? null)
-        if(foroEncontrado){
-          this.forumId = foroEncontrado.forumId
+
+        if (foroEncontrado) {
+          this.forumId = foroEncontrado.forumId;
           this.loadPosts()
         }
       },
@@ -46,63 +62,26 @@ export class Post {
     })
   }
 
-    // Verificar la sesión para poder acceder a ABM de publicaciones.
   get sesionIniciada(): boolean {
     return this.authService.isAuthenticated()
   }
 
-    // Obtener el usuario para la verificación de nombre de usuario y poder acceder a BM de publicaciones. 
   get usuarioId(): number | null {
-    const usuario = localStorage.getItem('usuario')
-    return usuario ? JSON.parse(usuario).id : null
+    try {
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+      return usuario.id ?? null
+    } catch {
+      return null
+    }
   }
 
-    // Verificación de si el usuario autenticado es propietario de la publicación.
   esPropietario(post: PostResponse): boolean {
-    console.log('Usuario ID:', this.usuarioId);
-    console.log('Autor ID:', post.authorId);
     return this.usuarioId === post.authorId
   }
-    
-    // Listas.
-  posts = signal<PostResponse[]>([])
-  filteredPosts = signal<PostResponse[]>([])
 
-    // Filtro.
-  titleFilter = ''
-
-    //Formulario.
-  formVisible = signal(false)
-  postId: number | null = null
-
-    // Datos del formulario.
-  model = signal<ForumRequest>({
-    title: '',
-    content: ''
-  })
-
-  readonly formulario = form(this.model, (ruta) => {
-    required(ruta.title, {
-      message: 'El título es obligatorio.'
-    })
-    minLength(ruta.title, 3, {
-      message: 'El título debe tener al menos 3 caracteres'
-    })
-    required(ruta.content, {
-      message: 'El contenido debe tener al menos 10 caracteres.'
-    })
-  })
-
-  constructor() {
-    effect(() => {
-      this.loadForum()
-    })
-    this.loadSavedPosts()
-  }
-
-    // Obtener publicaciones activas.
   loadPosts(): void {
-    if(this.forumId === null) return
+    if (this.forumId === null) return
+
     this.postService.getPostsByForum(this.forumId).subscribe({
       next: (datos) => {
         this.posts.set(datos)
@@ -111,75 +90,68 @@ export class Post {
       error: () => this.error.set('Error al cargar las publicaciones.')
     })
   }
-  
-    // Filtrar publicaciones por título.
+
   filterPosts(): void {
     if (!this.titleFilter.trim()) {
       this.loadPosts()
       return
     }
 
-    this.postService.filterPosts(this.forumId!, this.titleFilter.trim()).subscribe({
+    if (this.forumId === null) return
+
+    this.postService.filterPosts(this.forumId, this.titleFilter.trim()).subscribe({
       next: (datos) => this.filteredPosts.set(datos),
       error: () => this.error.set('Error al filtrar las publicaciones.')
     })
   }
+  onTitleFilterInput(event: Event): void {
+    this.titleFilter = (event.target as HTMLInputElement).value;
+    this.filterPosts();
+  }
 
-    // Cerrar formulario.
+  newPost(): void {
+    this.editingPost.set(null)
+    this.formVisible.set(true)
+  }
+
+  editPost(post: PostResponse): void {
+    this.editingPost.set(post)
+    this.formVisible.set(true)
+  }
+
   closeForm(): void {
     this.formVisible.set(false)
-    this.postId = null
-    this.model.set({
-      title: '',
-      content: ''
-    })
+    this.editingPost.set(null)
+    this.error.set('')
   }
 
-    // Creaar una publicación.
-  newPost(): void {
-    this.postId = null
-    this.model.set({
-      title: '',
-      content: ''
-    })
-    this.formVisible.set(true)
-  }
+  savePost(data: { request: ForumRequest; files: File[] }): void {
+    const post = this.editingPost()
 
-    // Editar una publicación.
-  editPost(postId: number, post: PostResponse): void{
-    this.postId = postId
-    this.model.set({
-      title: post.title,
-      content: post.content
-    })
-    this.formVisible.set(true)
-  }
-
-    // Guardar una publicación.
-  savePost(): void {
-    const datos = this.model()
-    if(this.postId !== null){
-      this.postService.updatePost(this.postId, datos).subscribe({
-        next: () =>{
+    if (post) {
+      this.postService.updatePost(post.postId, data.request, data.files).subscribe({
+        next: () => {
           this.closeForm()
           this.loadPosts()
         },
         error: () => this.error.set('Error al actualizar la publicación.')
       })
-    } else {
-      this.postService.createPost(this.forumId!, datos).subscribe({
-        next: () => {
-          this.closeForm()
-          this.loadPosts()
-        },
-        error: () => this.error.set('Error al crear la publicación.')
-      })
+      return
     }
+
+    if (this.forumId === null) return
+
+    this.postService.createPost(this.forumId, data.request, data.files).subscribe({
+      next: () => {
+        this.closeForm()
+        this.loadPosts()
+      },
+      error: () => this.error.set('Error al crear la publicación.')
+    })
   }
 
-    // Eliminar publicación.
   deletePost(postId: number): void {
-    if(!confirm('¿Estás seguro de que querés eliminar esta publicación?')){
+    if (!confirm('¿Estás seguro de que querés eliminar esta publicación?')) {
       return
     }
 
@@ -189,47 +161,42 @@ export class Post {
     })
   }
 
-  // Cargar las publicaciones guardadas.
-loadSavedPosts(): void{
-  if(!this.sesionIniciada) return
+  loadSavedPosts(): void {
+    if (!this.sesionIniciada) return
 
-  this.savedPostService.getSavedPosts().subscribe({
-    next: (datos) => {
-      this.savedPostsId.set(
-        new Set(datos.map(saved => saved.post.postId))
-      )
-    },
-    error: () => {
-      this.error.set('Error al cargar las publicaciones guardadas.')
-    }
-  })
-}
-
-// Verificar si una publicación está guardada.
-estaGuardada(postId: number): boolean {
-  return this.savedPostsId().has(postId)
-}
-
-// Guardar o quitar una publicación de guardados.
-toggleSavedPost(postId: number): void {
-  if (this.estaGuardada(postId)) {
-    this.savedPostService.unsavePost(postId).subscribe({
-      next: () => {
-        this.savedPostsId.update(ids => {
-          const nuevosIds = new Set(ids)
-          nuevosIds.delete(postId)
-          return nuevosIds
-        })
+    this.savedPostService.getSavedPosts().subscribe({
+      next: (datos) => {
+        this.savedPostsId.set(new Set(datos.map(saved => saved.post.postId)))
       },
-      error: () => this.error.set('Error al quitar la publicación de guardados.')
-    })
-  } else {
-    this.savedPostService.savePost(postId).subscribe({
-      next: () => {
-        this.savedPostsId.update(ids => new Set([...ids, postId]))
-      },
-      error: () => this.error.set('Error al guardar la publicación.')
+      error: () => {
+        this.error.set('Error al cargar las publicaciones guardadas.')
+      }
     })
   }
-}
+
+  estaGuardada(postId: number): boolean {
+    return this.savedPostsId().has(postId)
+  }
+
+  toggleSavedPost(postId: number): void {
+    if (this.estaGuardada(postId)) {
+      this.savedPostService.unsavePost(postId).subscribe({
+        next: () => {
+          this.savedPostsId.update(ids => {
+            const nuevosIds = new Set(ids)
+            nuevosIds.delete(postId)
+            return nuevosIds
+          })
+        },
+        error: () => this.error.set('Error al quitar la publicación de guardados.')
+      })
+    } else {
+      this.savedPostService.savePost(postId).subscribe({
+        next: () => {
+          this.savedPostsId.update(ids => new Set([...ids, postId]))
+        },
+        error: () => this.error.set('Error al guardar la publicación.')
+      })
+    }
+  }
 }

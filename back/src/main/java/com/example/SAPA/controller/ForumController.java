@@ -74,7 +74,7 @@ public class ForumController {
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
             @ApiResponse(responseCode = "404", description = "Foro no encontrado con el ID proporcionado")
     })
-    @PutMapping("/{forumId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{forumId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ForumResponseDTO> updateForum(
             @Parameter(description = "ID del foro a modificar", required = true, example = "1")
             @PathVariable Long forumId,

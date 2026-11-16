@@ -27,6 +27,7 @@ public class PostService {
     private final PostMapper postMapper;
     private final UserContextService userContextService;
     private final FileStorageService fileStorageService;
+    private static final int MAX_FILES = 10;
 
 
     @Transactional
@@ -55,6 +56,8 @@ public class PostService {
 
     private void addAttachments(PostEntity post, List<MultipartFile> files) throws IOException {
         if (files == null || files.isEmpty()) return;
+
+        if (post.getAttachments().size() + files.size() > MAX_FILES) throw new IllegalArgumentException("Una publicación no puede tener más de 10 archivos adjuntos.");
 
         for (MultipartFile file : files) {
             FileStorageService.StoredFile storedFile =

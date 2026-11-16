@@ -117,4 +117,13 @@ export class Auth {
         localStorage.setItem('jwt', JSON.stringify(newTokens));
       }));
   }
+
+  getAccessToken(): string | null {
+  try {
+    const tokens = JSON.parse(localStorage.getItem('jwt') ?? '{}')
+    return tokens.AccessToken ?? null
+  } catch {
+    return null
+  }
+}
 }

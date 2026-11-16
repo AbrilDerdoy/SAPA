@@ -1,0 +1,92 @@
+<section class="post-form">
+    <h2>{{ isEditing ? 'Editar publicación' : 'Nueva publicación' }}</h2>
+
+    <form (submit)="submitForm(); $event.preventDefault()">
+        <div class="form-field">
+            <label for="post-title">Título</label>
+
+            <input id="post-title" type="text" [formField]="formulario.title"
+                placeholder="Escribí el título de tu publicación">
+
+            @if (formulario.title().touched() && formulario.title().invalid()) {
+            <small class="field-error">
+                {{ formulario.title().errors()[0]?.message }}
+            </small>
+            }
+        </div>
+
+        <div class="form-field">
+            <label for="post-content">Contenido</label>
+
+            <textarea id="post-content" rows="6" [formField]="formulario.content"
+                placeholder="Escribí el contenido..."></textarea>
+
+            @if (formulario.content().touched() && formulario.content().invalid()) {
+            <small class="field-error">
+                {{ formulario.content().errors()[0]?.message }}
+            </small>
+            }
+        </div>
+
+        @if (post(); as currentPost) {
+        @if (currentPost.attachments.length > 0) {
+        <div class="current-attachments">
+            <h3>Archivos actuales</h3>
+            <app-post-attachments [attachments]="currentPost.attachments" />
+            <p class="attachments-hint">
+                Estos archivos ya están asociados a la publicación.
+            </p>
+        </div>
+        }
+        }
+
+        <div class="attachments-section">
+            <label for="post-files">Agregar archivos</label>
+
+            <p class="attachments-hint">Imágenes, PDF, Word o Excel. Máximo 10 archivos en total y 10 MB por archivo.</p>
+
+            <input id="post-files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx" (change)="selectFiles($event)">
+
+            @if (error()) {
+            <p class="field-error">{{ error() }}</p>
+            }
+
+            @if (selectedFiles().length > 0) {
+            <div class="selected-files">
+                <h3>Archivos seleccionados</h3>
+
+                @for (file of selectedFiles(); track $index) {
+                <div class="selected-file">
+                    <div class="file-info">
+                        <span class="file-icon">
+                            @if (isImageFile(file)) {
+                            <img [src]="getFilePreview(file)" alt="Vista previa">
+                            } @else { {{ getFileExtension(file) }} }
+                        </span>
+
+                        <div class="file-details">
+                            <span class="file-name">{{ file.name }}</span>
+                            <small>{{ formatFileSize(file.size) }}</small>
+                        </div>
+                    </div>
+
+                    <button type="button" class="remove-file" (click)="removeSelectedFile($index)">
+                        Quitar
+                    </button>
+                </div>
+                }
+            </div>
+            }
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="cancel-button" (click)="cancelForm()">
+                Cancelar
+            </button>
+
+            <button type="submit" class="submit-button">
+                {{ isEditing ? 'Guardar cambios' : 'Publicar' }}
+            </button>
+        </div>
+    </form>
+</section>
