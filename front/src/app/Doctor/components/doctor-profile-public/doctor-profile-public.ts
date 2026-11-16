@@ -1,3 +1,4 @@
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -26,10 +27,26 @@ export class DoctorProfilePublic {
   readonly initials = computed(() => {
     const doctor = this.doctor();
     if (!doctor) return '';
-    return `${doctor.firstName?.[0] ?? ''}${doctor.lastName?.[0] ?? ''}`.toUpperCase();
+
+    return `${doctor.firstName?.[0] ?? ''}${doctor.lastName?.[0] ?? ''}`
+      .toUpperCase() || 'M';
   });
 
-  readonly specialityName = computed(() => this.doctor()?.specialityName?.trim() ?? '');
+  readonly photoUrl = computed(() => {
+    const url = this.doctor()?.profileImageUrl;
+
+    if (!url) return null;
+
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+
+    return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
+  });
+
+  readonly specialityName = computed(
+    () => this.doctor()?.specialityName?.trim() ?? ''
+  );
 
   readonly bio = computed(() => this.doctor()?.bio?.trim() ?? '');
 
@@ -38,7 +55,9 @@ export class DoctorProfilePublic {
     return /^https?:\/\/\S+$/i.test(url) ? url : null;
   });
 
-  readonly hospitalAddress = computed(() => this.doctor()?.hospitalAddress?.trim() ?? '');
+  readonly hospitalAddress = computed(
+    () => this.doctor()?.hospitalAddress?.trim() ?? ''
+  );
 
   readonly hospitalMapUrl = computed<SafeResourceUrl | null>(() => {
     const doctor = this.doctor();
@@ -46,6 +65,7 @@ export class DoctorProfilePublic {
 
     const latitude = doctor.hospitalLatitude;
     const longitude = doctor.hospitalLongitude;
+
     if (
       typeof latitude !== 'number' ||
       typeof longitude !== 'number' ||
@@ -56,6 +76,7 @@ export class DoctorProfilePublic {
     }
 
     const delta = 0.008;
+
     const bbox = encodeURIComponent(
       [
         (longitude - delta).toFixed(5),
@@ -64,7 +85,10 @@ export class DoctorProfilePublic {
         (latitude + delta).toFixed(5),
       ].join(',')
     );
-    const marker = encodeURIComponent(`${latitude.toFixed(5)},${longitude.toFixed(5)}`);
+
+    const marker = encodeURIComponent(
+      `${latitude.toFixed(5)},${longitude.toFixed(5)}`
+    );
 
     return this.sanitizer.bypassSecurityTrustResourceUrl(
       `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${marker}`
@@ -77,6 +101,7 @@ export class DoctorProfilePublic {
 
     const latitude = doctor.hospitalLatitude;
     const longitude = doctor.hospitalLongitude;
+
     if (
       typeof latitude !== 'number' ||
       typeof longitude !== 'number' ||
@@ -110,12 +135,14 @@ export class DoctorProfilePublic {
 
   loadProfile(): void {
     const doctorId = this.doctorId();
+
     if (doctorId === null) {
       this.loadStatus.set('invalid');
       return;
     }
 
     this.loadStatus.set('loading');
+
     this.doctorService.getPublicProfile(doctorId).subscribe({
       next: (profile) => {
         this.doctor.set(profile);
@@ -123,7 +150,9 @@ export class DoctorProfilePublic {
       },
       error: (error: HttpErrorResponse) => {
         this.doctor.set(null);
-        this.loadStatus.set(error.status === 404 ? 'not-found' : 'error');
+        this.loadStatus.set(
+          error.status === 404 ? 'not-found' : 'error'
+        );
       },
     });
   }

@@ -263,6 +263,18 @@ export class ChatWindow implements OnChanges, OnDestroy {
     return `http://localhost:8080${normalizedUrl}`;
   }
 
+  getProfileImageUrl(imageUrl: string): string {
+    if (/^https?:\/\//i.test(imageUrl)) {
+      return imageUrl;
+    }
+
+    const normalizedUrl = imageUrl.startsWith('/')
+      ? imageUrl
+      : `/${imageUrl}`;
+
+    return `http://localhost:8080${normalizedUrl}`;
+  }
+
   isOwnMessage(message: Message): boolean {
     return message.senderId === this.currentUserId;
   }

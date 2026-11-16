@@ -1,3 +1,4 @@
+
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.Request.DeleteAccountRequest;
@@ -5,6 +6,7 @@ import com.example.SAPA.DTOs.Request.UpdateUserProfileRequestDTO;
 import com.example.SAPA.DTOs.Response.UserResponseDTO;
 import com.example.SAPA.DTOs.Response.fda.ProfileResponseDTO;
 import com.example.SAPA.security.DTO.AuthResponse;
+import com.example.SAPA.service.ProfilePhotoService;
 import com.example.SAPA.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,9 +18,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,19 +30,36 @@ import java.util.List;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Tag(name = "Usuarios", description = "Operaciones administrativas y de perfil para la gestión global de usuarios de la plataforma")
+@Tag(
+        name = "Usuarios",
+        description = "Operaciones administrativas y de perfil para la gestión global de usuarios de la plataforma"
+)
 public class UserController {
 
     private final UserService userService;
+    private final ProfilePhotoService profilePhotoService;
+
+    public record ProfilePhotoResponse(String profileImageUrl) {}
 
     @Operation(
             summary = "Listar todos los usuarios",
-            description = "Recupera la lista completa de usuarios registrados en el sistema, sin importar su estado actual de actividad (Uso administrativo)."
+            description = "Recupera la lista completa de usuarios registrados en el sistema."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de todos los usuarios recuperada con éxito.",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))),
-            @ApiResponse(responseCode = "403", description = "Prohibido - No tienes los roles administrativos necesarios.", content = @Content)
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Lista de usuarios recuperada con éxito.",
+                    content = @Content(
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = UserResponseDTO.class)
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "No tienes permisos administrativos.",
+                    content = @Content
+            )
     })
     @GetMapping("/all")
     public List<UserResponseDTO> findAllUsers() {
@@ -47,13 +68,8 @@ public class UserController {
 
     @Operation(
             summary = "Listar usuarios activos",
-            description = "Devuelve una lista filtrada que contiene únicamente a los usuarios cuya cuenta se encuentra con estado activo."
+            description = "Devuelve los usuarios cuyas cuentas están activas."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de usuarios activos obtenida con éxito.",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))),
-            @ApiResponse(responseCode = "403", description = "Prohibido - Acceso restringido a personal autorizado.", content = @Content)
-    })
     @GetMapping("/active")
     public List<UserResponseDTO> findActiveUsers() {
         return userService.getActiveUsers();
@@ -61,13 +77,8 @@ public class UserController {
 
     @Operation(
             summary = "Listar usuarios inactivos",
-            description = "Recupera la lista de usuarios que han sido dados de baja o cuyas cuentas están suspendidas."
+            description = "Recupera los usuarios dados de baja o suspendidos."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de usuarios inactivos obtenida con éxito.",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))),
-            @ApiResponse(responseCode = "403", description = "Prohibido - Permisos insuficientes.", content = @Content)
-    })
     @GetMapping("/inactive")
     public List<UserResponseDTO> findInactiveUsers() {
         return userService.getInactiveUsers();
@@ -75,75 +86,98 @@ public class UserController {
 
     @Operation(
             summary = "Obtener mi perfil de usuario",
-            description = "Recupera la información detallada del perfil correspondiente al usuario que se encuentra actualmente autenticado."
+            description = "Recupera la información del usuario autenticado."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Datos de perfil recuperados correctamente.",
-                    content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
-            @ApiResponse(responseCode = "401", description = "No autorizado - Token de sesión inválido o inexistente.", content = @Content)
-    })
     @GetMapping("/profile")
     public ResponseEntity<UserResponseDTO> getMyProfile(
-            @Parameter(hidden = true) Authentication authentication) {
+            @Parameter(hidden = true) Authentication authentication
+    ) {
+        UserResponseDTO profile =
+                userService.getMyProfile(authentication.getName());
 
-        String email = authentication.getName();
-        UserResponseDTO profile = userService.getMyProfile(email);
         return ResponseEntity.ok(profile);
     }
 
     @Operation(
-            summary = "Desactivar o dar de baja mi cuenta",
-            description = "Permite al usuario autenticado solicitar la baja lógica de su cuenta en el sistema, requiriendo su contraseña por motivos de confirmación y seguridad."
+            summary = "Subir o reemplazar foto de perfil",
+            description = "Permite a médicos y pacientes subir o reemplazar su foto."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuario dado de baja con éxito.",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "400", description = "La contraseña proporcionada es incorrecta o los datos de solicitud están mal formados.", content = @Content),
-            @ApiResponse(responseCode = "401", description = "No autorizado - Sesión inválida.", content = @Content)
-    })
+    @PostMapping(
+            value = "/profile/photo",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<ProfilePhotoResponse> uploadProfilePhoto(
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication
+    ) {
+        String imageUrl = profilePhotoService.uploadProfilePhoto(
+                authentication.getName(),
+                file
+        );
+
+        return ResponseEntity.ok(
+                new ProfilePhotoResponse(imageUrl)
+        );
+    }
+
+    @Operation(
+            summary = "Eliminar foto de perfil",
+            description = "Elimina la foto y permite volver al avatar de iniciales."
+    )
+    @DeleteMapping("/profile/photo")
+    public ResponseEntity<ProfilePhotoResponse> removeProfilePhoto(
+            Authentication authentication
+    ) {
+        profilePhotoService.removeProfilePhoto(
+                authentication.getName()
+        );
+
+        return ResponseEntity.ok(
+                new ProfilePhotoResponse(null)
+        );
+    }
+
+    @Operation(
+            summary = "Desactivar o dar de baja mi cuenta",
+            description = "Permite solicitar la baja lógica de la cuenta."
+    )
     @PatchMapping
     public ResponseEntity<String> deleteUser(
             @Valid @RequestBody DeleteAccountRequest request,
-            @Parameter(hidden = true) Authentication authentication) {
-        String email = authentication.getName();
-        userService.deleteUser(email, request.password());
+            @Parameter(hidden = true) Authentication authentication
+    ) {
+        userService.deleteUser(
+                authentication.getName(),
+                request.password()
+        );
+
         return ResponseEntity.ok("Usuario dado de baja con éxito");
     }
+
     @Operation(
             summary = "Mostrar mi perfil",
-            description = "Permite al usuario autenticado visualizar los datos de su perfil como medico o paciente."
+            description = "Permite visualizar los datos del perfil como médico o paciente."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Perfil mostrado correctamente.",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = "Usuario no encontrado.", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Paciente no encontrado", content = @Content)
-    })
     @GetMapping("/me")
-    public ResponseEntity<ProfileResponseDTO> me(Authentication authentication){
+    public ResponseEntity<ProfileResponseDTO> me(
+            Authentication authentication
+    ) {
         return ResponseEntity.ok(
-                userService.getProfile(
-                        authentication.getName()
-                )
+                userService.getProfile(authentication.getName())
         );
     }
 
     @Operation(
             summary = "Modificar mi perfil",
-            description = "Actualiza los datos personales del usuario autenticado y renueva sus tokens si cambia el email."
+            description = "Actualiza los datos personales y renueva tokens si cambia el email."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Perfil actualizado correctamente.",
-                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Los datos enviados no son válidos.", content = @Content),
-            @ApiResponse(responseCode = "401", description = "No autorizado - Token JWT inválido o ausente.", content = @Content),
-            @ApiResponse(responseCode = "404", description = "No se encontró el perfil del usuario autenticado.", content = @Content),
-            @ApiResponse(responseCode = "409", description = "El email ya está registrado por otro usuario.", content = @Content)
-    })
     @PutMapping("/modify")
     public ResponseEntity<AuthResponse> modifyProfile(
             @Valid @RequestBody UpdateUserProfileRequestDTO request,
-            Authentication authentication) {
-        return ResponseEntity.ok(userService.modifyProfile(authentication.getName(), request));
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                userService.modifyProfile(authentication.getName(), request)
+        );
     }
 }

@@ -124,6 +124,18 @@ export class ConversationList implements OnInit, OnDestroy {
     this.conversationSelected.emit(conversation);
   }
 
+  getProfileImageUrl(imageUrl: string): string {
+    if (/^https?:\/\//i.test(imageUrl)) {
+      return imageUrl;
+    }
+
+    const normalizedUrl = imageUrl.startsWith('/')
+      ? imageUrl
+      : `/${imageUrl}`;
+
+    return `http://localhost:8080${normalizedUrl}`;
+  }
+
   formatDate(date: string | null): string {
     if (!date) {
       return '';

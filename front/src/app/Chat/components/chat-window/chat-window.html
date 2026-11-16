@@ -6,7 +6,13 @@
     <header class="chat-header">
 
       <div class="participant-avatar">
-        {{ conversation.otherParticipantName.charAt(0).toUpperCase() }}
+        @if (conversation.otherParticipantProfileImageUrl) {
+          <img
+            [src]="getProfileImageUrl(conversation.otherParticipantProfileImageUrl)"
+            [alt]="'Foto de ' + conversation.otherParticipantName">
+        } @else {
+          {{ conversation.otherParticipantName.charAt(0).toUpperCase() }}
+        }
       </div>
 
       <div class="participant-info">

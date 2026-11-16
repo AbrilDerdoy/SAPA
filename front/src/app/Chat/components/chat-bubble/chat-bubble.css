@@ -1,3 +1,4 @@
+
 .chat-bubble-container {
   position: fixed;
   right: 25px;
@@ -147,7 +148,7 @@
 .bubble-avatar {
   width: 42px;
   height: 42px;
-  flex-shrink: 0;
+  flex: 0 0 42px;
   border-radius: 50%;
   background: var(--primary-light);
   color: var(--primary);
@@ -155,6 +156,13 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+.bubble-avatar--image {
+  display: block;
+  border: 1px solid var(--border);
 }
 
 .bubble-conversation-info {
