@@ -5,6 +5,9 @@ import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { Auth } from './auth';
 
+function fakeJwt(exp: number): string {
+  return `header.${btoa(JSON.stringify({ exp }))}.signature`;
+}
 
 describe('Auth', () => {
   let service: Auth;
@@ -73,5 +76,38 @@ describe('Auth', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ token: 'reset-token', newPassword: 'password-seguro' });
     request.flush(null);
+  });
+
+  it('detects an access token that is about to expire', () => {
+    localStorage.setItem('jwt', JSON.stringify({
+      AccessToken: fakeJwt(Math.floor(Date.now() / 1000) + 30),
+      RefreshToken: 'refresh'
+    }));
+
+    expect(service.isAccessTokenExpiring()).toBe(true);
+  });
+
+  it('keeps using an access token that is still valid', () => {
+    localStorage.setItem('jwt', JSON.stringify({
+      AccessToken: fakeJwt(Math.floor(Date.now() / 1000) + 3600),
+      RefreshToken: 'refresh'
+    }));
+
+    expect(service.isAccessTokenExpiring()).toBe(false);
+  });
+
+  it('falls back to the reactive refresh for opaque tokens', () => {
+    localStorage.setItem('jwt', JSON.stringify({
+      AccessToken: 'not-a-jwt',
+      RefreshToken: 'refresh'
+    }));
+
+    expect(service.isAccessTokenExpiring()).toBe(false);
+  });
+
+  it('returns no tokens when the stored payload is corrupted', () => {
+    localStorage.setItem('jwt', '{invalid');
+
+    expect(service.getTokens()).toBeNull();
   });
 });
