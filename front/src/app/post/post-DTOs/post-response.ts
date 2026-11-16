@@ -1,3 +1,5 @@
+import { PostAttachmentResponse } from "./post-attachment-response"
+
 export interface PostResponse {
     postId: number
     forumId: number
@@ -7,5 +9,6 @@ export interface PostResponse {
     title: string
     content: string
     active: boolean
+    attachments: PostAttachmentResponse[]
     createdAt: string
 }

@@ -11,11 +11,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -27,18 +33,14 @@ public class PostController {
 
     private final PostService postService;
 
-    @Operation(
-            summary = "Obtener publicaciones de un foro",
-            description = "Recupera de forma cronológica la lista de todas las publicaciones pertenecientes a un foro específico mediante su ID."
+    @Operation(summary = "Obtener publicaciones de un foro", description = "Recupera de forma cronológica la lista de todas las publicaciones pertenecientes a un foro específico mediante su ID."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de publicaciones recuperada con éxito.",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PostResponseDTO.class)))),
+            @ApiResponse(responseCode = "200", description = "Lista de publicaciones recuperada con éxito.", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PostResponseDTO.class)))),
             @ApiResponse(responseCode = "404", description = "El ID del foro especificado no existe.", content = @Content)
     })
     @GetMapping("/{forumId}")
-    public ResponseEntity<List<PostResponseDTO>> getPostsByForum(
-            @Parameter(description = "ID único del foro", required = true) @PathVariable Long forumId) {
+    public ResponseEntity<List<PostResponseDTO>> getPostsByForum(@Parameter(description = "ID único del foro", required = true) @PathVariable Long forumId) {
         return ResponseEntity.ok(postService.getPostsByForum(forumId));
     }
 
@@ -63,37 +65,41 @@ public class PostController {
             description = "Inserta un nuevo hilo de discusión o post dentro del foro indicado."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Publicación creada con éxito.",
-                    content = @Content(schema = @Schema(implementation = PostResponseDTO.class))),
+            @ApiResponse(responseCode = "201", description = "Publicación creada con éxito.", content = @Content(schema = @Schema(implementation = PostResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "El contenido o los datos de la publicación no son válidos.", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autorizado - Token JWT ausente o inválido.", content = @Content),
             @ApiResponse(responseCode = "404", description = "El foro donde se intenta publicar no existe.", content = @Content)
     })
-    @PostMapping("/{forumId}/create")
+    @PostMapping(value = "/{forumId}/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PostResponseDTO> createPost(
             @Parameter(description = "ID del foro donde se creará la publicación", required = true) @PathVariable Long forumId,
-            @RequestBody ForumRequestDTO request) {
+            @Valid @RequestPart("request") ForumRequestDTO request, @RequestPart(value = "files", required = false)List<MultipartFile> files) throws  IOException{
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(forumId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(forumId, request, files));
     }
 
-    @Operation(
-            summary = "Actualizar una publicación",
-            description = "Modifica los campos editables de un post existente mediante su ID."
-    )
+    @Operation(summary = "Actualizar una publicación", description = "Modifica los campos editables de un post existente mediante su ID.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Publicación modificada de forma exitosa.",
-                    content = @Content(schema = @Schema(implementation = PostResponseDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Publicación modificada de forma exitosa.", content = @Content(schema = @Schema(implementation = PostResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Los datos de la actualización son inválidos.", content = @Content),
             @ApiResponse(responseCode = "403", description = "Prohibido - No eres el autor de este post o no tienes permisos de edición.", content = @Content),
             @ApiResponse(responseCode = "404", description = "El ID del post especificado no existe.", content = @Content)
     })
-    @PutMapping("/{postId}")
+    @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PostResponseDTO> updatePost(
             @Parameter(description = "ID de la publicación a editar", required = true) @PathVariable Long postId,
-            @RequestBody ForumRequestDTO request) {
+            @Valid @RequestPart("request") ForumRequestDTO request,
+            @RequestPart(value = "files", required = false)List<MultipartFile> files,
+            @RequestPart(value = "removedAttachmentIds", required = false) String removedAttachmentIdsJson) throws IOException {
 
-        return ResponseEntity.ok(postService.updatePost(postId, request));
+        List<Long> removedAttachmentIds = removedAttachmentIdsJson == null
+                ? List.of()
+                : new ObjectMapper().readValue(
+                removedAttachmentIdsJson,
+                new TypeReference<List<Long>>() {}
+        );
+
+        return ResponseEntity.ok(postService.updatePost(postId, request, files, removedAttachmentIds));
     }
 
     @Operation(

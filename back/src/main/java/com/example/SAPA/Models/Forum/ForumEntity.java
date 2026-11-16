@@ -35,6 +35,9 @@ public class ForumEntity {
     @Column(nullable = false)
     private boolean active;
 
+    @Column(length = 500)
+    private String imageUrl;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

@@ -10,7 +10,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -20,10 +22,11 @@ public class ForumService {
     private final ForumRepository forumRepository;
     private final ForumMapper forumMapper;
     private final UserContextService userContextService;
+    private final FileStorageService fileStorageService;
 
 
     @Transactional
-    public ForumResponseDTO createForum(ForumRequestDTO request) {
+    public ForumResponseDTO createForum(ForumRequestDTO request, MultipartFile image) {
         UserEntity user = userContextService.getAuthenticatedUser();
 
         ForumEntity forum = ForumEntity.builder()
@@ -32,13 +35,22 @@ public class ForumService {
                 .description(request.content())
                 .build();
 
+        if (image != null && !image.isEmpty()) {
+            try {
+                FileStorageService.StoredFile storedFile = fileStorageService.storeForumImage(image);
+                forum.setImageUrl(storedFile.fileUrl());
+            } catch (IOException e) {
+                throw new RuntimeException("Error al guardar la imagen del foro.", e);
+            }
+        }
+
         ForumEntity saved = forumRepository.save(forum);
         return forumMapper.toForumResponse(saved, userContextService.resolveName(user));
     }
 
 
     @Transactional
-    public ForumResponseDTO updateForum(Long forumId, ForumRequestDTO request) {
+    public ForumResponseDTO updateForum(Long forumId, ForumRequestDTO request, MultipartFile image) {
         UserEntity user = userContextService.getAuthenticatedUser();
 
         ForumEntity forum = forumRepository.findById(forumId)
@@ -50,6 +62,24 @@ public class ForumService {
 
         forum.setTitle(request.title());
         forum.setDescription(request.content());
+
+        if (image != null && !image.isEmpty()) {
+            try {
+                FileStorageService.StoredFile storedFile = fileStorageService.storeForumImage(image);
+                String previousImage = forum.getImageUrl();
+                forum.setImageUrl(storedFile.fileUrl());
+
+                if (previousImage != null) {
+                    try {
+                        fileStorageService.deleteFile(previousImage);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error al eliminar la imagen anterior.", e);
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Error al guardar la imagen del foro.", e);
+            }
+        }
 
         ForumEntity updated = forumRepository.save(forum);
         return forumMapper.toForumResponse(updated, userContextService.resolveName(user));
