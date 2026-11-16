@@ -3,6 +3,7 @@ import {
   Component,
   OnInit,
   ChangeDetectorRef,
+  NgZone,
   effect,
   inject
 } from '@angular/core';
@@ -25,6 +26,7 @@ export class ChatBubble implements OnInit {
 
   private readonly chatService = inject(ChatService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly ngZone = inject(NgZone);
 
   readonly bubblePreference = inject(ChatBubblePreferenceService);
 
@@ -77,36 +79,40 @@ export class ChatBubble implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
 
     this.chatService.getConversations().subscribe({
       next: conversations => {
-        this.conversations = [...conversations];
+        this.ngZone.run(() => {
+          this.conversations = [...conversations];
 
-        if (this.selectedConversation) {
-          const updatedConversation = this.conversations.find(
-            item =>
-              item.conversationId ===
-              this.selectedConversation?.conversationId
-          );
+          if (this.selectedConversation) {
+            const updatedConversation = this.conversations.find(
+              item =>
+                item.conversationId ===
+                this.selectedConversation?.conversationId
+            );
 
-          this.selectedConversation = updatedConversation ?? null;
-        }
+            this.selectedConversation = updatedConversation ?? null;
+          }
 
-        this.loading = false;
-        this.loadingRequest = false;
+          this.loading = false;
+          this.loadingRequest = false;
 
-        this.cdr.detectChanges();
+          this.cdr.detectChanges();
+        });
       },
 
       error: error => {
-        console.error('Error al cargar conversaciones:', error);
+        this.ngZone.run(() => {
+          console.error('Error al cargar conversaciones:', error);
 
-        this.errorMessage = 'No se pudieron cargar tus conversaciones.';
-        this.loading = false;
-        this.loadingRequest = false;
+          this.errorMessage = 'No se pudieron cargar tus conversaciones.';
+          this.loading = false;
+          this.loadingRequest = false;
 
-        this.cdr.detectChanges();
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -119,13 +125,13 @@ export class ChatBubble implements OnInit {
   backToConversations(): void {
     this.selectedConversation = null;
     this.loadConversations();
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   closeBubble(): void {
     this.isOpen = false;
     this.selectedConversation = null;
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   getProfileImageUrl(imageUrl: string | null | undefined): string | null {

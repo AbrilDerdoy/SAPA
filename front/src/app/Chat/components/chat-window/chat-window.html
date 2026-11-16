@@ -53,11 +53,14 @@
 
           <div
             class="message-row"
-            [class.own-message]="isOwnMessage(message)">
+            [class.own-message]="message.type !== 'SYSTEM' && isOwnMessage(message)"
+            [class.system-message]="message.type === 'SYSTEM'">
 
             <div class="message-bubble">
 
-              @if (!isOwnMessage(message)) {
+              @if (message.type === 'SYSTEM') {
+                <span class="system-label">Aviso del sistema</span>
+              } @else if (!isOwnMessage(message)) {
                 <span class="sender-name">
                   {{ message.senderName }}
                 </span>
