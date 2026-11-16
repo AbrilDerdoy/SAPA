@@ -160,6 +160,18 @@ public class PostService {
         postRepository.save(post);
     }
 
+    @Transactional(readOnly = true)
+    public PostResponseDTO getPostById(Long postId) {
+
+        PostEntity post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("La publicación no existe o fue eliminada."));
+
+        if (!post.isActive()) {
+            throw new EntityNotFoundException("La publicación no existe o fue eliminada.");
+        }
+
+        return postMapper.toPostResponse(post, userContextService.resolveName(post.getAuthor()));
+    }
 
     @Transactional(readOnly = true)
     public List<PostResponseDTO> getPostsByForum(Long forumId) {

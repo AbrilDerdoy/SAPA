@@ -1,45 +1,36 @@
 <section class="posts-container">
+  @if (isSharedPost) {
 
-  @if (forum(); as currentForum) {
-  <header class="posts-header">
-    <div>
-      <h1>{{ currentForum.title }}</h1>
-      <p>Publicaciones de la comunidad</p>
-    </div>
+  @if (loadingSharedPost()) {
+  <div class="empty-state">
+    <p>Cargando publicación...</p>
+  </div>
 
-    @if (sesionIniciada) {
-    <button type="button" class="primary-button" (click)="newPost()">Nueva publicación</button>
-    }
-  </header>
-  }
+  } @else if (postUnavailable()) {
+  <div class="empty-state">
+    <h2>Publicación no disponible</h2>
+    <p>Esta publicación no existe o fue eliminada.</p>
+  </div>
 
-  @if (error()) {
+  } @else if (error()) {
   <p class="error-message">{{ error() }}</p>
-  }
 
-  <div class="posts-filter">
-    <input type="text" placeholder="Buscar publicaciones por título..." [value]="titleFilter"
-      (input)="onTitleFilterInput($event)">
-  </div>
-
-  @if (formVisible()) {
-  <div id="post-form">
-    <app-post-form [post]="editingPost()" (save)="savePost($event)" (cancel)="closeForm()" />
-  </div>
-  }
+  } @else if (sharedPost(); as post) {
 
   <div class="posts-list">
-    @for (post of filteredPosts(); track post.postId) {
     <article class="post-card">
+
       <div class="post-card-header">
         <h2>{{ post.title }}</h2>
 
         @if (sesionIniciada) {
-        <button type="button" class="save-button" (click)="toggleSavedPost(post.postId)"
-          [attr.aria-label]="estaGuardada(post.postId) ? 'Quitar de guardados' : 'Guardar publicación'">
+        <button type="button" class="save-button" (click)="toggleSavedPost(post.postId)" [attr.aria-label]="estaGuardada(post.postId)
+                  ? 'Quitar de guardados'
+                  : 'Guardar publicación'">
+
           <img [src]="estaGuardada(post.postId)
-            ? '/images/bookmark-fill-t.png'
-            : '/images/bookmark.png'" alt="">
+                    ? '/images/bookmark-fill-t.png'
+                    : '/images/bookmark.png'" alt="">
         </button>
         }
       </div>
@@ -67,12 +58,103 @@
       </div>
       }
 
+      <button type="button" class="share-button" (click)="sharePost(post.postId)" title="Compartir publicación">
+
+        <img src="/images/share-fat.png" alt="Compartir">
+      </button>
+
     </article>
+  </div>
+  }
+  }
+
+  @if (!isSharedPost) {
+
+  @if (forum(); as currentForum) {
+  <header class="posts-header">
+    <div>
+      <h1>{{ currentForum.title }}</h1>
+      <p>Publicaciones de la comunidad</p>
+    </div>
+
+    @if (sesionIniciada) {
+    <button type="button" class="primary-button" (click)="newPost()">
+      Nueva publicación
+    </button>
+    }
+  </header>
+  }
+
+  @if (error()) {
+  <p class="error-message">{{ error() }}</p>
+  }
+
+  <div class="posts-filter">
+    <input type="text" placeholder="Buscar publicaciones por título..." [value]="titleFilter"
+      (input)="onTitleFilterInput($event)">
+  </div>
+
+  @if (formVisible()) {
+  <div id="post-form">
+    <app-post-form [post]="editingPost()" (save)="savePost($event)" (cancel)="closeForm()" />
+  </div>
+  }
+
+  <div class="posts-list">
+    @for (post of filteredPosts(); track post.postId) {
+    <article class="post-card">
+
+      <div class="post-card-header">
+        <h2>{{ post.title }}</h2>
+
+        @if (sesionIniciada) {
+        <button type="button" class="save-button" (click)="toggleSavedPost(post.postId)" [attr.aria-label]="estaGuardada(post.postId)
+                  ? 'Quitar de guardados'
+                  : 'Guardar publicación'">
+
+          <img [src]="estaGuardada(post.postId)
+                    ? '/images/bookmark-fill-t.png'
+                    : '/images/bookmark.png'" alt="">
+        </button>
+        }
+      </div>
+
+      <p class="post-content">{{ post.content }}</p>
+
+      @if (post.attachments.length > 0) {
+      <app-post-attachments [attachments]="post.attachments" />
+      }
+
+      <div class="post-meta">
+        <span>Publicado por {{ post.authorName }}</span>
+        <span>{{ post.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+
+      @if (sesionIniciada && esPropietario(post)) {
+      <div class="post-actions">
+        <button type="button" class="edit-button" (click)="editPost(post)">
+          Editar
+        </button>
+
+        <button type="button" class="delete-button" (click)="deletePost(post.postId)">
+          Eliminar
+        </button>
+      </div>
+      }
+
+      <button type="button" class="share-button" (click)="sharePost(post.postId)" title="Compartir publicación">
+
+        <img src="/images/share-fat.png" alt="Compartir">
+      </button>
+
+    </article>
+
     } @empty {
     <div class="empty-state">
       <p>No hay publicaciones para mostrar.</p>
     </div>
     }
   </div>
+  }
 
 </section>

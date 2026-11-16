@@ -18,6 +18,11 @@ export class PostService {
     return this.http.get<PostResponse[]>(`${this.BASE_URL}/${forumId}`)
   }
 
+  // Obtener una publicación por ID.
+  getPostById(postId: number): Observable<PostResponse> {
+    return this.http.get<PostResponse>(`${this.BASE_URL}/by-id/${postId}`)
+  }
+
   // Filtrar publicaciones de un foro por título.
   filterPosts(forumId: number, title: string): Observable<PostResponse[]> {
     const params = new HttpParams().set('title', title)
@@ -37,7 +42,7 @@ export class PostService {
 
     if (removedAttachmentIds.length > 0) {
       formData.append(
-        'removedAttachmentIds', new Blob([JSON.stringify(removedAttachmentIds)], {type: 'application/json'})
+        'removedAttachmentIds', new Blob([JSON.stringify(removedAttachmentIds)], { type: 'application/json' })
       )
     }
 
