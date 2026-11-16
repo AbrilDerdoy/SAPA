@@ -1,12 +1,26 @@
 
-import {Component,OnInit,OnDestroy,NgZone,ChangeDetectorRef,inject} from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  NgZone,
+  ChangeDetectorRef,
+  inject
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, NavigationEnd } from '@angular/router';
-import {forkJoin,of,Subscription} from 'rxjs';
+import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError, filter } from 'rxjs/operators';
+
 import { HealthTipService } from '../../services/health-tip.service';
-import {HealthTip,CreateHealthTip,Doctor} from '../../models/health-tip';
+import {
+  HealthTip,
+  CreateHealthTip,
+  Doctor
+} from '../../models/health-tip';
+
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 
@@ -106,7 +120,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
             this.loadTips();
           }
 
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         })
     );
   }
@@ -172,7 +186,6 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
       return;
     }
 
-    // Cancela la consulta anterior si se cambia de usuario.
     this.subscriptions.add(
       this.followService.getSent().subscribe({
         next: requests => {
@@ -275,12 +288,12 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
             doctor => !excludedIds.has(doctor.id)
           );
 
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         },
         error: error => {
           console.error('Error al cargar profesionales:', error);
           this.recommendations = [];
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         }
       })
     );
@@ -289,7 +302,9 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   private finishLoading(): void {
     this.currentIndex = 0;
     this.loading = false;
-    this.cdr.markForCheck();
+
+    this.cdr.detectChanges();
+
     this.resetCarouselTimer();
   }
 
@@ -343,9 +358,11 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
       this.carouselTimer = setInterval(() => {
         this.zone.run(() => {
           this.advanceTip();
-          this.cdr.markForCheck();
+
+          // Fuerza la actualización visual del carrusel.
+          this.cdr.detectChanges();
         });
-      }, 5000);
+      }, 10000);
     });
   }
 
@@ -389,6 +406,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
           );
 
           this.requestingDoctorId = null;
+          this.cdr.detectChanges();
         },
         error: error => {
           console.error('Error al solicitar seguimiento:', error);
@@ -398,6 +416,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
             'No se pudo enviar la solicitud de seguimiento.';
 
           this.requestingDoctorId = null;
+          this.cdr.detectChanges();
         }
       })
     );
@@ -470,6 +489,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
           this.showForm = false;
 
           this.resetCarouselTimer();
+          this.cdr.detectChanges();
         },
         error: error => {
           console.error('Error al publicar consejo:', error);
@@ -477,6 +497,8 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
           this.errorMessage =
             error.error?.message ??
             'No se pudo publicar el consejo. Verificá tu sesión e intentá nuevamente.';
+
+          this.cdr.detectChanges();
         }
       })
     );
