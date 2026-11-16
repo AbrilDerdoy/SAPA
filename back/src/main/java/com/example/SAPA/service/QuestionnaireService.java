@@ -9,12 +9,14 @@ import com.example.SAPA.Repositories.QuestionnaireAssignmentRepository;
 import com.example.SAPA.Repositories.QuestionnaireRepository;
 import com.example.SAPA.Repositories.QuestionRepository;
 import com.example.SAPA.mappers.QuestionnaireMapper;
+import com.example.SAPA.enums.QuestionType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -44,12 +46,7 @@ public class QuestionnaireService {
         QuestionnaireEntity saved = questionnaireRepository.save(questionnaire);
 
         List<QuestionEntity> questions = request.questions().stream()
-                .map(q -> QuestionEntity.builder()
-                        .questionnaire(saved)
-                        .text(q.text().trim())
-                        .type(q.type())
-                        .orderIndex(q.orderIndex())
-                        .build())
+                .map(q -> buildQuestion(saved, q, q.orderIndex()))
                 .sorted(Comparator.comparing(QuestionEntity::getOrderIndex))
                 .toList();
 
@@ -62,6 +59,10 @@ public class QuestionnaireService {
         );
     }
 
+    /**
+     * Agrega una pregunta nueva al final del cuestionario.
+     * No modifica ni elimina las preguntas existentes.
+     */
     @Transactional
     public QuestionnaireDTO.QuestionnaireResponse addQuestionToQuestionnaire(
             Long questionnaireId,
@@ -78,12 +79,11 @@ public class QuestionnaireService {
                 .max()
                 .orElse(-1) + 1;
 
-        QuestionEntity question = QuestionEntity.builder()
-                .questionnaire(questionnaire)
-                .text(request.text().trim())
-                .type(request.type())
-                .orderIndex(nextOrder)
-                .build();
+        QuestionEntity question = buildQuestion(
+                questionnaire,
+                request,
+                nextOrder
+        );
 
         questionRepository.save(question);
 
@@ -93,6 +93,79 @@ public class QuestionnaireService {
                 questionnaire,
                 userContextService.resolveDoctorName(doctor)
         );
+    }
+
+    private QuestionEntity buildQuestion(
+            QuestionnaireEntity questionnaire,
+            QuestionnaireDTO.CreateQuestionRequest request,
+            Integer orderIndex) {
+
+        QuestionEntity.QuestionEntityBuilder builder = QuestionEntity.builder()
+                .questionnaire(questionnaire)
+                .text(request.text().trim())
+                .type(request.type())
+                .orderIndex(orderIndex);
+
+        if (request.type() == QuestionType.MULTIPLE_CHOICE) {
+
+            if (request.options() == null || request.options().size() < 2) {
+                throw new IllegalArgumentException(
+                        "Una pregunta de opción múltiple debe tener al menos dos opciones."
+                );
+            }
+
+            List<String> options = request.options().stream()
+                    .map(String::trim)
+                    .toList();
+
+            if (options.stream().anyMatch(String::isBlank)) {
+                throw new IllegalArgumentException(
+                        "Las opciones no pueden estar vacías."
+                );
+            }
+
+            long distinctOptions = options.stream()
+                    .map(String::toLowerCase)
+                    .distinct()
+                    .count();
+
+            if (distinctOptions != options.size()) {
+                throw new IllegalArgumentException(
+                        "No se permiten opciones repetidas."
+                );
+            }
+
+            builder.options(new ArrayList<>(options));
+        }
+
+        if (request.type() == QuestionType.SCALE) {
+
+            if (request.scaleMin() == null
+                    || request.scaleMax() == null
+                    || request.scaleMin() >= request.scaleMax()) {
+
+                throw new IllegalArgumentException(
+                        "La escala debe tener un mínimo y un máximo válidos."
+                );
+            }
+
+            if (request.scaleMinLabel() == null
+                    || request.scaleMinLabel().isBlank()
+                    || request.scaleMaxLabel() == null
+                    || request.scaleMaxLabel().isBlank()) {
+
+                throw new IllegalArgumentException(
+                        "La escala debe tener una etiqueta para cada extremo."
+                );
+            }
+
+            builder.scaleMin(request.scaleMin())
+                    .scaleMax(request.scaleMax())
+                    .scaleMinLabel(request.scaleMinLabel().trim())
+                    .scaleMaxLabel(request.scaleMaxLabel().trim());
+        }
+
+        return builder.build();
     }
 
     @Transactional
@@ -136,7 +209,7 @@ public class QuestionnaireService {
         );
 
         boolean hasAssignments =
-        !assignmentRepository.findByQuestionnaire(questionnaire).isEmpty();
+                !assignmentRepository.findByQuestionnaire(questionnaire).isEmpty();
 
         if (hasAssignments) {
             throw new IllegalStateException(
@@ -154,10 +227,11 @@ public class QuestionnaireService {
 
         return questionnaireRepository.findByDoctor(doctor)
                 .stream()
-                .map(questionnaire -> questionnaireMapper.toQuestionnaireResponse(
-                        questionnaire,
-                        userContextService.resolveDoctorName(doctor)
-                ))
+                .map(questionnaire ->
+                        questionnaireMapper.toQuestionnaireResponse(
+                                questionnaire,
+                                userContextService.resolveDoctorName(doctor)
+                        ))
                 .toList();
     }
 
@@ -165,10 +239,11 @@ public class QuestionnaireService {
             Long questionnaireId,
             DoctorEntity doctor) {
 
-        QuestionnaireEntity questionnaire = questionnaireRepository.findById(questionnaireId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Cuestionario no encontrado con id: " + questionnaireId
-                ));
+        QuestionnaireEntity questionnaire =
+                questionnaireRepository.findById(questionnaireId)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Cuestionario no encontrado con id: " + questionnaireId
+                        ));
 
         if (!questionnaire.getDoctor().getId().equals(doctor.getId())) {
             throw new AccessDeniedException(

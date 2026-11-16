@@ -1,3 +1,4 @@
+
 package com.example.SAPA.mappers;
 
 import com.example.SAPA.DTOs.QuestionnaireDTO;
@@ -9,6 +10,10 @@ import org.mapstruct.Mapping;
 public interface QuestionnaireMapper {
 
     @Mapping(source = "question.id", target = "questionId")
+    @Mapping(source = "question.scaleMin", target = "scaleMin")
+    @Mapping(source = "question.scaleMax", target = "scaleMax")
+    @Mapping(source = "question.scaleMinLabel", target = "scaleMinLabel")
+    @Mapping(source = "question.scaleMaxLabel", target = "scaleMaxLabel")
     QuestionnaireDTO.QuestionResponse toQuestionResponse(
             QuestionEntity question
     );
@@ -36,6 +41,10 @@ public interface QuestionnaireMapper {
     @Mapping(source = "answer.question.id", target = "questionId")
     @Mapping(source = "answer.question.text", target = "questionText")
     @Mapping(source = "answer.question.type", target = "type")
+    @Mapping(source = "answer.question.scaleMin", target = "scaleMin")
+    @Mapping(source = "answer.question.scaleMax", target = "scaleMax")
+    @Mapping(source = "answer.question.scaleMinLabel", target = "scaleMinLabel")
+    @Mapping(source = "answer.question.scaleMaxLabel", target = "scaleMaxLabel")
     QuestionnaireDTO.AnswerResponse toAnswerResponse(
             AnswerEntity answer
     );

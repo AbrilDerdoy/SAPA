@@ -15,11 +15,18 @@ interface ScalePoint {
   responseId: number;
   answeredAt: string;
   value: number;
+  min: number;
+  max: number;
+  percentage: number;
 }
 
 interface ScaleGroup {
   questionId: number;
   questionText: string;
+  min: number;
+  max: number;
+  minLabel: string;
+  maxLabel: string;
   points: ScalePoint[];
 }
 
@@ -42,7 +49,7 @@ export class QuestionnaireHistory implements OnInit {
 
   selectedPatientId = signal<number | null>(null);
 
-  loading = signal(false);
+  loading = signal(true);
   error = signal('');
 
   scaleGroups = computed<ScaleGroup[]>(() => {
@@ -56,8 +63,17 @@ export class QuestionnaireHistory implements OnInit {
         }
 
         const value = Number(answer.value);
+        const min = answer.scaleMin;
+        const max = answer.scaleMax;
 
-        if (!Number.isFinite(value)) {
+        if (
+          !Number.isFinite(value) ||
+          min === null ||
+          max === null ||
+          min === undefined ||
+          max === undefined ||
+          max <= min
+        ) {
           continue;
         }
 
@@ -65,14 +81,23 @@ export class QuestionnaireHistory implements OnInit {
           groups.set(answer.questionId, {
             questionId: answer.questionId,
             questionText: answer.questionText,
+            min,
+            max,
+            minLabel: answer.scaleMinLabel ?? 'Mínimo',
+            maxLabel: answer.scaleMaxLabel ?? 'Máximo',
             points: []
           });
         }
 
-        groups.get(answer.questionId)!.points.push({
+        const percentage = ((value - min) / (max - min)) * 100;
+
+        groups.get(answer.questionId)?.points.push({
           responseId: response.responseId,
           answeredAt: response.answeredAt,
-          value
+          value,
+          min,
+          max,
+          percentage: Math.max(0, Math.min(100, percentage))
         });
       }
     }
@@ -110,9 +135,7 @@ export class QuestionnaireHistory implements OnInit {
       },
       error: (err: unknown) => {
         console.error('Error al cargar el historial:', err);
-        this.error.set(
-          'No se pudo cargar tu historial de cuestionarios.'
-        );
+        this.error.set('No se pudo cargar tu historial de cuestionarios.');
         this.loading.set(false);
       }
     });
@@ -153,13 +176,8 @@ export class QuestionnaireHistory implements OnInit {
         this.loading.set(false);
       },
       error: (err: unknown) => {
-        console.error(
-          'Error al cargar respuestas del paciente:',
-          err
-        );
-        this.error.set(
-          'No se pudo cargar el historial de este paciente.'
-        );
+        console.error('Error al cargar respuestas del paciente:', err);
+        this.error.set('No se pudo cargar el historial de este paciente.');
         this.loading.set(false);
       }
     });
@@ -173,24 +191,28 @@ export class QuestionnaireHistory implements OnInit {
     return response.answers ?? [];
   }
 
-  getScaleLabel(value: number): string {
-    if (value <= 3) {
+  getScaleLabel(value: number, min: number, max: number): string {
+    const percentage = ((value - min) / (max - min)) * 100;
+
+    if (percentage <= 33) {
       return 'Bajo';
     }
 
-    if (value <= 6) {
+    if (percentage <= 66) {
       return 'Moderado';
     }
 
     return 'Alto';
   }
 
-  getScaleColor(value: number): string {
-    if (value <= 3) {
+  getScaleColor(value: number, min: number, max: number): string {
+    const percentage = ((value - min) / (max - min)) * 100;
+
+    if (percentage <= 33) {
       return 'scale-low';
     }
 
-    if (value <= 6) {
+    if (percentage <= 66) {
       return 'scale-medium';
     }
 

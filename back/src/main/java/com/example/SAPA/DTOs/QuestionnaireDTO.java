@@ -38,7 +38,20 @@ public class QuestionnaireDTO {
 
             @NotNull(message = "El índice de orden es obligatorio.")
             @PositiveOrZero(message = "El índice debe ser cero o positivo.")
-            Integer orderIndex
+            Integer orderIndex,
+
+            @Size(min = 2, max = 20, message = "La pregunta debe tener entre 2 y 20 opciones.")
+            List<@NotBlank @Size(max = 100) String> options,
+
+            Integer scaleMin,
+
+            Integer scaleMax,
+
+            @Size(max = 50, message = "La etiqueta inicial no puede superar los 50 caracteres.")
+            String scaleMinLabel,
+
+            @Size(max = 50, message = "La etiqueta final no puede superar los 50 caracteres.")
+            String scaleMaxLabel
     ) {}
 
     public record AssignQuestionnaireRequest(
@@ -86,7 +99,12 @@ public class QuestionnaireDTO {
             Long questionId,
             String text,
             QuestionType type,
-            Integer orderIndex
+            Integer orderIndex,
+            List<String> options,
+            Integer scaleMin,
+            Integer scaleMax,
+            String scaleMinLabel,
+            String scaleMaxLabel
     ) {}
 
     public record AssignmentResponse(
@@ -113,6 +131,10 @@ public class QuestionnaireDTO {
             Long questionId,
             String questionText,
             QuestionType type,
-            String value
+            String value,
+            Integer scaleMin,
+            Integer scaleMax,
+            String scaleMinLabel,
+            String scaleMaxLabel
     ) {}
 }

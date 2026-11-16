@@ -62,24 +62,48 @@
               }
 
               @if (question.type === 'MULTIPLE_CHOICE') {
-                <input
-                  type="text"
-                  placeholder="Escribí tu respuesta..."
-                  [value]="answers[question.questionId] || ''"
-                  (input)="updateAnswer(question.questionId, $any($event.target).value)">
+                <div class="multiple-choice-options">
+
+                  @for (option of question.options; track $index) {
+                    <label class="choice-option">
+                      <input
+                        type="radio"
+                        [name]="'question-' + question.questionId"
+                        [value]="option"
+                        [checked]="answers[question.questionId] === option"
+                        (change)="updateAnswer(question.questionId, option)">
+
+                      <span>{{ option }}</span>
+                    </label>
+                  }
+
+                </div>
               }
 
               @if (question.type === 'SCALE') {
                 <div class="scale-answer">
+
+                  <div class="scale-labels">
+                    <span>{{ question.scaleMinLabel }}</span>
+                    <strong>
+                      {{ answers[question.questionId] || 'Sin seleccionar' }}
+                    </strong>
+                    <span>{{ question.scaleMaxLabel }}</span>
+                  </div>
+
                   <input
-                    type="number"
-                    min="1"
-                    max="10"
+                    type="range"
+                    [min]="question.scaleMin ?? 1"
+                    [max]="question.scaleMax ?? 10"
                     step="1"
-                    placeholder="Del 1 al 10"
-                    [value]="answers[question.questionId] || ''"
+                    [value]="answers[question.questionId] || question.scaleMin || 1"
                     (input)="updateAnswer(question.questionId, $any($event.target).value)">
-                  <small>Ingresá un valor entero entre 1 y 10.</small>
+
+                  <div class="scale-range">
+                    <span>{{ question.scaleMin }}</span>
+                    <span>{{ question.scaleMax }}</span>
+                  </div>
+
                 </div>
               }
 
