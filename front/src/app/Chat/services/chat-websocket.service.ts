@@ -47,28 +47,10 @@ export class ChatWebSocketService {
       return;
     }
 
-    const jwtData = localStorage.getItem('jwt');
+    const accessToken = this.readAccessToken();
 
-    if (!jwtData) {
-      console.error('No se encontró el token JWT.');
-      this.connectionSubject.next(false);
-      return;
-    }
-
-    let accessToken: string;
-
-    try {
-      const tokens = JSON.parse(jwtData) as JwtTokens;
-
-      if (!tokens.AccessToken) {
-        console.error('No se encontró AccessToken.');
-        this.connectionSubject.next(false);
-        return;
-      }
-
-      accessToken = tokens.AccessToken;
-    } catch (error) {
-      console.error('Error al leer el token JWT:', error);
+    if (!accessToken) {
+      console.error('No se encontró el AccessToken.');
       this.connectionSubject.next(false);
       return;
     }
@@ -82,11 +64,23 @@ export class ChatWebSocketService {
       const sockJsModule = await import('sockjs-client');
       const SockJS = sockJsModule.default;
 
-      this.client = new Client({
+      const client = new Client({
         webSocketFactory: () => new SockJS(this.WS_URL),
 
         connectHeaders: {
           Authorization: `Bearer ${accessToken}`
+        },
+
+        // Se ejecuta en cada (re)conexión: toma el token más reciente,
+        // incluyendo el que el interceptor haya renovado mientras tanto.
+        beforeConnect: (stompClient: Client) => {
+          const latestToken = this.readAccessToken();
+
+          if (latestToken) {
+            stompClient.connectHeaders = {
+              Authorization: `Bearer ${latestToken}`
+            };
+          }
         },
 
         reconnectDelay: 5000,
@@ -127,7 +121,8 @@ export class ChatWebSocketService {
         }
       });
 
-      this.client.activate();
+      this.client = client;
+      client.activate();
 
     } catch (error) {
       this.connectionSubject.next(false);
@@ -162,6 +157,16 @@ export class ChatWebSocketService {
         }
       }
     );
+  }
+
+  private readAccessToken(): string | null {
+    try {
+      const tokens = JSON.parse(localStorage.getItem('jwt') ?? '{}') as JwtTokens;
+      return tokens.AccessToken ?? null;
+    } catch (error) {
+      console.error('Error al leer el token JWT:', error);
+      return null;
+    }
   }
 
   sendMessage(

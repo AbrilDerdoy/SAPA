@@ -1,12 +1,12 @@
 
-import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Usuario } from '../../models/usuario';
 import { registerRequest } from '../../models/registerRequest';
 import { loginRequest } from '../../models/loginRequest';
 import { TokenResponse } from '../../models/token-response';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, throwError } from 'rxjs';
 
 export interface especialidad {
   readonly id: number;
@@ -23,6 +23,33 @@ interface UsuarioSesion {
   username: string;
   email: string;
   role: string;
+}
+
+interface JwtPayload {
+  exp?: number;
+}
+
+const TOKENS_STORAGE_KEY = 'jwt';
+const USER_STORAGE_KEY = 'usuario';
+/** Se renueva el token un minuto antes de que venza para evitar el primer 401. */
+const REFRESH_LEEWAY_MS = 60_000;
+
+function decodeJwtPayload(token: string): JwtPayload | null {
+  const parts = token.split('.');
+
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const payload: unknown = JSON.parse(atob(padded));
+
+    return payload && typeof payload === 'object' ? (payload as JwtPayload) : null;
+  } catch {
+    return null;
+  }
 }
 
 @Injectable({
@@ -47,8 +74,7 @@ export class Auth {
       });
     }
 
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('usuario');
+    this.clearSession();
     this.router.navigate(['/home']);
   }
 
@@ -73,20 +99,13 @@ export class Auth {
   }
 
   isAuthenticated(): boolean {
-    try {
-      const token: Partial<TokenResponse> = JSON.parse(
-        localStorage.getItem('jwt') ?? '{}'
-      );
-
-      return !!token.AccessToken && !!token.RefreshToken;
-    } catch {
-      return false;
-    }
+    const tokens = this.getTokens();
+    return !!tokens?.AccessToken && !!tokens?.RefreshToken;
   }
 
   private getRole(): string {
     try {
-      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+      const usuario = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) ?? '{}')
 
       if (!usuario || typeof usuario !== 'object') {
         return ''
@@ -108,22 +127,70 @@ export class Auth {
     return this.http.post(this.BASE_URL+'/forgot-password',{email:mail});
   }
 
-  refreshToken() {
-    const tokens = JSON.parse(localStorage.getItem('jwt') || '{}');
-    const refreshToken = tokens.RefreshToken;
+  /** Tokens guardados en localStorage, o null si no existen / están corruptos. */
+  getTokens(): Partial<TokenResponse> | null {
+    try {
+      const raw = localStorage.getItem(TOKENS_STORAGE_KEY);
+
+      if (!raw) {
+        return null;
+      }
+
+      const parsed: unknown = JSON.parse(raw);
+
+      return parsed && typeof parsed === 'object'
+        ? (parsed as Partial<TokenResponse>)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  saveTokens(tokens: TokenResponse): void {
+    localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(tokens));
+  }
+
+  clearSession(): void {
+    localStorage.removeItem(TOKENS_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
+
+  /**
+   * Indica si el access token ya venció o está por vencer.
+   * Si no tiene un `exp` legible se devuelve false y se deja actuar al
+   * refresh reactivo (401 del backend).
+   */
+  isAccessTokenExpiring(leewayMs: number = REFRESH_LEEWAY_MS): boolean {
+    const accessToken = this.getTokens()?.AccessToken;
+
+    if (!accessToken) {
+      return true;
+    }
+
+    const payload = decodeJwtPayload(accessToken);
+
+    if (!payload?.exp) {
+      return false;
+    }
+
+    return payload.exp * 1000 - leewayMs <= Date.now();
+  }
+
+  refreshToken(): Observable<TokenResponse> {
+    const refreshToken = this.getTokens()?.RefreshToken;
+
+    if (!refreshToken) {
+      return throwError(() => new HttpErrorResponse({
+        status: 401,
+        statusText: 'No hay refresh token disponible'
+      }));
+    }
 
     return this.http.post<TokenResponse>(`${this.BASE_URL}/refresh`, { refreshToken })
-      .pipe(tap((newTokens) => {
-        localStorage.setItem('jwt', JSON.stringify(newTokens));
-      }));
+      .pipe(tap((newTokens) => this.saveTokens(newTokens)));
   }
 
   getAccessToken(): string | null {
-  try {
-    const tokens = JSON.parse(localStorage.getItem('jwt') ?? '{}')
-    return tokens.AccessToken ?? null
-  } catch {
-    return null
+    return this.getTokens()?.AccessToken ?? null;
   }
-}
 }
