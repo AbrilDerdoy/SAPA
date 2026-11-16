@@ -127,6 +127,7 @@
       <textarea
         name="newMessage"
         [(ngModel)]="newMessage"
+        (keydown)="onMessageKeydown($event)"
         placeholder="Escribí tu mensaje..."
         rows="1"
         maxlength="2000"

@@ -193,6 +193,19 @@ export class ChatWindow implements OnChanges, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  onMessageKeydown(event: KeyboardEvent): void {
+    if (
+      event.key !== 'Enter' ||
+      event.shiftKey ||
+      event.isComposing
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    this.sendMessage();
+  }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
