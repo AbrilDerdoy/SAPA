@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { PostService } from '../../post-service/post-service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { PostResponse } from '../../post-DTOs/post-response';
@@ -125,11 +125,15 @@ export class Post {
     this.error.set('')
   }
 
-  savePost(data: { request: ForumRequest; files: File[] }): void {
+  savePost(data: {
+    request: ForumRequest
+    files: File[]
+    removedAttachmentIds: number[]
+    }): void {
     const post = this.editingPost()
 
     if (post) {
-      this.postService.updatePost(post.postId, data.request, data.files).subscribe({
+      this.postService.updatePost(post.postId, data.request, data.files, data.removedAttachmentIds).subscribe({
         next: () => {
           this.closeForm()
           this.loadPosts()

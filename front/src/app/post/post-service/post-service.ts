@@ -25,7 +25,7 @@ export class PostService {
   }
 
   // Construir el multipart/form-data.
-  private createFormData(request: ForumRequest, files: File[]): FormData {
+  private createFormData(request: ForumRequest, files: File[], removedAttachmentIds: number[] = []): FormData {
     const formData = new FormData()
 
     formData.append(
@@ -33,6 +33,14 @@ export class PostService {
     )
 
     files.forEach(file => formData.append('files', file))
+
+
+    if (removedAttachmentIds.length > 0) {
+      formData.append(
+        'removedAttachmentIds', new Blob([JSON.stringify(removedAttachmentIds)], {type: 'application/json'})
+      )
+    }
+
     return formData
   }
 
@@ -41,6 +49,7 @@ export class PostService {
     const formData = this.createFormData(request, files)
     return this.http.post<PostResponse>(`${this.BASE_URL}/${forumId}/create`, formData)
   }
+
   // Obtener archivos.
   getAttachment(fileUrl: string): Observable<Blob> {
     const token = this.auth.getAccessToken();
@@ -54,8 +63,8 @@ export class PostService {
   }
 
   // Modificar una publicación.
-  updatePost(postId: number, request: ForumRequest, files: File[]): Observable<PostResponse> {
-    const formData = this.createFormData(request, files)
+  updatePost(postId: number, request: ForumRequest, files: File[], removedAttachmentIds: number[]): Observable<PostResponse> {
+    const formData = this.createFormData(request, files, removedAttachmentIds)
     return this.http.put<PostResponse>(`${this.BASE_URL}/${postId}`, formData)
   }
 

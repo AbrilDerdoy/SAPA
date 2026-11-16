@@ -13,9 +13,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -76,7 +79,7 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDTO updatePost(Long postId, ForumRequestDTO request, List<MultipartFile> files) throws IOException {
+    public PostResponseDTO updatePost(Long postId, ForumRequestDTO request, List<MultipartFile> files, List<Long> removedAttachmentIds) throws IOException {
         UserEntity user = userContextService.getAuthenticatedUser();
 
         PostEntity post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post no encontrado con id: " + postId));
@@ -88,10 +91,54 @@ public class PostService {
         post.setTitle(request.title());
         post.setContent(request.content());
 
+        List<String> filesToDelete = new ArrayList<>();
+
+        if (removedAttachmentIds != null && !removedAttachmentIds.isEmpty()) {
+
+            List<PostAttachmentEntity> attachmentsToRemove =
+                    post.getAttachments().stream()
+                            .filter(attachment ->
+                                    removedAttachmentIds.contains(attachment.getId()))
+                            .toList();
+
+            if (attachmentsToRemove.size() != removedAttachmentIds.stream().distinct().count()) {
+                throw new IllegalArgumentException(
+                        "Uno o más archivos no pertenecen a esta publicación."
+                );
+            }
+
+            for (PostAttachmentEntity attachment : attachmentsToRemove) {
+                filesToDelete.add(attachment.getFileUrl());
+                post.getAttachments().remove(attachment);
+            }
+        }
+
+
         addAttachments(post, files);
 
         PostEntity updated = postRepository.save(post);
+        deleteFilesAfterCommit(filesToDelete);
+
         return postMapper.toPostResponse(updated, userContextService.resolveName(user));
+    }
+
+    private void deleteFilesAfterCommit(List<String> fileUrls) {
+        if (fileUrls.isEmpty()) return;
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (String fileUrl : fileUrls) {
+                            try {
+                                fileStorageService.deleteFile(fileUrl);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Error al eliminar archivo: {}" + fileUrl, e);
+                            }
+                        }
+                    }
+                }
+        );
     }
 
 

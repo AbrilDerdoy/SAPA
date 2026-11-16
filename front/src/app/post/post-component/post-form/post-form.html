@@ -32,10 +32,32 @@
         @if (currentPost.attachments.length > 0) {
         <div class="current-attachments">
             <h3>Archivos actuales</h3>
-            <app-post-attachments [attachments]="currentPost.attachments" />
-            <p class="attachments-hint">
-                Estos archivos ya están asociados a la publicación.
-            </p>
+
+            @for (attachment of currentPost.attachments; track attachment.attachmentId) {
+            @if (!removedAttachmentIds().includes(attachment.attachmentId)) {
+            <div class="selected-file">
+                <div class="file-info">
+                    <span class="file-icon">
+                        {{ attachment.fileName.split('.').pop()?.toUpperCase() }}
+                    </span>
+
+                    <div class="file-details">
+                        <span class="file-name">
+                            {{ attachment.fileName }}
+                        </span>
+
+                        <small>
+                            {{ formatFileSize(attachment.size) }}
+                        </small>
+                    </div>
+                </div>
+
+                <button type="button" class="remove-file" (click)="removeExistingAttachment(attachment.attachmentId)">
+                    Quitar
+                </button>
+            </div>
+            }
+            }
         </div>
         }
         }
@@ -43,9 +65,11 @@
         <div class="attachments-section">
             <label for="post-files">Agregar archivos</label>
 
-            <p class="attachments-hint">Imágenes, PDF, Word o Excel. Máximo 10 archivos en total y 10 MB por archivo.</p>
+            <p class="attachments-hint">Imágenes, PDF, Word o Excel. Máximo 10 archivos en total y 10 MB por archivo.
+            </p>
 
-            <input id="post-files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx" (change)="selectFiles($event)">
+            <input id="post-files" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx"
+                (change)="selectFiles($event)">
 
             @if (error()) {
             <p class="field-error">{{ error() }}</p>

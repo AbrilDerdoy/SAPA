@@ -13,8 +13,14 @@ import { PostAttachments } from '../post-attachments/post-attachments';
 export class PostForm implements OnDestroy {
   post = input<PostResponse | null>(null)
 
-  save = output<{ request: ForumRequest; files: File[] }>()
+  save = output<{
+    request: ForumRequest
+    files: File[]
+    removedAttachmentIds: number[]
+  }>()
   cancel = output<void>()
+
+  removedAttachmentIds = signal<number[]>([])
 
   model = signal<ForumRequest>({
     title: '',
@@ -46,6 +52,7 @@ export class PostForm implements OnDestroy {
 
       this.clearFilePreviews()
       this.selectedFiles.set([])
+      this.removedAttachmentIds.set([])
       this.error.set('')
 
       this.model.set({
@@ -63,7 +70,7 @@ export class PostForm implements OnDestroy {
     const input = event.target as HTMLInputElement
     const files = Array.from(input.files ?? [])
     const currentFiles = this.selectedFiles()
-    const existingCount = this.post()?.attachments.length ?? 0
+    const existingCount = (this.post()?.attachments.length ?? 0) - this.removedAttachmentIds().length
 
     const duplicated = files.find(file =>
       currentFiles.some(existing =>
@@ -158,7 +165,8 @@ export class PostForm implements OnDestroy {
 
     this.save.emit({
       request: this.model(),
-      files: this.selectedFiles()
+      files: this.selectedFiles(),
+      removedAttachmentIds: this.removedAttachmentIds()
     })
   }
 
@@ -181,6 +189,12 @@ export class PostForm implements OnDestroy {
     }
 
     this.filePreviews.clear()
+  }
+
+  removeExistingAttachment(attachmentId: number): void {
+    this.removedAttachmentIds.update(ids =>
+      ids.includes(attachmentId) ? ids : [...ids, attachmentId]
+    )
   }
 
   ngOnDestroy(): void {

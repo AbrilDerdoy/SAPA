@@ -18,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -87,9 +89,17 @@ public class PostController {
     public ResponseEntity<PostResponseDTO> updatePost(
             @Parameter(description = "ID de la publicación a editar", required = true) @PathVariable Long postId,
             @Valid @RequestPart("request") ForumRequestDTO request,
-            @RequestPart(value = "files", required = false)List<MultipartFile> files) throws IOException {
+            @RequestPart(value = "files", required = false)List<MultipartFile> files,
+            @RequestPart(value = "removedAttachmentIds", required = false) String removedAttachmentIdsJson) throws IOException {
 
-        return ResponseEntity.ok(postService.updatePost(postId, request, files));
+        List<Long> removedAttachmentIds = removedAttachmentIdsJson == null
+                ? List.of()
+                : new ObjectMapper().readValue(
+                removedAttachmentIdsJson,
+                new TypeReference<List<Long>>() {}
+        );
+
+        return ResponseEntity.ok(postService.updatePost(postId, request, files, removedAttachmentIds));
     }
 
     @Operation(
