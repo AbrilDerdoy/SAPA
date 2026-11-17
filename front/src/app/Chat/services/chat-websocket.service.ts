@@ -12,6 +12,11 @@ interface JwtTokens {
   AccessToken?: string;
 }
 
+export interface PresenceUpdate {
+  userId: number;
+  online: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,11 +25,17 @@ export class ChatWebSocketService {
   private readonly WS_URL = 'http://localhost:8080/ws';
 
   private client: Client | null = null;
-  private subscription: StompSubscription | null = null;
+
+  private conversationSubscription: StompSubscription | null = null;
+  private presenceSubscription: StompSubscription | null = null;
+
   private pendingConversationId: number | null = null;
+  private pendingOtherParticipantId: number | null = null;
+
   private initializing = false;
 
   private readonly incomingMessageSubject = new Subject<Message>();
+  private readonly presenceSubject = new Subject<PresenceUpdate>();
 
   private readonly connectionSubject =
     new BehaviorSubject<boolean>(false);
@@ -32,14 +43,23 @@ export class ChatWebSocketService {
   readonly incomingMessages$: Observable<Message> =
     this.incomingMessageSubject.asObservable();
 
+  readonly presenceUpdates$: Observable<PresenceUpdate> =
+    this.presenceSubject.asObservable();
+
   readonly connectionStatus$: Observable<boolean> =
     this.connectionSubject.asObservable();
 
-  async connectToConversation(conversationId: number): Promise<void> {
+  async connectToConversation(
+    conversationId: number,
+    otherParticipantId: number
+  ): Promise<void> {
+
     this.pendingConversationId = conversationId;
+    this.pendingOtherParticipantId = otherParticipantId;
 
     if (this.client?.connected) {
       this.subscribeToConversation(conversationId);
+      this.subscribeToPresence(otherParticipantId);
       return;
     }
 
@@ -59,21 +79,22 @@ export class ChatWebSocketService {
     this.connectionSubject.next(false);
 
     try {
+
       Reflect.set(globalThis, 'global', globalThis);
 
       const sockJsModule = await import('sockjs-client');
       const SockJS = sockJsModule.default;
 
       const client = new Client({
+
         webSocketFactory: () => new SockJS(this.WS_URL),
 
         connectHeaders: {
           Authorization: `Bearer ${accessToken}`
         },
 
-        // Se ejecuta en cada (re)conexión: toma el token más reciente,
-        // incluyendo el que el interceptor haya renovado mientras tanto.
         beforeConnect: (stompClient: Client) => {
+
           const latestToken = this.readAccessToken();
 
           if (latestToken) {
@@ -88,11 +109,18 @@ export class ChatWebSocketService {
         heartbeatOutgoing: 10000,
 
         onConnect: () => {
+
           this.connectionSubject.next(true);
 
           if (this.pendingConversationId !== null) {
             this.subscribeToConversation(
               this.pendingConversationId
+            );
+          }
+
+          if (this.pendingOtherParticipantId !== null) {
+            this.subscribeToPresence(
+              this.pendingOtherParticipantId
             );
           }
         },
@@ -103,11 +131,13 @@ export class ChatWebSocketService {
 
         onWebSocketClose: () => {
           this.connectionSubject.next(false);
-          this.subscription = null;
+          this.clearSubscriptions();
         },
 
         onStompError: frame => {
+
           this.connectionSubject.next(false);
+
           console.error(
             'Error STOMP:',
             frame.headers['message'],
@@ -116,7 +146,9 @@ export class ChatWebSocketService {
         },
 
         onWebSocketError: error => {
+
           this.connectionSubject.next(false);
+
           console.error('Error WebSocket:', error);
         }
       });
@@ -125,8 +157,13 @@ export class ChatWebSocketService {
       client.activate();
 
     } catch (error) {
+
       this.connectionSubject.next(false);
-      console.error('Error al inicializar WebSocket:', error);
+
+      console.error(
+        'Error al inicializar WebSocket:',
+        error
+      );
 
     } finally {
       this.initializing = false;
@@ -136,20 +173,26 @@ export class ChatWebSocketService {
   private subscribeToConversation(
     conversationId: number
   ): void {
+
     if (!this.client?.connected) {
       return;
     }
 
-    this.subscription?.unsubscribe();
-    this.subscription = null;
+    this.conversationSubscription?.unsubscribe();
+    this.conversationSubscription = null;
 
-    this.subscription = this.client.subscribe(
+    this.conversationSubscription = this.client.subscribe(
       `/queue/conversation/${conversationId}`,
       (frame: IMessage) => {
+
         try {
+
           const message = JSON.parse(frame.body) as Message;
+
           this.incomingMessageSubject.next(message);
+
         } catch (error) {
+
           console.error(
             'Error al procesar el mensaje recibido:',
             error
@@ -159,12 +202,58 @@ export class ChatWebSocketService {
     );
   }
 
+  private subscribeToPresence(userId: number): void {
+
+    if (!this.client?.connected) {
+      return;
+    }
+
+    this.presenceSubscription?.unsubscribe();
+    this.presenceSubscription = null;
+
+    this.presenceSubscription = this.client.subscribe(
+      `/topic/presence/${userId}`,
+      (frame: IMessage) => {
+
+        try {
+
+          const update = JSON.parse(frame.body) as PresenceUpdate;
+
+          if (
+            typeof update.userId === 'number' &&
+            typeof update.online === 'boolean'
+          ) {
+            this.presenceSubject.next(update);
+          }
+
+        } catch (error) {
+
+          console.error(
+            'Error al procesar la presencia:',
+            error
+          );
+        }
+      }
+    );
+  }
+
   private readAccessToken(): string | null {
+
     try {
-      const tokens = JSON.parse(localStorage.getItem('jwt') ?? '{}') as JwtTokens;
+
+      const tokens = JSON.parse(
+        localStorage.getItem('jwt') ?? '{}'
+      ) as JwtTokens;
+
       return tokens.AccessToken ?? null;
+
     } catch (error) {
-      console.error('Error al leer el token JWT:', error);
+
+      console.error(
+        'Error al leer el token JWT:',
+        error
+      );
+
       return null;
     }
   }
@@ -173,6 +262,7 @@ export class ChatWebSocketService {
     conversationId: number,
     content: string
   ): boolean {
+
     if (!this.client?.connected) {
       console.error('WebSocket no está conectado.');
       return false;
@@ -185,6 +275,7 @@ export class ChatWebSocketService {
     }
 
     try {
+
       this.client.publish({
         destination: `/app/chat/${conversationId}`,
         body: JSON.stringify({
@@ -196,19 +287,36 @@ export class ChatWebSocketService {
       return true;
 
     } catch (error) {
-      console.error('Error al enviar el mensaje:', error);
+
+      console.error(
+        'Error al enviar el mensaje:',
+        error
+      );
+
       return false;
     }
   }
 
+  private clearSubscriptions(): void {
+
+    this.conversationSubscription = null;
+    this.presenceSubscription = null;
+  }
+
   disconnect(): void {
-    this.subscription?.unsubscribe();
-    this.subscription = null;
+
+    this.conversationSubscription?.unsubscribe();
+    this.presenceSubscription?.unsubscribe();
+
+    this.clearSubscriptions();
 
     this.pendingConversationId = null;
+    this.pendingOtherParticipantId = null;
+
     this.connectionSubject.next(false);
 
     if (this.client) {
+
       const currentClient = this.client;
       this.client = null;
 

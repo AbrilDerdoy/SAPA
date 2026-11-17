@@ -1,4 +1,3 @@
-
 @if (conversation) {
 
   <section class="chat-container">
@@ -21,10 +20,10 @@
         <span class="connection-status">
           <span
             class="status-dot"
-            [class.connected]="isConnected">
+            [class.connected]="otherParticipantOnline">
           </span>
 
-          {{ isConnected ? 'Conectado' : 'Conectando...' }}
+          {{ otherParticipantOnline ? 'En línea' : 'Desconectado' }}
         </span>
       </div>
 

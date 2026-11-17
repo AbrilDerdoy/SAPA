@@ -1,4 +1,3 @@
-
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -47,6 +46,7 @@ export class DoctorQuestionnaires implements OnInit {
   savingNewQuestion = signal(false);
 
   addingQuestionToId = signal<number | null>(null);
+  expandedQuestionnaireIds = signal<number[]>([]);
   unassigningIds = signal<number[]>([]);
 
   message = signal('');
@@ -324,6 +324,14 @@ export class DoctorQuestionnaires implements OnInit {
         this.assigning.set(false);
       }
     });
+  }
+
+  toggleQuestionnaireQuestions(questionnaireId: number): void {
+    this.expandedQuestionnaireIds.update(ids =>
+      ids.includes(questionnaireId)
+        ? ids.filter(id => id !== questionnaireId)
+        : [...ids, questionnaireId]
+    );
   }
 
   openAddQuestion(questionnaireId: number): void {

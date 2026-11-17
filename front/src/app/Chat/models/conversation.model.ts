@@ -1,6 +1,6 @@
-
 export interface Conversation {
   conversationId: number;
+  otherParticipantId: number;
   otherParticipantName: string;
   otherParticipantProfileImageUrl: string | null;
   lastMessage: string;

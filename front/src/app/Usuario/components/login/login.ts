@@ -63,17 +63,33 @@ export class Login {
               'Puedes usar el sistema',
               'Sesion iniciada'
             );
-            const usuario = { id: user.id, username: user.username, email: user.email, role: user.role }
+
+            const usuario = {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              role: user.role
+            };
+
             console.log('Usuario:', usuario);
-            localStorage.setItem('usuario', JSON.stringify(usuario));
+
+            localStorage.setItem(
+              'usuario',
+              JSON.stringify(usuario)
+            );
+
+            // Notifica a los componentes que la sesión fue iniciada.
+            this.auth.notifySessionChanged();
 
             this.router.navigate(['/home']);
           },
           error: (error) => {
-            console.error('No se pudo obtener el usuario:', error);
+            console.error(
+              'No se pudo obtener el usuario:',
+              error
+            );
 
-            localStorage.removeItem('jwt');
-            localStorage.removeItem('usuario');
+            this.auth.clearSession();
 
             this.aviso.set({
               tipo: 'error',

@@ -26,6 +26,8 @@
   line-height: 1.55;
 }
 
+/* Foto de perfil */
+
 .profile-photo {
   display: flex;
   align-items: center;
@@ -104,12 +106,17 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
 }
 
 .photo-button {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--on-primary);
+}
+
+.photo-button:hover:not(.photo-button--disabled) {
+  background: var(--primary-dark);
 }
 
 .photo-button--disabled {
@@ -120,6 +127,10 @@
 .photo-remove {
   background: var(--surface);
   color: var(--danger);
+}
+
+.photo-remove:hover:not(:disabled) {
+  background: var(--danger-light);
 }
 
 .photo-remove:disabled {
@@ -137,6 +148,8 @@
   color: var(--danger) !important;
   font-size: 0.85rem !important;
 }
+
+/* Formulario */
 
 .form {
   display: grid;
@@ -191,6 +204,8 @@
   font-size: 0.85rem;
 }
 
+/* Mensajes */
+
 .notice {
   padding: 1rem 1.2rem;
   background: var(--primary-light);
@@ -216,6 +231,8 @@
   border-left-color: var(--danger);
 }
 
+/* Acciones */
+
 .form__actions {
   display: flex;
   gap: 0.75rem;
@@ -231,6 +248,8 @@
   margin: 0;
   color: var(--text-muted);
 }
+
+/* Adaptación móvil */
 
 @media (max-width: 520px) {
   .pp {
@@ -252,5 +271,12 @@
 
   .form__actions {
     flex-direction: column-reverse;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-button,
+  .photo-remove {
+    transition: none;
   }
 }

@@ -1,4 +1,3 @@
-
 import {
   Component,
   DestroyRef,
@@ -10,11 +9,17 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-
-import { FormField, disabled, form, maxLength, minLength, pattern, required } from '@angular/forms/signals';
+import {
+  FormField,
+  disabled,
+  form,
+  maxLength,
+  minLength,
+  pattern,
+  required,
+} from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
 import * as L from 'leaflet';
-
 import { DoctorService } from '../../service/doctor.service';
 import {
   LocationMapService,
@@ -54,7 +59,11 @@ type ProfileModel = {
   hospitalLongitude: string;
 };
 
-const DEFAULT_MAP_CENTER: MapCoordinates = { lat: -34.6037, lng: -58.3816 };
+const DEFAULT_MAP_CENTER: MapCoordinates = {
+  lat: -34.6037,
+  lng: -58.3816,
+};
+
 const MAP_ZOOM_WITH_LOCATION = 16;
 const MAP_ZOOM_DEFAULT = 12;
 const SEARCH_DEBOUNCE_MS = 450;
@@ -101,14 +110,26 @@ export class DoctorProfile {
   readonly photoError = signal('');
   readonly profileImageUrl = signal<string | null>(null);
 
+  // Cambios de foto pendientes de confirmar
+  readonly pendingPhotoFile = signal<File | null>(null);
+  readonly photoPreviewUrl = signal<string | null>(null);
+  readonly photoRemovalPending = signal(false);
+
   readonly initials = computed(() => {
     const firstName = this.model().firstName.trim();
     const lastName = this.model().lastName.trim();
 
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'M';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`
+      .toUpperCase() || 'M';
   });
 
   readonly photoUrl = computed(() => {
+    const previewUrl = this.photoPreviewUrl();
+
+    if (previewUrl) return previewUrl;
+
+    if (this.photoRemovalPending()) return null;
+
     const url = this.profileImageUrl();
 
     if (!url) return null;
@@ -158,6 +179,8 @@ export class DoctorProfile {
         window.clearTimeout(this.searchTimeoutId);
       }
 
+      this.clearPhotoPreview();
+
       this.map?.remove();
       this.map = null;
       this.marker = null;
@@ -187,6 +210,7 @@ export class DoctorProfile {
 
     if (
       !this.editing() ||
+      this.status() === 'saving' ||
       this.photoStatus() === 'uploading' ||
       this.photoStatus() === 'deleting'
     ) {
@@ -216,30 +240,24 @@ export class DoctorProfile {
       return;
     }
 
-    this.photoStatus.set('uploading');
+    // La imagen todavía no se envía al servidor.
+    // Solamente se crea una vista previa temporal.
+    this.clearPhotoPreview();
 
-    this.doctorService.uploadProfilePhoto(file).subscribe({
-      next: (response) => {
-        this.profileImageUrl.set(response.profileImageUrl ?? null);
-        this.photoStatus.set('idle');
-        this.photoError.set('');
-        input.value = '';
-      },
-      error: (error) => {
-        console.error('No se pudo subir la foto de perfil', error);
-        this.photoStatus.set('error');
-        this.photoError.set(
-          'No se pudo subir la foto. Intentá nuevamente.'
-        );
-        input.value = '';
-      },
-    });
+    this.pendingPhotoFile.set(file);
+    this.photoRemovalPending.set(false);
+    this.photoPreviewUrl.set(URL.createObjectURL(file));
+
+    this.photoStatus.set('idle');
+    this.photoError.set('');
+
+    input.value = '';
   }
 
   removeProfilePhoto(): void {
     if (
-      !this.profileImageUrl() ||
       !this.editing() ||
+      this.status() === 'saving' ||
       this.photoStatus() === 'uploading' ||
       this.photoStatus() === 'deleting'
     ) {
@@ -247,22 +265,129 @@ export class DoctorProfile {
     }
 
     this.photoError.set('');
-    this.photoStatus.set('deleting');
 
-    this.doctorService.removeProfilePhoto().subscribe({
-      next: () => {
-        this.profileImageUrl.set(null);
-        this.photoStatus.set('idle');
-        this.photoError.set('');
-      },
-      error: (error) => {
-        console.error('No se pudo eliminar la foto de perfil', error);
-        this.photoStatus.set('error');
-        this.photoError.set(
-          'No se pudo quitar la foto. Intentá nuevamente.'
-        );
-      },
-    });
+    // Descarta una imagen nueva que todavía no fue confirmada.
+    this.clearPhotoPreview();
+    this.pendingPhotoFile.set(null);
+
+    // La eliminación real queda pendiente hasta confirmar.
+    this.photoRemovalPending.set(!!this.profileImageUrl());
+
+    this.photoStatus.set('idle');
+  }
+
+  private clearPhotoPreview(): void {
+    const previewUrl = this.photoPreviewUrl();
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    this.photoPreviewUrl.set(null);
+  }
+
+  private resetPendingPhotoChanges(): void {
+    this.clearPhotoPreview();
+
+    this.pendingPhotoFile.set(null);
+    this.photoRemovalPending.set(false);
+
+    this.photoStatus.set('idle');
+    this.photoError.set('');
+  }
+
+  private finishProfileSave(
+    savedValues: ProfileModel,
+    selectedSpeciality: number
+  ): void {
+    this.model.set(savedValues);
+    this.initialModel.set({ ...savedValues });
+    this.initialSpeciality.set(selectedSpeciality);
+
+    this.resetPendingPhotoChanges();
+
+    this.editing.set(false);
+    this.status.set('success');
+
+    this.syncMapWithModel();
+  }
+
+  private savePendingPhoto(
+    savedValues: ProfileModel,
+    selectedSpeciality: number
+  ): void {
+    const pendingFile = this.pendingPhotoFile();
+
+    // Si se seleccionó una foto nueva, se sube ahora,
+    // después de confirmar los datos del perfil.
+    if (pendingFile) {
+      this.photoStatus.set('uploading');
+
+      this.doctorService.uploadProfilePhoto(pendingFile).subscribe({
+        next: (response) => {
+          this.profileImageUrl.set(response.profileImageUrl ?? null);
+
+          this.finishProfileSave(
+            savedValues,
+            selectedSpeciality
+          );
+        },
+        error: (error) => {
+          console.error(
+            'No se pudo subir la foto de perfil',
+            error
+          );
+
+          this.photoStatus.set('error');
+
+          this.photoError.set(
+            'No se pudo subir la foto. Tus datos personales se guardaron; volvé a confirmar para reintentar la foto.'
+          );
+
+          this.status.set('error');
+        },
+      });
+
+      return;
+    }
+
+    // Si se solicitó quitar la foto, se elimina recién ahora.
+    if (this.photoRemovalPending()) {
+      this.photoStatus.set('deleting');
+
+      this.doctorService.removeProfilePhoto().subscribe({
+        next: (response) => {
+          this.profileImageUrl.set(response.profileImageUrl ?? null);
+
+          this.finishProfileSave(
+            savedValues,
+            selectedSpeciality
+          );
+        },
+        error: (error) => {
+          console.error(
+            'No se pudo eliminar la foto de perfil',
+            error
+          );
+
+          this.photoStatus.set('error');
+
+          this.photoError.set(
+            'No se pudo quitar la foto. Tus datos personales se guardaron; volvé a confirmar para reintentar.'
+          );
+
+          this.status.set('error');
+        },
+      });
+
+      return;
+    }
+
+    // No había cambios pendientes de foto.
+    this.finishProfileSave(
+      savedValues,
+      selectedSpeciality
+    );
   }
 
   // -------------------------
@@ -270,13 +395,21 @@ export class DoctorProfile {
   // -------------------------
 
   onAddressInput(event: Event): void {
-    this.queueSearch((event.target as HTMLInputElement).value);
+    this.queueSearch(
+      (event.target as HTMLInputElement).value
+    );
   }
 
   selectPlace(place: PlaceSuggestion): void {
     this.placeSuggestions.set([]);
     this.searchStatus.set('idle');
-    this.setLocation(place.lat, place.lng, place.label, 17);
+
+    this.setLocation(
+      place.lat,
+      place.lng,
+      place.label,
+      17
+    );
   }
 
   loadProfile(): void {
@@ -293,17 +426,22 @@ export class DoctorProfile {
           bio: profile.bio ?? '',
           hospitalUrl: profile.hospitalUrl ?? '',
           hospitalAddress: profile.hospitalAddress ?? '',
-          hospitalLatitude: profile.hospitalLatitude?.toString() ?? '',
-          hospitalLongitude: profile.hospitalLongitude?.toString() ?? '',
+          hospitalLatitude:
+            profile.hospitalLatitude?.toString() ?? '',
+          hospitalLongitude:
+            profile.hospitalLongitude?.toString() ?? '',
         };
 
         const selectedSpeciality = profile.speciality ?? null;
 
         this.model.set(values);
         this.initialModel.set({ ...values });
+
         this.selectedSpeciality.set(selectedSpeciality);
         this.initialSpeciality.set(selectedSpeciality);
+
         this.loadStatus.set('ready');
+
         this.syncMapWithModel();
       },
       error: (error) => {
@@ -318,21 +456,33 @@ export class DoctorProfile {
       const initial = this.initialModel();
       const initialSpeciality = this.initialSpeciality();
 
-      if (initial) this.model.set(initial);
+      if (initial) {
+        this.model.set(initial);
+      }
 
       this.selectedSpeciality.set(initialSpeciality);
+
       this.profileForm().reset();
+
       this.specialityTouched.set(false);
       this.status.set('idle');
+
       this.placeSuggestions.set([]);
       this.searchStatus.set('idle');
+
+      // Cancelar descarta todos los cambios pendientes de foto.
+      this.resetPendingPhotoChanges();
+
       this.editing.set(false);
+
       this.syncMapWithModel();
+
       return;
     }
 
     this.status.set('idle');
     this.editing.set(true);
+
     this.syncMapWithModel();
 
     window.setTimeout(() => this.map?.invalidateSize(), 0);
@@ -368,7 +518,8 @@ export class DoctorProfile {
     });
 
     pattern(path.phoneNumber, /^\+?[0-9\s\-()]+$/, {
-      message: 'Solo se permiten números, espacios, guiones o el signo +.',
+      message:
+        'Solo se permiten números, espacios, guiones o el signo +.',
     });
 
     required(path.licenseNumber, {
@@ -392,7 +543,8 @@ export class DoctorProfile {
     });
 
     pattern(path.hospitalUrl, /^(https?:\/\/\S+\.\S+)?$/i, {
-      message: 'Ingresá una URL válida que empiece con http:// o https://',
+      message:
+        'Ingresá una URL válida que empiece con http:// o https://',
     });
 
     maxLength(path.hospitalAddress, 255, {
@@ -416,12 +568,15 @@ export class DoctorProfile {
       initial.hospitalAddress !== this.profileForm.hospitalAddress().value() ||
       initial.hospitalLatitude !== this.model().hospitalLatitude ||
       initial.hospitalLongitude !== this.model().hospitalLongitude ||
-      initialSpeciality !== this.selectedSpeciality()
+      initialSpeciality !== this.selectedSpeciality() ||
+      this.pendingPhotoFile() !== null ||
+      this.photoRemovalPending()
     );
   });
 
   invalid(field: ProfileField): boolean {
     const state = this.profileForm[field]();
+
     return state.touched() && state.invalid();
   }
 
@@ -433,25 +588,34 @@ export class DoctorProfile {
     this.specialityTouched.set(true);
 
     const select = event.target as HTMLSelectElement;
-    this.selectedSpeciality.set(select.value ? Number(select.value) : null);
+
+    this.selectedSpeciality.set(
+      select.value ? Number(select.value) : null
+    );
   }
 
   submit(event: Event): void {
     event.preventDefault();
 
-    if (!this.editing() || !this.hasChanges()) return;
+    if (!this.editing() || !this.hasChanges()) {
+      return;
+    }
 
     this.specialityTouched.set(true);
 
     const selectedSpeciality = this.selectedSpeciality();
 
-    if (this.profileForm().invalid() || selectedSpeciality === null) {
+    if (
+      this.profileForm().invalid() ||
+      selectedSpeciality === null
+    ) {
       this.profileForm().markAsTouched();
       this.status.set('idle');
       return;
     }
 
     const value = this.model();
+
     const latitude = value.hospitalLatitude.trim();
     const longitude = value.hospitalLongitude.trim();
 
@@ -463,8 +627,10 @@ export class DoctorProfile {
       bio: value.bio.trim() || null,
       hospitalUrl: value.hospitalUrl.trim() || null,
       hospitalAddress: value.hospitalAddress.trim() || null,
-      hospitalLatitude: latitude === '' ? null : Number(latitude),
-      hospitalLongitude: longitude === '' ? null : Number(longitude),
+      hospitalLatitude:
+        latitude === '' ? null : Number(latitude),
+      hospitalLongitude:
+        longitude === '' ? null : Number(longitude),
       speciality: selectedSpeciality,
     };
 
@@ -481,18 +647,26 @@ export class DoctorProfile {
           bio: request.bio ?? '',
           hospitalUrl: request.hospitalUrl ?? '',
           hospitalAddress: request.hospitalAddress ?? '',
-          hospitalLatitude: request.hospitalLatitude?.toString() ?? '',
-          hospitalLongitude: request.hospitalLongitude?.toString() ?? '',
+          hospitalLatitude:
+            request.hospitalLatitude?.toString() ?? '',
+          hospitalLongitude:
+            request.hospitalLongitude?.toString() ?? '',
         };
 
         this.model.set(savedValues);
         this.initialModel.set({ ...savedValues });
         this.initialSpeciality.set(selectedSpeciality);
-        this.editing.set(false);
-        this.status.set('success');
-        this.syncMapWithModel();
+
+        // Después de guardar los datos, aplica el cambio de foto.
+        this.savePendingPhoto(
+          savedValues,
+          selectedSpeciality
+        );
       },
-      error: () => this.status.set('error'),
+      error: (error) => {
+        console.error('No se pudo guardar el perfil', error);
+        this.status.set('error');
+      },
     });
   }
 
@@ -515,13 +689,25 @@ export class DoctorProfile {
     const latitude = this.model().hospitalLatitude.trim();
     const longitude = this.model().hospitalLongitude.trim();
 
-    if (!latitude || !longitude) return null;
+    if (!latitude || !longitude) {
+      return null;
+    }
 
     const lat = Number(latitude);
     const lng = Number(longitude);
 
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return null;
+    }
+
+    if (
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      return null;
+    }
 
     return { lat, lng };
   }
@@ -534,18 +720,29 @@ export class DoctorProfile {
     if (location) {
       this.map.setView(
         [location.lat, location.lng],
-        Math.max(this.map.getZoom(), MAP_ZOOM_WITH_LOCATION)
+        Math.max(
+          this.map.getZoom(),
+          MAP_ZOOM_WITH_LOCATION
+        )
       );
 
-      this.marker?.setLatLng([location.lat, location.lng]);
+      this.marker?.setLatLng([
+        location.lat,
+        location.lng,
+      ]);
+
       this.marker?.addTo(this.map);
+
       return;
     }
 
     this.marker?.remove();
 
     this.map.setView(
-      [DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng],
+      [
+        DEFAULT_MAP_CENTER.lat,
+        DEFAULT_MAP_CENTER.lng,
+      ],
       MAP_ZOOM_DEFAULT
     );
   }
@@ -553,7 +750,9 @@ export class DoctorProfile {
   private initLocationMap(): void {
     const container = this.mapContainer()?.nativeElement;
 
-    if (!container || this.map) return;
+    if (!container || this.map) {
+      return;
+    }
 
     const location = this.currentLocation();
 
@@ -561,16 +760,24 @@ export class DoctorProfile {
       this.map = L.map(container, {
         center: location
           ? [location.lat, location.lng]
-          : [DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng],
-        zoom: location ? MAP_ZOOM_WITH_LOCATION : MAP_ZOOM_DEFAULT,
+          : [
+              DEFAULT_MAP_CENTER.lat,
+              DEFAULT_MAP_CENTER.lng,
+            ],
+        zoom: location
+          ? MAP_ZOOM_WITH_LOCATION
+          : MAP_ZOOM_DEFAULT,
         scrollWheelZoom: false,
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(this.map);
+      L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+          maxZoom: 19,
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        }
+      ).addTo(this.map);
 
       this.marker = L.marker(
         [
@@ -584,15 +791,19 @@ export class DoctorProfile {
       );
 
       this.map.on('click', (event: L.LeafletMouseEvent) => {
-        if (!this.editing()) return;
+        if (!this.editing()) {
+          return;
+        }
 
         const { lat, lng } = event.latlng;
 
         this.setLocation(lat, lng);
+
         void this.resolveAddress({ lat, lng });
       });
 
       this.locationStatus.set('ready');
+
       this.syncMapWithModel();
     } catch (error) {
       console.error('No se pudo inicializar el mapa', error);
@@ -609,7 +820,8 @@ export class DoctorProfile {
     this.model.update((current) => ({
       ...current,
       hospitalAddress:
-        address?.slice(0, ADDRESS_MAX_LENGTH) ?? current.hospitalAddress,
+        address?.slice(0, ADDRESS_MAX_LENGTH) ??
+        current.hospitalAddress,
       hospitalLatitude: lat.toString(),
       hospitalLongitude: lng.toString(),
     }));
@@ -629,10 +841,13 @@ export class DoctorProfile {
     }
   }
 
-  private async resolveAddress(location: MapCoordinates): Promise<void> {
+  private async resolveAddress(
+    location: MapCoordinates
+  ): Promise<void> {
     this.reverseController?.abort();
 
     const controller = new AbortController();
+
     this.reverseController = controller;
 
     try {
@@ -641,7 +856,13 @@ export class DoctorProfile {
         controller.signal
       );
 
-      if (!address || controller.signal.aborted || !this.editing()) return;
+      if (
+        !address ||
+        controller.signal.aborted ||
+        !this.editing()
+      ) {
+        return;
+      }
 
       const current = this.currentLocation();
 
@@ -655,7 +876,10 @@ export class DoctorProfile {
 
       this.model.update((model) => ({
         ...model,
-        hospitalAddress: address.slice(0, ADDRESS_MAX_LENGTH),
+        hospitalAddress: address.slice(
+          0,
+          ADDRESS_MAX_LENGTH
+        ),
       }));
     } catch (error) {
       if (!controller.signal.aborted) {
@@ -694,6 +918,7 @@ export class DoctorProfile {
     this.searchController?.abort();
 
     const controller = new AbortController();
+
     this.searchController = controller;
     this.searchStatus.set('searching');
 
@@ -703,14 +928,22 @@ export class DoctorProfile {
         controller.signal
       );
 
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        return;
+      }
 
       this.placeSuggestions.set(results);
-      this.searchStatus.set(results.length > 0 ? 'ready' : 'empty');
+
+      this.searchStatus.set(
+        results.length > 0 ? 'ready' : 'empty'
+      );
     } catch (error) {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        return;
+      }
 
       console.error('No se pudo buscar la dirección', error);
+
       this.placeSuggestions.set([]);
       this.searchStatus.set('error');
     }

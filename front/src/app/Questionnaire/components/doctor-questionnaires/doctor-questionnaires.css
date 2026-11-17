@@ -22,6 +22,9 @@
 .page-header h1 {
   margin: 8px 0;
   font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--primary);
 }
 
 .page-header p,
@@ -36,11 +39,13 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
+  box-shadow: var(--shadow);
 }
 
 .panel h2 {
   margin: 0 0 20px;
   font-size: 20px;
+  color: var(--primary);
 }
 
 .panel form {
@@ -92,6 +97,7 @@
 .section-heading h3 {
   margin: 0;
   font-size: 16px;
+  color: var(--primary);
 }
 
 .question-row {
@@ -102,6 +108,12 @@
   background: var(--surface-hover);
   border: 1px solid var(--border);
   border-radius: 10px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.question-row:focus-within {
+  border-color: var(--primary);
+  background: var(--surface);
 }
 
 .question-number {
@@ -111,7 +123,7 @@
   height: 30px;
   border-radius: 50%;
   background: var(--primary);
-  color: white;
+  color: var(--on-primary, #fff);
   font-weight: 700;
 }
 
@@ -138,7 +150,7 @@
 .primary-button {
   margin-top: 12px;
   background: var(--primary);
-  color: white;
+  color: var(--on-primary, #fff);
 }
 
 .secondary-button {
@@ -174,6 +186,14 @@
   cursor: not-allowed;
 }
 
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.remove-button:focus-visible,
+.danger-button:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .questionnaire-list,
 .assignment-list {
   display: grid;
@@ -183,19 +203,24 @@
 .questionnaire-card,
 .assignment-card {
   padding: 17px;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  transition: border-color 0.2s;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.045);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .questionnaire-card:hover,
 .assignment-card:hover {
   border-color: var(--primary);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
 }
 
 .questionnaire-card h3,
 .assignment-card h3 {
   margin: 0 0 8px;
+  color: var(--primary);
 }
 
 .questionnaire-card p,
@@ -264,8 +289,6 @@
   gap: 7px;
 }
 
-/* Encabezado de cada cuestionario */
-
 .questionnaire-card-header {
   display: flex;
   justify-content: space-between;
@@ -276,8 +299,6 @@
 .questionnaire-card-header > div {
   min-width: 0;
 }
-
-/* Formulario para agregar preguntas */
 
 .add-question-panel {
   display: flex;
@@ -293,6 +314,7 @@
 .add-question-panel h4 {
   margin: 0;
   font-size: 16px;
+  color: var(--primary);
 }
 
 .add-question-panel .section-description {
@@ -310,8 +332,6 @@
 .add-question-actions .primary-button {
   margin-top: 0;
 }
-
-/* Asignaciones */
 
 .assignment-card {
   display: flex;
@@ -337,151 +357,6 @@
   color: var(--tone-amber-text);
   font-size: 12px;
   font-weight: 700;
-}
-
-/* ========================================
-   CONFIRMACIÓN PERSONALIZADA SAPA
-======================================== */
-
-.confirmation-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(3, 12, 11, 0.76);
-  backdrop-filter: blur(7px);
-  animation: confirmation-fade-in 0.2s ease;
-}
-
-.confirmation-modal {
-  width: min(440px, 100%);
-  box-sizing: border-box;
-  padding: 30px;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.4);
-  animation: confirmation-slide-in 0.25s ease;
-}
-
-.confirmation-icon {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 20px;
-  border-radius: 16px;
-  background: var(--tone-amber-bg);
-  color: var(--tone-amber-text);
-}
-
-.confirmation-icon span {
-  font-size: 27px;
-  font-weight: 800;
-}
-
-.confirmation-modal h2 {
-  margin: 0 0 10px;
-  font-size: 22px;
-}
-
-.confirmation-description {
-  margin: 0 0 20px;
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.confirmation-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px;
-  margin-bottom: 22px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface-hover);
-  overflow-wrap: anywhere;
-}
-
-.confirmation-details strong {
-  margin-bottom: 9px;
-  font-size: 14px;
-}
-
-.confirmation-details strong:last-child {
-  margin-bottom: 0;
-}
-
-.detail-label {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.confirmation-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.cancel-confirmation-button,
-.accept-confirmation-button {
-  min-height: 43px;
-  padding: 10px 16px;
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s, background 0.2s;
-}
-
-.cancel-confirmation-button {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.accept-confirmation-button {
-  border-color: transparent;
-  background: var(--danger);
-  color: white;
-}
-
-.cancel-confirmation-button:hover,
-.accept-confirmation-button:hover {
-  transform: translateY(-1px);
-  opacity: 0.88;
-}
-
-.cancel-confirmation-button:disabled,
-.accept-confirmation-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@keyframes confirmation-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes confirmation-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 @media (max-width: 600px) {
@@ -531,17 +406,15 @@
   .add-question-panel {
     padding: 13px;
   }
+}
 
-  .confirmation-modal {
-    padding: 22px;
-  }
-
-  .confirmation-actions {
-    flex-direction: column-reverse;
-  }
-
-  .cancel-confirmation-button,
-  .accept-confirmation-button {
-    width: 100%;
+@media (prefers-reduced-motion: reduce) {
+  .question-row,
+  .questionnaire-card,
+  .assignment-card,
+  .primary-button,
+  .secondary-button,
+  .danger-button {
+    transition: none;
   }
 }

@@ -1,3 +1,4 @@
+
 package com.example.SAPA.service;
 
 import com.example.SAPA.Models.Chat.ConversationEntity;
@@ -7,6 +8,7 @@ import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.FollowRequestEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.FollowRequestRepository;
+import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.enums.NotificationType;
 import com.example.SAPA.enums.UserCategory;
@@ -15,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.SAPA.enums.AccountStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +35,8 @@ public class FollowRequestService {
     @Transactional
     public FollowRequestEntity create(Long doctorId) {
 
-        UserEntity authenticatedUser = userContextService.getAuthenticatedUser();
+        UserEntity authenticatedUser =
+                userContextService.getAuthenticatedUser();
 
         DoctorEntity targetDoctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -42,19 +44,23 @@ public class FollowRequestService {
                 ));
 
         if (targetDoctor.getUser().getStatus() != AccountStatus.ACTIVE) {
-            throw new RuntimeException("Este médico todavía no está habilitado para recibir solicitudes.");
+            throw new RuntimeException(
+                    "Este médico todavía no está habilitado para recibir solicitudes."
+            );
         }
 
         FollowRequestEntity request;
 
         if (authenticatedUser.getRole() == UserCategory.PATIENT) {
 
-            PatientEntity patient = userContextService.getAuthenticatedPatient();
+            PatientEntity patient =
+                    userContextService.getAuthenticatedPatient();
 
             if (followRequestRepository.existsByPatientAndDoctorAndStatus(
                     patient, targetDoctor, FollowRequestStatus.PENDING)
                     || followRequestRepository.existsByPatientAndDoctorAndStatus(
                     patient, targetDoctor, FollowRequestStatus.APPROVED)) {
+
                 throw new RuntimeException(
                         "Ya existe una solicitud pendiente o un seguimiento activo con este médico."
                 );
@@ -76,7 +82,8 @@ public class FollowRequestService {
 
         } else if (authenticatedUser.getRole() == UserCategory.DOCTOR) {
 
-            DoctorEntity doctorFollower = userContextService.getAuthenticatedDoctor();
+            DoctorEntity doctorFollower =
+                    userContextService.getAuthenticatedDoctor();
 
             if (doctorFollower.getId().equals(targetDoctor.getId())) {
                 throw new RuntimeException(
@@ -88,6 +95,7 @@ public class FollowRequestService {
                     doctorFollower, targetDoctor, FollowRequestStatus.PENDING)
                     || followRequestRepository.existsByDoctorFollowerAndDoctorAndStatus(
                     doctorFollower, targetDoctor, FollowRequestStatus.APPROVED)) {
+
                 throw new RuntimeException(
                         "Ya existe una solicitud pendiente o un seguimiento activo con este médico."
                 );
@@ -119,7 +127,8 @@ public class FollowRequestService {
     @Transactional
     public FollowRequestEntity approve(Long id) {
 
-        DoctorEntity authenticatedDoctor = userContextService.getAuthenticatedDoctor();
+        DoctorEntity authenticatedDoctor =
+                userContextService.getAuthenticatedDoctor();
 
         FollowRequestEntity request = findRequest(id);
 
@@ -131,22 +140,20 @@ public class FollowRequestService {
             );
         }
 
-        if (request.getStatus() != FollowRequestStatus.PENDING) {
-            throw new RuntimeException("Solo se pueden responder solicitudes pendientes");
-        }
-
         request.setStatus(FollowRequestStatus.APPROVED);
         request.setRespondedAt(LocalDateTime.now());
 
-        FollowRequestEntity saved = followRequestRepository.save(request);
+        FollowRequestEntity saved =
+                followRequestRepository.save(request);
 
-        // Solo el seguimiento paciente -> médico crea una conversación.
+        // Solicitud de paciente a médico.
         if (request.getPatient() != null) {
 
-            ConversationEntity conversation = conversationService.createConversation(
-                    request.getPatient(),
-                    request.getDoctor()
-            );
+            ConversationEntity conversation =
+                    conversationService.createConversation(
+                            request.getPatient(),
+                            request.getDoctor()
+                    );
 
             messageService.sendSystemMessage(
                     conversation,
@@ -162,7 +169,19 @@ public class FollowRequestService {
                     NotificationType.FOLLOW
             );
 
+        // Solicitud de médico a médico.
         } else if (request.getDoctorFollower() != null) {
+
+            ConversationEntity conversation =
+                    conversationService.createDoctorConversation(
+                            request.getDoctorFollower(),
+                            request.getDoctor()
+                    );
+
+            messageService.sendSystemMessage(
+                    conversation,
+                    "¡La solicitud de seguimiento fue aprobada! Ya pueden comunicarse por este chat."
+            );
 
             notificationService.createNotification(
                     request.getDoctorFollower().getUser(),
@@ -173,44 +192,89 @@ public class FollowRequestService {
                     NotificationType.FOLLOW
             );
         }
+
         return saved;
     }
 
     @Transactional
     public FollowRequestEntity reject(Long id) {
-        DoctorEntity authenticatedDoctor = userContextService.getAuthenticatedDoctor();
+
+        DoctorEntity authenticatedDoctor =
+                userContextService.getAuthenticatedDoctor();
+
         FollowRequestEntity request = findRequest(id);
+
         validateTargetDoctor(request, authenticatedDoctor);
 
         if (request.getStatus() != FollowRequestStatus.PENDING) {
-            throw new RuntimeException("La solicitud ya fue respondida o no está pendiente.");
+            throw new RuntimeException(
+                    "La solicitud ya fue respondida o no está pendiente."
+            );
         }
 
         request.setStatus(FollowRequestStatus.REJECTED);
         request.setRespondedAt(LocalDateTime.now());
 
         if (request.getPatient() != null) {
-            notificationService.createNotification( request.getPatient().getUser(), "Solicitud rechazada", "El Dr. " + authenticatedDoctor.getFirstName() + " " + authenticatedDoctor.getLastName() + " rechazó tu solicitud de seguimiento.", NotificationType.FOLLOW);
+
+            notificationService.createNotification(
+                    request.getPatient().getUser(),
+                    "Solicitud rechazada",
+                    "El Dr. " + authenticatedDoctor.getFirstName() + " "
+                            + authenticatedDoctor.getLastName()
+                            + " rechazó tu solicitud de seguimiento.",
+                    NotificationType.FOLLOW
+            );
+
         } else if (request.getDoctorFollower() != null) {
-            notificationService.createNotification(request.getDoctorFollower().getUser(), "Solicitud rechazada", "El Dr. " + authenticatedDoctor.getFirstName() + " " + authenticatedDoctor.getLastName() + " rechazó tu solicitud para seguir sus consejos.", NotificationType.FOLLOW);
+
+            notificationService.createNotification(
+                    request.getDoctorFollower().getUser(),
+                    "Solicitud rechazada",
+                    "El Dr. " + authenticatedDoctor.getFirstName() + " "
+                            + authenticatedDoctor.getLastName()
+                            + " rechazó tu solicitud para seguir sus consejos.",
+                    NotificationType.FOLLOW
+            );
         }
+
         return followRequestRepository.save(request);
     }
 
     @Transactional
     public FollowRequestEntity dissolve(Long id) {
-        UserEntity authenticatedUser = userContextService.getAuthenticatedUser();
+
+        UserEntity authenticatedUser =
+                userContextService.getAuthenticatedUser();
+
         FollowRequestEntity request = findRequest(id);
-        boolean isPatientFollower = request.getPatient() != null && request.getPatient().getUser().getId().equals(authenticatedUser.getId());
-        boolean isDoctorFollower = request.getDoctorFollower() != null && request.getDoctorFollower().getUser().getId().equals(authenticatedUser.getId());
-        boolean isTargetDoctor = request.getDoctor().getUser().getId().equals(authenticatedUser.getId());
+
+        boolean isPatientFollower =
+                request.getPatient() != null
+                && request.getPatient().getUser().getId()
+                .equals(authenticatedUser.getId());
+
+        boolean isDoctorFollower =
+                request.getDoctorFollower() != null
+                && request.getDoctorFollower().getUser().getId()
+                .equals(authenticatedUser.getId());
+
+        boolean isTargetDoctor =
+                request.getDoctor().getUser().getId()
+                .equals(authenticatedUser.getId());
 
         if (!isPatientFollower && !isDoctorFollower && !isTargetDoctor) {
-            throw new AccessDeniedException("No tenés permiso para disolver este seguimiento.");
+            throw new AccessDeniedException(
+                    "No tenés permiso para disolver este seguimiento."
+            );
         }
 
         if (request.getStatus() != FollowRequestStatus.APPROVED) {
-            throw new RuntimeException("Solo se puede disolver un seguimiento activo.");}
+            throw new RuntimeException(
+                    "Solo se puede disolver un seguimiento activo."
+            );
+        }
+
         request.setStatus(FollowRequestStatus.DISOLVED);
         request.setRespondedAt(LocalDateTime.now());
 
@@ -219,35 +283,67 @@ public class FollowRequestService {
 
     @Transactional(readOnly = true)
     public List<FollowRequestEntity> getPendingRequests() {
-        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
-        return followRequestRepository.findByDoctorAndStatus(doctor, FollowRequestStatus.PENDING);
+
+        DoctorEntity doctor =
+                userContextService.getAuthenticatedDoctor();
+
+        return followRequestRepository.findByDoctorAndStatus(
+                doctor,
+                FollowRequestStatus.PENDING
+        );
     }
 
     @Transactional(readOnly = true)
     public List<FollowRequestEntity> getSentRequests() {
-        UserEntity authenticatedUser = userContextService.getAuthenticatedUser();
+
+        UserEntity authenticatedUser =
+                userContextService.getAuthenticatedUser();
 
         if (authenticatedUser.getRole() == UserCategory.PATIENT) {
-            PatientEntity patient = userContextService.getAuthenticatedPatient();
+
+            PatientEntity patient =
+                    userContextService.getAuthenticatedPatient();
+
             return followRequestRepository.findByPatient(patient);
         }
 
         if (authenticatedUser.getRole() == UserCategory.DOCTOR) {
-            DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+
+            DoctorEntity doctor =
+                    userContextService.getAuthenticatedDoctor();
+
             return followRequestRepository.findByDoctorFollower(doctor);
-        }throw new AccessDeniedException("No tenés permiso para consultar estas solicitudes.");
+        }
+
+        throw new AccessDeniedException(
+                "No tenés permiso para consultar estas solicitudes."
+        );
     }
 
     private FollowRequestEntity findRequest(Long id) {
-        return followRequestRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Solicitud no encontrada con id: " + id));
+        return followRequestRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Solicitud no encontrada con id: " + id
+                ));
     }
 
-    private void validateTargetDoctor(FollowRequestEntity request, DoctorEntity authenticatedDoctor) {
-        if (!request.getDoctor().getId().equals(authenticatedDoctor.getId())) {throw new AccessDeniedException("No tenés permiso para responder esta solicitud.");}}
+    private void validateTargetDoctor(
+            FollowRequestEntity request,
+            DoctorEntity authenticatedDoctor
+    ) {
+        if (!request.getDoctor().getId().equals(authenticatedDoctor.getId())) {
+            throw new AccessDeniedException(
+                    "No tenés permiso para responder esta solicitud."
+            );
+        }
+    }
 
     @Transactional(readOnly = true)
     public List<FollowRequestEntity> getApprovedPatients() {
-        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+
+        DoctorEntity doctor =
+                userContextService.getAuthenticatedDoctor();
+
         return followRequestRepository.findByDoctorAndPatientIsNotNullAndStatus(
                 doctor,
                 FollowRequestStatus.APPROVED
@@ -256,7 +352,10 @@ public class FollowRequestService {
 
     @Transactional(readOnly = true)
     public List<FollowRequestEntity> getApprovedDoctorFollowers() {
-        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+
+        DoctorEntity doctor =
+                userContextService.getAuthenticatedDoctor();
+
         return followRequestRepository.findByDoctorAndDoctorFollowerIsNotNullAndStatus(
                 doctor,
                 FollowRequestStatus.APPROVED
