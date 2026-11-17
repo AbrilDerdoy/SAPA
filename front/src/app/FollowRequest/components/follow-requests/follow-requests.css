@@ -145,15 +145,20 @@
 }
 
 .btn {
-  display: inline-block;
-  padding: 0.55rem 1.1rem;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-decoration: none;
-  text-align: center;
-  cursor: pointer;
+    display: inline-block;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+.btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed; 
 }
 
 .btn--primary {
