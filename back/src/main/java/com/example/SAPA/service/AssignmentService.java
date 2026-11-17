@@ -38,8 +38,7 @@ public class AssignmentService {
     private final NotificationService notificationService;
 
     /**
-     * Asigna un cuestionario a un paciente vinculado mediante
-     * una solicitud de seguimiento aprobada.
+     * Asigna un cuestionario a un paciente vinculado.
      */
     @Transactional
     public QuestionnaireDTO.AssignmentResponse assignQuestionnaire(
@@ -125,8 +124,67 @@ public class AssignmentService {
     }
 
     /**
-     * Obtiene los cuestionarios pendientes y disponibles
-     * del paciente autenticado.
+     * Desasigna un cuestionario pendiente.
+     * No elimina el cuestionario ni modifica las respuestas históricas.
+     */
+    @Transactional
+    public void unassignQuestionnaire(Long assignmentId) {
+
+        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+
+        QuestionnaireAssignmentEntity assignment =
+                assignmentRepository.findByIdForUpdate(assignmentId)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Asignación no encontrada con id: " + assignmentId));
+
+        if (!assignment.getQuestionnaire().getDoctor().getId()
+                .equals(doctor.getId())) {
+
+            throw new AccessDeniedException(
+                    "No tenés permiso para desasignar este cuestionario.");
+        }
+
+        if (!assignment.isActive()) {
+            throw new IllegalStateException(
+                    "Esta asignación ya no está activa.");
+        }
+
+        boolean alreadyAnswered =
+                responseRepository.existsByAssignment(assignment);
+
+        if (alreadyAnswered) {
+            throw new IllegalStateException(
+                    "No se puede desasignar un cuestionario que ya fue respondido.");
+        }
+
+        assignment.setActive(false);
+        assignmentRepository.save(assignment);
+    }
+
+    /**
+     * Obtiene las asignaciones activas de los cuestionarios
+     * pertenecientes al médico autenticado.
+     */
+    @Transactional(readOnly = true)
+    public List<QuestionnaireDTO.AssignmentResponse> getMyAssignedQuestionnaires() {
+
+        DoctorEntity doctor = userContextService.getAuthenticatedDoctor();
+
+        return assignmentRepository
+                .findByQuestionnaire_Doctor_IdAndActiveTrue(doctor.getId())
+                .stream()
+                .map(assignment ->
+                        questionnaireMapper.toAssignmentResponse(
+                                assignment,
+                                userContextService.resolvePatientName(
+                                        assignment.getPatient()
+                                )
+                        ))
+                .toList();
+    }
+
+    /**
+     * Obtiene los cuestionarios pendientes del paciente autenticado.
      */
     @Transactional(readOnly = true)
     public List<QuestionnaireDTO.AssignmentResponse> getMyAssignments() {
@@ -177,7 +235,7 @@ public class AssignmentService {
     }
 
     /**
-     * Obtiene el historial de respuestas del paciente autenticado.
+     * Obtiene el historial del paciente autenticado.
      */
     @Transactional(readOnly = true)
     public List<QuestionnaireDTO.QuestionnaireResponseDTO> getMyResponses() {
@@ -191,8 +249,7 @@ public class AssignmentService {
     }
 
     /**
-     * Obtiene el historial de respuestas de un paciente.
-     * Solamente puede consultarlo un médico con vínculo aprobado.
+     * Obtiene el historial de un paciente para el médico vinculado.
      */
     @Transactional(readOnly = true)
     public List<QuestionnaireDTO.QuestionnaireResponseDTO> getPatientResponses(
@@ -216,8 +273,7 @@ public class AssignmentService {
                     "No tenés un vínculo aprobado con este paciente.");
         }
 
-        return responseRepository
-                .findAllByPatientAndDoctorWithDetails(
+        return responseRepository.findAllByPatientAndDoctorWithDetails(
                         patient.getId(),
                         doctor.getId()
                 )

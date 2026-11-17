@@ -1,16 +1,17 @@
+
 package com.example.SAPA.Models.Entities;
 
 import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.UserCategory;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-
 @Entity
 @Table(name = "user")
 public class UserEntity {
@@ -45,6 +46,8 @@ public class UserEntity {
     @Column
     private AccountStatus statusBeforeDeletion;
 
+    @Column(name = "profile_image_url", length = 500)
+    private String profileImageUrl;
 
     @PrePersist
     public void prePersist() {
@@ -60,11 +63,16 @@ public class UserEntity {
     public boolean canBeRecovered() {
         return this.status == AccountStatus.INACTIVE
                 && this.deletionRequestedAt != null
-                && this.deletionRequestedAt.isAfter(LocalDateTime.now().minusDays(GRACE_DAYS));
+                && this.deletionRequestedAt.isAfter(
+                        LocalDateTime.now().minusDays(GRACE_DAYS)
+                );
     }
 
     public void recover() {
-        this.status = this.statusBeforeDeletion != null ? this.statusBeforeDeletion : AccountStatus.ACTIVE;
+        this.status = this.statusBeforeDeletion != null
+                ? this.statusBeforeDeletion
+                : AccountStatus.ACTIVE;
+
         this.statusBeforeDeletion = null;
         this.deletionRequestedAt = null;
     }

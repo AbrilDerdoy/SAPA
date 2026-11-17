@@ -45,6 +45,30 @@ public class PostController {
     }
 
     @Operation(
+            summary = "Obtener una publicación por ID",
+            description = "Recupera una publicación específica mediante su identificador único, incluyendo sus archivos adjuntos."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Publicación recuperada exitosamente.",
+                    content = @Content(schema = @Schema(implementation = PostResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "La publicación no existe o fue eliminada.",
+                    content = @Content
+            )
+    })
+    @GetMapping("/by-id/{postId}")
+    public ResponseEntity<PostResponseDTO> getPostById(
+            @Parameter(description = "ID único de la publicación", required = true)
+            @PathVariable Long postId) {
+
+        return ResponseEntity.ok(postService.getPostById(postId));
+    }
+
+    @Operation(
             summary = "Filtrar publicaciones de un foro por título",
             description = "Busca publicaciones dentro de un foro específico cuyos títulos coincidan con el parámetro de búsqueda."
     )

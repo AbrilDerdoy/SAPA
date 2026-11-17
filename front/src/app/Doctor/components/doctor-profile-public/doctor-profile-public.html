@@ -1,104 +1,130 @@
+
 <section class="dpp">
-  <header class="dpp__header">
-    <h1 class="dpp__title">Perfil del médico</h1>
-    <p class="dpp__lead">
-      Conocé la información profesional y el sitio de consulta de este médico.
-    </p>
-  </header>
+    <header class="dpp__header">
+        <h1 class="dpp__title">Perfil del médico</h1>
+        <p class="dpp__lead">
+            Conocé la información profesional y el sitio de consulta de este médico.
+        </p>
+    </header>
 
-  @if (loadStatus() === 'loading') {
-    <div class="skeleton" role="status" aria-label="Cargando perfil del médico">
-      <span class="skeleton__avatar"></span>
-      <span class="skeleton__row"></span>
-      <span class="skeleton__row skeleton__row--short"></span>
-    </div>
-  }
-
-  @if (loadStatus() === 'invalid') {
-    <div class="notice notice--error" role="alert">
-      <strong>El médico indicado no es válido</strong>
-      <p>Volvé a abrir el perfil desde la búsqueda de médicos.</p>
-    </div>
-  }
-
-  @if (loadStatus() === 'not-found') {
-    <div class="notice notice--error" role="alert">
-      <strong>No encontramos este médico</strong>
-      <p>Puede que el perfil ya no esté disponible.</p>
-    </div>
-  }
-
-  @if (loadStatus() === 'error') {
-    <div class="notice notice--error" role="alert">
-      <strong>No pudimos cargar el perfil</strong>
-      <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
-      <button type="button" (click)="loadProfile()">Reintentar</button>
-    </div>
-  }
-
-  @if (loadStatus() === 'ready') {
-    @if (doctor(); as profile) {
-      <article class="card">
-        <header class="card__hero">
-          <div class="card__avatar" aria-hidden="true">{{ initials() }}</div>
-          <div class="card__identity">
-            <h2 class="card__name">{{ profile.firstName }} {{ profile.lastName }}</h2>
-            @if (specialityName()) {
-              <p class="card__speciality">{{ specialityName() }}</p>
-            }
-            <p class="card__license">Matrícula {{ profile.licenseNumber }}</p>
-          </div>
-        </header>
-
-        <section class="card__section">
-          <h3 class="card__heading">Sobre el médico</h3>
-          @if (bio()) {
-            <p class="card__bio">{{ bio() }}</p>
-          } @else {
-            <p class="card__empty">Este médico todavía no agregó una biografía.</p>
-          }
-        </section>
-
-        <section class="card__section">
-          <h3 class="card__heading">Sitio del hospital o consultorio</h3>
-          @if (hospitalLink(); as link) {
-            <a class="card__link" [href]="link" target="_blank" rel="noopener noreferrer">
-              Visitar sitio web
-              <span aria-hidden="true">↗</span>
-            </a>
-          } @else {
-            <p class="card__empty">Este médico todavía no registró un sitio web.</p>
-          }
-        </section>
-
-        <section class="card__section">
-          <h3 class="card__heading">Ubicación del hospital o consultorio</h3>
-          @if (hospitalMapUrl(); as mapUrl) {
-            <iframe
-              class="card__map"
-              [src]="mapUrl"
-              title="Ubicación del hospital o consultorio"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"></iframe>
-
-            <div class="card__map-meta">
-              @if (hospitalAddress()) {
-                <p class="card__address">{{ hospitalAddress() }}</p>
-              }
-              @if (hospitalMapLink(); as mapLink) {
-                <a class="card__map-link" [href]="mapLink" target="_blank" rel="noopener noreferrer">
-                  Ver mapa ampliado
-                  <span aria-hidden="true">↗</span>
-                </a>
-              }
-            </div>
-          } @else if (hospitalAddress()) {
-            <p class="card__address">{{ hospitalAddress() }}</p>
-          } @else {
-            <p class="card__empty">Este médico todavía no registró una ubicación.</p>
-          }
-        </section>
-      </article>
+    @if (loadStatus() === 'loading') {
+        <div class="skeleton" role="status" aria-label="Cargando perfil del médico">
+            <span class="skeleton__avatar"></span>
+            <span class="skeleton__row"></span>
+            <span class="skeleton__row skeleton__row--short"></span>
+        </div>
     }
-  }
+
+    @if (loadStatus() === 'invalid') {
+        <div class="notice notice--error" role="alert">
+            <strong>El médico indicado no es válido</strong>
+            <p>Volvé a abrir el perfil desde la búsqueda de médicos.</p>
+        </div>
+    }
+
+    @if (loadStatus() === 'not-found') {
+        <div class="notice notice--error" role="alert">
+            <strong>No encontramos este médico</strong>
+            <p>Puede que el perfil ya no esté disponible.</p>
+        </div>
+    }
+
+    @if (loadStatus() === 'error') {
+        <div class="notice notice--error" role="alert">
+            <strong>No pudimos cargar el perfil</strong>
+            <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
+            <button type="button" (click)="loadProfile()">Reintentar</button>
+        </div>
+    }
+
+    @if (loadStatus() === 'ready') {
+        @if (doctor(); as profile) {
+            <article class="card">
+                <header class="card__hero">
+                    <div class="card__avatar">
+                        @if (photoUrl()) {
+                            <img
+                                [src]="photoUrl()"
+                                [alt]="'Foto de perfil de ' + profile.firstName + ' ' + profile.lastName"
+                            />
+                        } @else {
+                            <span>{{ initials() }}</span>
+                        }
+                    </div>
+
+                    <div class="card__identity">
+                        <h2 class="card__name">
+                            {{ profile.firstName }} {{ profile.lastName }}
+                        </h2>
+
+                        @if (specialityName()) {
+                            <p class="card__speciality">{{ specialityName() }}</p>
+                        }
+
+                        <p class="card__license">
+                            Matrícula {{ profile.licenseNumber }}
+                        </p>
+                    </div>
+                </header>
+
+                <section class="card__section">
+                    <h3 class="card__heading">Sobre el médico</h3>
+                    @if (bio()) {
+                        <p class="card__bio">{{ bio() }}</p>
+                    } @else {
+                        <p class="card__empty">
+                            Este médico todavía no agregó una biografía.
+                        </p>
+                    }
+                </section>
+
+                <section class="card__section">
+                    <h3 class="card__heading">Sitio del hospital o consultorio</h3>
+                    @if (hospitalLink(); as link) {
+                        <a class="card__link" [href]="link" target="_blank" rel="noopener noreferrer">
+                            Visitar sitio web
+                            <span aria-hidden="true">↗</span>
+                        </a>
+                    } @else {
+                        <p class="card__empty">
+                            Este médico todavía no registró un sitio web.
+                        </p>
+                    }
+                </section>
+
+                <section class="card__section">
+                    <h3 class="card__heading">Ubicación del hospital o consultorio</h3>
+
+                    @if (hospitalMapUrl(); as mapUrl) {
+                        <iframe
+                            class="card__map"
+                            [src]="mapUrl"
+                            title="Ubicación del hospital o consultorio"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+
+                        <div class="card__map-meta">
+                            @if (hospitalAddress()) {
+                                <p class="card__address">{{ hospitalAddress() }}</p>
+                            }
+
+                            @if (hospitalMapLink(); as mapLink) {
+                                <a class="card__map-link" [href]="mapLink" target="_blank" rel="noopener noreferrer">
+                                    Ver mapa ampliado
+                                    <span aria-hidden="true">↗</span>
+                                </a>
+                            }
+                        </div>
+                    } @else if (hospitalAddress()) {
+                        <p class="card__address">{{ hospitalAddress() }}</p>
+                    } @else {
+                        <p class="card__empty">
+                            Este médico todavía no registró una ubicación.
+                        </p>
+                    }
+                </section>
+            </article>
+        }
+    }
 </section>

@@ -1,13 +1,12 @@
+
 <div class="chat-bubble-container">
 
   @if (isOpen) {
-
     <section class="chat-bubble-panel">
 
       <header class="bubble-header">
 
         @if (selectedConversation) {
-
           <button
             type="button"
             class="bubble-back"
@@ -20,14 +19,11 @@
             <h3>{{ selectedConversation.otherParticipantName }}</h3>
             <p>Conversación</p>
           </div>
-
         } @else {
-
           <div>
             <h3>Mensajes</h3>
             <p>Tus conversaciones</p>
           </div>
-
         }
 
         <button
@@ -41,29 +37,21 @@
       </header>
 
       @if (selectedConversation) {
-
         <div class="bubble-chat-window">
-
           <app-chat-window
             [conversation]="selectedConversation"
           />
-
         </div>
-
       } @else {
-
         <div class="bubble-conversations">
 
           @if (loading) {
-
             <div class="bubble-state">
               <p>Cargando conversaciones...</p>
             </div>
-
           }
 
           @if (!loading && errorMessage) {
-
             <div class="bubble-state">
               <p>{{ errorMessage }}</p>
 
@@ -73,13 +61,10 @@
                 Reintentar
               </button>
             </div>
-
           }
 
           @if (!loading && !errorMessage && conversations.length === 0) {
-
             <div class="bubble-state">
-
               <div class="bubble-empty-icon">✉</div>
 
               <h4>Sin conversaciones</h4>
@@ -89,31 +74,33 @@
                 Seguí a otras personas y conectá con ellas
                 para poder chatear.
               </p>
-
             </div>
-
           }
 
           @if (!loading && !errorMessage && conversations.length > 0) {
-
             <div class="bubble-list">
 
               @for (
                 conversation of conversations;
                 track conversation.conversationId
               ) {
-
                 <button
                   type="button"
                   class="bubble-conversation"
                   (click)="selectConversation(conversation)">
 
-                  <span class="bubble-avatar">
-                    {{ conversation.otherParticipantName.charAt(0).toUpperCase() }}
-                  </span>
+                  @if (getProfileImageUrl(conversation.otherParticipantProfileImageUrl); as photoUrl) {
+                    <img
+                      class="bubble-avatar bubble-avatar--image"
+                      [src]="photoUrl"
+                      [alt]="'Foto de ' + conversation.otherParticipantName">
+                  } @else {
+                    <span class="bubble-avatar">
+                      {{ getInitials(conversation.otherParticipantName) }}
+                    </span>
+                  }
 
                   <span class="bubble-conversation-info">
-
                     <strong>
                       {{ conversation.otherParticipantName }}
                     </strong>
@@ -121,37 +108,29 @@
                     <small>
                       {{ conversation.lastMessage || 'Sin mensajes aún' }}
                     </small>
-
                   </span>
 
                 </button>
-
               }
 
             </div>
-
           }
 
         </div>
-
       }
 
       <footer class="bubble-footer">
-
         <a
           routerLink="/chat"
           (click)="closeBubble()">
           Ver todos los mensajes
         </a>
-
       </footer>
 
     </section>
-
   }
 
   @if (bubblePreference.enabled()) {
-
     <button
       type="button"
       class="chat-bubble-button"
@@ -166,7 +145,6 @@
       }
 
     </button>
-
   }
 
 </div>

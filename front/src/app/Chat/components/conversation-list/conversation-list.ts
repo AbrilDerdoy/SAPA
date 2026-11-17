@@ -1,7 +1,18 @@
-import {Component, EventEmitter, OnInit, OnDestroy, Output, inject} from '@angular/core';
+
+import {
+  Component,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  Output,
+  ChangeDetectorRef,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+
 import { ChatService } from '../../services/chat.service';
 import { ChatWebSocketService } from '../../services/chat-websocket.service';
 import { Conversation } from '../../models/conversation.model';
@@ -17,6 +28,7 @@ export class ConversationList implements OnInit, OnDestroy {
 
   private readonly chatService = inject(ChatService);
   private readonly websocket = inject(ChatWebSocketService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   private subscription = new Subscription();
 
@@ -39,18 +51,24 @@ export class ConversationList implements OnInit, OnDestroy {
   loadConversations(): void {
     this.loading = true;
     this.errorMessage = '';
+    this.cdr.markForCheck();
 
     this.chatService.getConversations().subscribe({
       next: conversations => {
         this.conversations = conversations;
         this.sortConversations();
         this.filterConversations();
+
         this.loading = false;
+        this.cdr.markForCheck();
       },
+
       error: error => {
         console.error('Error al cargar conversaciones:', error);
+
         this.errorMessage = 'No se pudieron cargar las conversaciones.';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -71,6 +89,7 @@ export class ConversationList implements OnInit, OnDestroy {
 
         this.sortConversations();
         this.filterConversations();
+        this.cdr.markForCheck();
       })
     );
   }
@@ -96,11 +115,25 @@ export class ConversationList implements OnInit, OnDestroy {
       conversation =>
         conversation.otherParticipantName.toLowerCase().includes(search)
     );
+
+    this.cdr.markForCheck();
   }
 
   selectConversation(conversation: Conversation): void {
     this.selectedConversationId = conversation.conversationId;
     this.conversationSelected.emit(conversation);
+  }
+
+  getProfileImageUrl(imageUrl: string): string {
+    if (/^https?:\/\//i.test(imageUrl)) {
+      return imageUrl;
+    }
+
+    const normalizedUrl = imageUrl.startsWith('/')
+      ? imageUrl
+      : `/${imageUrl}`;
+
+    return `http://localhost:8080${normalizedUrl}`;
   }
 
   formatDate(date: string | null): string {

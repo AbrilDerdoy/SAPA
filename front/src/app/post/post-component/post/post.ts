@@ -9,6 +9,7 @@ import { SavedPostService } from '../../../saved-post/saved-post-service/saved-p
 import { PostForm } from '../post-form/post-form';
 import { PostAttachments } from '../post-attachments/post-attachments';
 import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-post',
@@ -22,6 +23,7 @@ export class Post {
   private authService = inject(Auth)
   private savedPostService = inject(SavedPostService)
   private injector = inject(Injector)
+  private route = inject(ActivatedRoute)
 
   error = signal('')
 
@@ -30,10 +32,14 @@ export class Post {
   forum = signal<ForumResponse | null>(null)
   forumId: number | null = null
 
-  titleForum = input.required<string>()
+  titleForum = input<string>()
 
   posts = signal<PostResponse[]>([])
   filteredPosts = signal<PostResponse[]>([])
+
+  sharedPost = signal<PostResponse | null>(null)
+  postUnavailable = signal(false)
+  loadingSharedPost = signal(false)
 
   titleFilter = ''
 
@@ -41,8 +47,14 @@ export class Post {
   editingPost = signal<PostResponse | null>(null)
 
   ngOnInit(): void {
-    this.loadForum()
-    this.loadSavedPosts()
+    if (this.isSharedPost) {
+      this.loadSharedPost()
+      this.loadSavedPosts()
+    } else {
+      this.loadForum()
+      this.loadSavedPosts()
+    }
+
   }
 
   private scrollToForm(): void {
@@ -55,10 +67,13 @@ export class Post {
   }
 
   loadForum(): void {
-    this.forumService.filterForums(this.titleForum()).subscribe({
+    const title = this.titleForum()
+    if (!title) return
+
+    this.forumService.filterForums(title).subscribe({
       next: (datos) => {
         const foroEncontrado = datos.find(
-          f => f.title.toLowerCase() === this.titleForum().toLowerCase()
+          f => f.title.toLowerCase() === title.toLowerCase()
         )
 
         this.forum.set(foroEncontrado ?? null)
@@ -214,5 +229,60 @@ export class Post {
         error: () => this.error.set('Error al guardar la publicación.')
       })
     }
+  }
+
+  async sharePost(postId: number): Promise<void> {
+    const url = `${window.location.origin}/posts/${postId}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Compartir publicación',
+          url
+        })
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error al compartir:', error)
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url)
+        alert('Enlace copiado al portapapeles')
+      } catch {
+        alert('No se pudo copiar el enlace')
+      }
+    }
+  }
+
+  get isSharedPost(): boolean {
+    return this.route.snapshot.paramMap.has('postId')
+  }
+
+  loadSharedPost(): void {
+    const postId = Number(this.route.snapshot.paramMap.get('postId'))
+
+    if (!Number.isInteger(postId) || postId <= 0) {
+      this.postUnavailable.set(true)
+      return
+    }
+
+    this.loadingSharedPost.set(true)
+
+    this.postService.getPostById(postId).subscribe({
+      next: (data) => {
+        this.sharedPost.set(data)
+        this.loadingSharedPost.set(false)
+      },
+      error: (err) => {
+        this.loadingSharedPost.set(false)
+
+        if (err.status === 404) {
+          this.postUnavailable.set(true)
+        } else {
+          this.error.set('Error al cargar la publicación.')
+        }
+      }
+    })
   }
 }

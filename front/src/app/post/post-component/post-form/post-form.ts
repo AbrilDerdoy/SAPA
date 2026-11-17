@@ -31,6 +31,7 @@ export class PostForm implements OnDestroy {
     required(path.title, { message: 'El título es obligatorio.' })
     minLength(path.title, 3, { message: 'El título debe tener al menos 3 caracteres.' })
     required(path.content, { message: 'El contenido es obligatorio.' })
+    minLength(path.content, 10, { message: 'El contenido debe tener al menos 10 caracteres.'})
   })
 
   selectedFiles = signal<File[]>([])

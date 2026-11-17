@@ -45,9 +45,7 @@
   line-height: 1.6;
 }
 
-/* BOTÓN PUBLICAR: SOLO PARA DOCTORES */
-
-.publish-button {
+.section-heading > button {
   width: 100%;
   padding: 11px 15px;
   border: none;
@@ -59,7 +57,7 @@
   transition: background 0.2s ease;
 }
 
-.publish-button:hover {
+.section-heading > button:hover {
   background: var(--primary-dark);
 }
 
@@ -96,19 +94,21 @@
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
 }
 
-/* TARJETA PRINCIPAL DEL CONSEJO */
+/* TARJETAS DE CONSEJOS */
 
 .tip-card {
+  width: 100%;
+  height: 420px;
   min-width: 0;
-  min-height: 285px;
-  padding: 22px 18px;
+  padding: 24px 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 14px;
+  overflow: hidden;
   background: var(--primary-light);
   border: 1px solid var(--border);
   border-left: 4px solid var(--primary);
@@ -118,6 +118,7 @@
 .tip-label {
   display: inline-block;
   width: fit-content;
+  flex-shrink: 0;
   padding: 6px 10px;
   border-radius: 20px;
   background: var(--surface);
@@ -128,6 +129,7 @@
 }
 
 .tip-card h3 {
+  flex-shrink: 0;
   margin: 0;
   color: var(--primary-dark);
   font-size: 1.25rem;
@@ -136,19 +138,34 @@
 }
 
 .tip-content {
+  flex: 1;
+  min-height: 0;
   margin: 0;
+  overflow-y: auto;
   color: var(--text);
   font-size: 0.95rem;
-  line-height: 1.75;
+  line-height: 1.8;
   overflow-wrap: anywhere;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+.tip-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.tip-content::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: var(--scrollbar);
 }
 
 .tip-author {
   display: flex;
   flex-wrap: wrap;
+  flex-shrink: 0;
   gap: 4px;
   align-items: center;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.82rem;
@@ -160,6 +177,7 @@
 
 .tip-counter {
   align-self: flex-end;
+  flex-shrink: 0;
   color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 700;
@@ -314,8 +332,10 @@
 .tip-form {
   width: 100%;
   max-width: 480px;
+  max-height: 90vh;
   padding: 24px;
   box-sizing: border-box;
+  overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 15px;
@@ -384,9 +404,10 @@
 
 .form-actions .publish-button {
   flex: 1;
+  width: auto;
 }
 
-/* PANTALLAS PEQUEÑAS */
+/* PANTALLAS MEDIANAS */
 
 @media (max-width: 1000px) {
   .tips-section {
@@ -394,9 +415,11 @@
   }
 
   .tip-card {
-    min-height: 260px;
+    height: 420px;
   }
 }
+
+/* PANTALLAS PEQUEÑAS */
 
 @media (max-width: 750px) {
   .tips-section {
@@ -414,7 +437,7 @@
   }
 
   .tip-card {
-    min-height: 240px;
+    height: 390px;
     padding: 18px 14px;
   }
 

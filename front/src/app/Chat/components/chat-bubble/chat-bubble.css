@@ -1,3 +1,4 @@
+
 .chat-bubble-container {
   position: fixed;
   right: 25px;
@@ -147,7 +148,7 @@
 .bubble-avatar {
   width: 42px;
   height: 42px;
-  flex-shrink: 0;
+  flex: 0 0 42px;
   border-radius: 50%;
   background: var(--primary-light);
   color: var(--primary);
@@ -155,6 +156,13 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+.bubble-avatar--image {
+  display: block;
+  border: 1px solid var(--border);
 }
 
 .bubble-conversation-info {
@@ -200,7 +208,7 @@
   text-decoration: underline;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .chat-bubble-container {
     right: 15px;
     bottom: 15px;
@@ -208,10 +216,26 @@
 
   .chat-bubble-panel {
     position: fixed;
-    right: 10px;
-    left: 10px;
+    right: 12px;
+    left: 12px;
     bottom: 85px;
     width: auto;
-    height: min(460px, calc(100vh - 120px));
+    height: min(380px, calc(100vh - 150px));
+    max-height: calc(100vh - 150px);
+    border-radius: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .chat-bubble-panel {
+    right: 8px;
+    left: 8px;
+    bottom: 80px;
+    height: min(350px, calc(100vh - 140px));
+    max-height: calc(100vh - 140px);
+  }
+
+  .bubble-header {
+    padding: 10px 12px;
   }
 }

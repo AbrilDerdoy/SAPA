@@ -1,52 +1,114 @@
-@if(auth.isAuthenticated()){
-    <section class="profile">
-        @if(profile.isLoading()){
-            <p>Cargando datos...</p>
-        }
-        @if(profile.error()){
-            <p>Ocurrio un error</p>
-        }
-        @if(profile.hasValue()){
-        <form class="card" novalidate (submit)="enviar($event)">
-            <label>
-                Nombre:
-                <input type="text" [formField]="formulario.firstName">
-                <app-form-error [field]="formulario.firstName()" />
-            </label>
-            <label>
-                Apellido:
-                <input type="text" [formField]="formulario.lastName">
-                <app-form-error [field]="formulario.lastName()" />
-            </label>
-            <label>
-                Email:
-                <input type="email" [formField]="formulario.email">
-                <app-form-error [field]="formulario.email()" />
-            </label>
-            @if(!esAdmin()){
-            <label>
-                Fecha de nacimiento:
-                <input type="date" [formField]="formulario.birthDate">
-                <app-form-error [field]="formulario.birthDate()" />
-            </label>
-            <label>
-                Telefono:
-                <input type="number" [formField]="formulario.phoneNumber">
-                <app-form-error [field]="formulario.phoneNumber()" />
-            </label>
-            <div class="form__actions">
-                <button type="button" (click)="toggleFormulario()">
-                    {{ modificarDatos() ? 'Cancelar' : 'Editar datos' }}
-                </button>
-                <button class="btn-enviar" type="submit" [disabled]="!modificarDatos() || !hayCambios()">Confirmar</button>
-            </div>
+@if (auth.isAuthenticated()) {
+  <section class="profile">
+    @if (profile.isLoading()) {
+      <p>Cargando datos...</p>
+    }
+
+    @if (profile.error()) {
+      <p>Ocurrió un error al cargar el perfil.</p>
+    }
+
+    @if (profile.hasValue()) {
+      <form class="card" novalidate (submit)="enviar($event)">
+
+        @if (!esAdmin()) {
+          <section class="profile-photo" aria-label="Foto de perfil">
+            @if (fotoPerfilUrl()) {
+              <img
+                class="profile-photo__image"
+                [src]="fotoPerfilUrl()"
+                alt="Foto de perfil">
             } @else {
-            <div class="notice" role="note">
-                <strong>Perfil de administrador</strong>
-                <p>Los datos de esta cuenta no se pueden modificar.</p>
-            </div>
+              <div
+                class="profile-photo__initials"
+                aria-label="Avatar con iniciales">
+                {{ iniciales() }}
+              </div>
             }
-        </form>
+
+            <div class="profile-photo__controls">
+              <strong>Foto de perfil</strong>
+              <p>JPG o PNG. Tamaño máximo: 5 MB.</p>
+
+              <label class="photo-button">
+                {{ subiendoFoto() ? 'Subiendo...' : (fotoPerfilUrl() ? 'Cambiar foto' : 'Agregar foto') }}
+
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  (change)="seleccionarFoto($event)"
+                  [disabled]="subiendoFoto() || eliminandoFoto()"
+                  hidden>
+              </label>
+
+              @if (fotoPerfilUrl()) {
+                <button
+                  class="photo-remove"
+                  type="button"
+                  (click)="quitarFoto()"
+                  [disabled]="subiendoFoto() || eliminandoFoto()">
+                  {{ eliminandoFoto() ? 'Quitando...' : 'Quitar foto' }}
+                </button>
+              }
+            </div>
+          </section>
+        } @else {
+          <div class="admin-profile-label">
+            <strong>Perfil de administrador</strong>
+            <span>Este tipo de cuenta no utiliza foto de perfil.</span>
+          </div>
         }
-    </section>
+
+        <label>
+          Nombre:
+          <input type="text" [formField]="formulario.firstName">
+          <app-form-error [field]="formulario.firstName()" />
+        </label>
+
+        <label>
+          Apellido:
+          <input type="text" [formField]="formulario.lastName">
+          <app-form-error [field]="formulario.lastName()" />
+        </label>
+
+        <label>
+          Email:
+          <input type="email" [formField]="formulario.email">
+          <app-form-error [field]="formulario.email()" />
+        </label>
+
+        @if (!esAdmin()) {
+          <label>
+            Fecha de nacimiento:
+            <input type="date" [formField]="formulario.birthDate">
+            <app-form-error [field]="formulario.birthDate()" />
+          </label>
+
+          <label>
+            Teléfono:
+            <input type="number" [formField]="formulario.phoneNumber">
+            <app-form-error [field]="formulario.phoneNumber()" />
+          </label>
+
+          <div class="form__actions">
+            <button type="button" (click)="toggleFormulario()">
+              {{ modificarDatos() ? 'Cancelar' : 'Editar datos' }}
+            </button>
+
+            <button
+              class="btn-enviar"
+              type="submit"
+              [disabled]="!modificarDatos() || !hayCambios()">
+              Confirmar
+            </button>
+          </div>
+        } @else {
+          <div class="notice" role="note">
+            <p>Los datos de esta cuenta no se pueden modificar.</p>
+          </div>
+        }
+
+      </form>
+    }
+  </section>
 }

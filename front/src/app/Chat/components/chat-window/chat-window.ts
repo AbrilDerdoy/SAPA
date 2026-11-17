@@ -1,7 +1,18 @@
-import {Component, Input, OnChanges, OnDestroy, SimpleChanges, inject} from '@angular/core';
+
+import {
+  Component,
+  Input,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+  ChangeDetectorRef,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+
 import { Conversation } from '../../models/conversation.model';
 import { Message } from '../../models/message.model';
 import { ChatService } from '../../services/chat.service';
@@ -20,6 +31,8 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
   private readonly chatService = inject(ChatService);
   private readonly websocket = inject(ChatWebSocketService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   private subscriptions = new Subscription();
   private historyRequestId = 0;
 
@@ -40,6 +53,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
         ) {
           this.addMessage(message);
           this.updateLastMessage(message.content);
+          this.cdr.markForCheck();
         }
       })
     );
@@ -47,6 +61,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
     this.subscriptions.add(
       this.websocket.connectionStatus$.subscribe(status => {
         this.isConnected = status;
+        this.cdr.markForCheck();
       })
     );
   }
@@ -66,6 +81,8 @@ export class ChatWindow implements OnChanges, OnDestroy {
         this.loading = false;
         this.websocket.disconnect();
       }
+
+      this.cdr.markForCheck();
     }
   }
 
@@ -94,6 +111,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
     this.loading = true;
     this.errorMessage = '';
+    this.cdr.markForCheck();
 
     this.chatService.getMessages(conversationId).subscribe({
       next: history => {
@@ -117,15 +135,19 @@ export class ChatWindow implements OnChanges, OnDestroy {
         );
 
         this.loading = false;
+        this.cdr.markForCheck();
       },
+
       error: error => {
         if (requestId !== this.historyRequestId) {
           return;
         }
 
         console.error('Error al cargar mensajes:', error);
+
         this.errorMessage = 'No se pudo cargar el historial.';
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -152,6 +174,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
     if (!this.isConnected) {
       this.errorMessage = 'Esperando conexión con el chat...';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -166,6 +189,21 @@ export class ChatWindow implements OnChanges, OnDestroy {
     } else {
       this.errorMessage = 'No se pudo enviar el mensaje.';
     }
+
+    this.cdr.markForCheck();
+  }
+
+  onMessageKeydown(event: KeyboardEvent): void {
+    if (
+      event.key !== 'Enter' ||
+      event.shiftKey ||
+      event.isComposing
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    this.sendMessage();
   }
 
   onFileSelected(event: Event): void {
@@ -185,6 +223,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
     if (!validType) {
       this.errorMessage = 'Solo se permiten imágenes y archivos PDF.';
       input.value = '';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -199,11 +238,15 @@ export class ChatWindow implements OnChanges, OnDestroy {
         this.addMessage(message);
         this.updateLastMessage(file.name);
         input.value = '';
+        this.cdr.markForCheck();
       },
+
       error: error => {
         console.error('Error al adjuntar archivo:', error);
+
         this.errorMessage = 'No se pudo adjuntar el archivo.';
         input.value = '';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -216,6 +259,18 @@ export class ChatWindow implements OnChanges, OnDestroy {
     const normalizedUrl = fileUrl.startsWith('/')
       ? fileUrl
       : `/${fileUrl}`;
+
+    return `http://localhost:8080${normalizedUrl}`;
+  }
+
+  getProfileImageUrl(imageUrl: string): string {
+    if (/^https?:\/\//i.test(imageUrl)) {
+      return imageUrl;
+    }
+
+    const normalizedUrl = imageUrl.startsWith('/')
+      ? imageUrl
+      : `/${imageUrl}`;
 
     return `http://localhost:8080${normalizedUrl}`;
   }

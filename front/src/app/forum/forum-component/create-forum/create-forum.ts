@@ -15,6 +15,7 @@ export class CreateForum {
   private router = inject(Router);
 
   error = signal('');
+  imagenSeleccionada = signal<File | null>(null)
 
   modelo = signal<ForumRequest>({
     title: '',
@@ -34,7 +35,18 @@ export class CreateForum {
   guardar(): void {
     if (this.formulario().invalid()) return;
 
-    this.forumService.createForum(this.modelo()).subscribe({
+    const formData = new FormData()
+    formData.append(
+      'request',
+      new Blob([JSON.stringify(this.modelo())], { type: 'application/json' })
+    )
+
+    const imagen = this.imagenSeleccionada()
+
+    if (imagen) {
+      formData.append('image', imagen)
+    }
+    this.forumService.createForum(formData).subscribe({
       next: () => this.router.navigate(['/forums']),
       error: () => this.error.set('Error al crear el foro.')
     });
@@ -42,5 +54,39 @@ export class CreateForum {
 
   cancelar(): void {
     this.router.navigate(['/forums']);
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement
+    const file = input.files?.[0] ?? null
+
+    if (!file) {
+      this.imagenSeleccionada.set(null)
+      return
+    }
+
+    const tiposPermitidos = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif'
+    ]
+
+    if (!tiposPermitidos.includes(file.type)) {
+      this.error.set('Solo se permiten imágenes JPG, PNG, WEBP o GIF.')
+      input.value = ''
+      this.imagenSeleccionada.set(null)
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      this.error.set('La imagen no puede superar los 10 MB.')
+      input.value = ''
+      this.imagenSeleccionada.set(null)
+      return
+    }
+
+    this.error.set('')
+    this.imagenSeleccionada.set(file)
   }
 }
