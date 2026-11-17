@@ -1,5 +1,5 @@
 
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Usuario } from '../../models/usuario';
 import { registerRequest } from '../../models/registerRequest';
@@ -31,6 +31,7 @@ interface JwtPayload {
 
 const TOKENS_STORAGE_KEY = 'jwt';
 const USER_STORAGE_KEY = 'usuario';
+
 /** Se renueva el token un minuto antes de que venza para evitar el primer 401. */
 const REFRESH_LEEWAY_MS = 60_000;
 
@@ -43,10 +44,16 @@ function decodeJwtPayload(token: string): JwtPayload | null {
 
   try {
     const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      '='
+    );
+
     const payload: unknown = JSON.parse(atob(padded));
 
-    return payload && typeof payload === 'object' ? (payload as JwtPayload) : null;
+    return payload && typeof payload === 'object'
+      ? (payload as JwtPayload)
+      : null;
   } catch {
     return null;
   }
@@ -60,17 +67,42 @@ export class Auth {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
+  /**
+   * Cambia cada vez que se inicia o se cierra una sesión.
+   * Permite que los componentes reaccionen a esos cambios.
+   */
+  readonly sessionVersion = signal(0);
+
   register(datos: registerRequest) {
-    return this.http.post<TokenResponse>(this.BASE_URL + '/register', datos)
+    return this.http.post<TokenResponse>(
+      this.BASE_URL + '/register',
+      datos
+    );
   }
+
   login(datos: loginRequest) {
-    return this.http.post<TokenResponse>(this.BASE_URL + '/login', datos);
+    return this.http.post<TokenResponse>(
+      this.BASE_URL + '/login',
+      datos
+    );
   }
-  logout() {
+
+  logout(): void {
     if (this.isAuthenticated()) {
-      this.http.post(`${this.BASE_URL}/logout`, null, { responseType: 'text' }).subscribe({
-        next: () => { console.log('Sesion cerrada exitosamente'); },
-        error: (error) => console.error('No se pudo cerrar la sesión en el servidor', error)
+      this.http.post(
+        `${this.BASE_URL}/logout`,
+        null,
+        { responseType: 'text' }
+      ).subscribe({
+        next: () => {
+          console.log('Sesion cerrada exitosamente');
+        },
+        error: (error) => {
+          console.error(
+            'No se pudo cerrar la sesión en el servidor',
+            error
+          );
+        }
       });
     }
 
@@ -79,11 +111,16 @@ export class Auth {
   }
 
   guardarDatosUsuario() {
-    return this.http.get<Usuario>("http://localhost:8080/users/me");
+    return this.http.get<Usuario>(
+      'http://localhost:8080/users/me'
+    );
   }
 
   private normalizarRol(role: string): string {
-    return (role ?? '').trim().toUpperCase().replace(/^ROLE_/, '');
+    return (role ?? '')
+      .trim()
+      .toUpperCase()
+      .replace(/^ROLE_/, '');
   }
 
   isDoctor(): boolean {
@@ -100,31 +137,42 @@ export class Auth {
 
   isAuthenticated(): boolean {
     const tokens = this.getTokens();
+
     return !!tokens?.AccessToken && !!tokens?.RefreshToken;
   }
 
   private getRole(): string {
     try {
-      const usuario = JSON.parse(localStorage.getItem(USER_STORAGE_KEY) ?? '{}')
+      const usuario = JSON.parse(
+        localStorage.getItem(USER_STORAGE_KEY) ?? '{}'
+      );
 
       if (!usuario || typeof usuario !== 'object') {
-        return ''
+        return '';
       }
 
-      const role = Reflect.get(usuario, 'role')
+      const role = Reflect.get(usuario, 'role');
+
       return typeof role === 'string'
         ? role.trim().toUpperCase().replace(/^ROLE_/, '')
-        : ''
+        : '';
     } catch {
-      return ''
+      return '';
     }
   }
 
   resetPassword(datos: datosPassword) {
-    return this.http.post<void>(`${this.BASE_URL}/reset-password`, datos);
+    return this.http.post<void>(
+      `${this.BASE_URL}/reset-password`,
+      datos
+    );
   }
-  forgotPassword(mail:string){
-    return this.http.post(this.BASE_URL+'/forgot-password',{email:mail});
+
+  forgotPassword(mail: string) {
+    return this.http.post(
+      this.BASE_URL + '/forgot-password',
+      { email: mail }
+    );
   }
 
   /** Tokens guardados en localStorage, o null si no existen / están corruptos. */
@@ -147,20 +195,35 @@ export class Auth {
   }
 
   saveTokens(tokens: TokenResponse): void {
-    localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(tokens));
+    localStorage.setItem(
+      TOKENS_STORAGE_KEY,
+      JSON.stringify(tokens)
+    );
+  }
+
+  /**
+   * Notifica que los datos de la sesión fueron actualizados.
+   * Se utiliza después de guardar los datos del usuario al iniciar sesión.
+   */
+  notifySessionChanged(): void {
+    this.sessionVersion.update(version => version + 1);
   }
 
   clearSession(): void {
     localStorage.removeItem(TOKENS_STORAGE_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
+
+    this.notifySessionChanged();
   }
 
   /**
    * Indica si el access token ya venció o está por vencer.
-   * Si no tiene un `exp` legible se devuelve false y se deja actuar al
+   * Si no tiene un exp legible se devuelve false y se deja actuar al
    * refresh reactivo (401 del backend).
    */
-  isAccessTokenExpiring(leewayMs: number = REFRESH_LEEWAY_MS): boolean {
+  isAccessTokenExpiring(
+    leewayMs: number = REFRESH_LEEWAY_MS
+  ): boolean {
     const accessToken = this.getTokens()?.AccessToken;
 
     if (!accessToken) {
@@ -186,8 +249,12 @@ export class Auth {
       }));
     }
 
-    return this.http.post<TokenResponse>(`${this.BASE_URL}/refresh`, { refreshToken })
-      .pipe(tap((newTokens) => this.saveTokens(newTokens)));
+    return this.http.post<TokenResponse>(
+      `${this.BASE_URL}/refresh`,
+      { refreshToken }
+    ).pipe(
+      tap((newTokens) => this.saveTokens(newTokens))
+    );
   }
 
   getAccessToken(): string | null {
