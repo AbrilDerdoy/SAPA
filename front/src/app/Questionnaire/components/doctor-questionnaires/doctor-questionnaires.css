@@ -22,6 +22,9 @@
 .page-header h1 {
   margin: 8px 0;
   font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--primary);
 }
 
 .page-header p,
@@ -36,11 +39,13 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
+  box-shadow: var(--shadow);
 }
 
 .panel h2 {
   margin: 0 0 20px;
   font-size: 20px;
+  color: var(--primary);
 }
 
 .panel form {
@@ -92,6 +97,7 @@
 .section-heading h3 {
   margin: 0;
   font-size: 16px;
+  color: var(--primary);
 }
 
 .question-row {
@@ -102,6 +108,12 @@
   background: var(--surface-hover);
   border: 1px solid var(--border);
   border-radius: 10px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.question-row:focus-within {
+  border-color: var(--primary);
+  background: var(--surface);
 }
 
 .question-number {
@@ -111,7 +123,7 @@
   height: 30px;
   border-radius: 50%;
   background: var(--primary);
-  color: white;
+  color: var(--on-primary, #fff);
   font-weight: 700;
 }
 
@@ -138,7 +150,7 @@
 .primary-button {
   margin-top: 12px;
   background: var(--primary);
-  color: white;
+  color: var(--on-primary, #fff);
 }
 
 .secondary-button {
@@ -174,6 +186,14 @@
   cursor: not-allowed;
 }
 
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.remove-button:focus-visible,
+.danger-button:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .questionnaire-list,
 .assignment-list {
   display: grid;
@@ -183,19 +203,24 @@
 .questionnaire-card,
 .assignment-card {
   padding: 17px;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  transition: border-color 0.2s;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.045);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .questionnaire-card:hover,
 .assignment-card:hover {
   border-color: var(--primary);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
 }
 
 .questionnaire-card h3,
 .assignment-card h3 {
   margin: 0 0 8px;
+  color: var(--primary);
 }
 
 .questionnaire-card p,
@@ -293,6 +318,7 @@
 .add-question-panel h4 {
   margin: 0;
   font-size: 16px;
+  color: var(--primary);
 }
 
 .add-question-panel .section-description {
@@ -387,6 +413,7 @@
 .confirmation-modal h2 {
   margin: 0 0 10px;
   font-size: 22px;
+  color: var(--primary);
 }
 
 .confirmation-description {
@@ -462,6 +489,12 @@
 .accept-confirmation-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.cancel-confirmation-button:focus-visible,
+.accept-confirmation-button:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }
 
 @keyframes confirmation-fade-in {
@@ -543,5 +576,23 @@
   .cancel-confirmation-button,
   .accept-confirmation-button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .question-row,
+  .questionnaire-card,
+  .assignment-card,
+  .primary-button,
+  .secondary-button,
+  .danger-button,
+  .cancel-confirmation-button,
+  .accept-confirmation-button {
+    transition: none;
+  }
+
+  .confirmation-overlay,
+  .confirmation-modal {
+    animation: none;
   }
 }

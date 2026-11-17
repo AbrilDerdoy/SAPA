@@ -5,9 +5,10 @@
 }
 
 .questionnaires-page {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 32px 24px;
+  width: min(1050px, 100%);
+  box-sizing: border-box;
+  margin: 35px auto;
+  padding: 0 24px 50px;
   color: var(--text);
 }
 
@@ -17,19 +18,24 @@
 
 .eyebrow {
   color: var(--primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .page-header h1 {
   margin: 8px 0;
-  font-size: 28px;
-  color: var(--text);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: var(--primary);
 }
 
 .page-header p {
   color: var(--text-muted);
   margin: 0;
+  line-height: 1.5;
 }
 
 .assignments {
@@ -47,6 +53,16 @@
   box-shadow: var(--shadow);
 }
 
+.questionnaire-card {
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.questionnaire-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -56,11 +72,14 @@
 
 .card-header h2 {
   margin: 0 0 8px;
-  color: var(--text);
+  color: var(--primary);
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .due-date {
   color: var(--text-muted);
+  font-size: 13px;
 }
 
 .status {
@@ -88,6 +107,7 @@
 .question > label {
   color: var(--text);
   font-weight: 700;
+  line-height: 1.5;
 }
 
 .question textarea,
@@ -100,6 +120,7 @@
   background: var(--surface-alt);
   color: var(--text);
   font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .question textarea {
@@ -111,6 +132,13 @@
 .question input::placeholder {
   color: var(--text-muted);
   opacity: 0.85;
+}
+
+.question textarea:focus,
+.question input:not([type="radio"]):not([type="range"]):focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
 }
 
 .multiple-choice-options {
@@ -133,6 +161,11 @@
 }
 
 .question .choice-option:hover {
+  border-color: var(--primary);
+  background: var(--surface-hover);
+}
+
+.question .choice-option:has(input:checked) {
   border-color: var(--primary);
   background: var(--surface-hover);
 }
@@ -166,7 +199,7 @@
 }
 
 .scale-labels strong {
-  color: var(--primary-dark);
+  color: var(--primary);
   font-size: 21px;
 }
 
@@ -191,15 +224,22 @@
   color: var(--on-primary);
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .questionnaire-card button:hover:not(:disabled) {
   background: var(--primary-dark);
+  transform: translateY(-1px);
 }
 
 .questionnaire-card button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.questionnaire-card button:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }
 
 .message {
@@ -227,17 +267,25 @@
 }
 
 .empty-state h2 {
-  color: var(--text);
+  color: var(--primary);
+  font-size: 21px;
+  margin-top: 0;
 }
 
 .empty-state p {
   margin: 10px auto 0;
   color: var(--text-muted);
+  line-height: 1.5;
 }
 
 @media (max-width: 600px) {
   .questionnaires-page {
-    padding: 20px 14px;
+    margin-top: 20px;
+    padding: 0 14px 35px;
+  }
+
+  .page-header h1 {
+    font-size: 25px;
   }
 
   .questionnaire-card,
@@ -247,5 +295,13 @@
 
   .card-header {
     flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .questionnaire-card,
+  .questionnaire-card button,
+  .question .choice-option {
+    transition: none;
   }
 }

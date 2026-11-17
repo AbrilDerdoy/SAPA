@@ -115,7 +115,8 @@
 
 .questionnaires-heading h2 {
   margin: 6px 0;
-  color: var(--text);
+  color: var(--primary);
+  font-weight: 800;
 }
 
 .questionnaires-heading p {
