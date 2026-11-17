@@ -41,6 +41,7 @@ public class ChatDTO {
 
     public record ConversationSummary(
             Long conversationId,
+            Long otherParticipantId,
             String otherParticipantName,
             String otherParticipantProfileImageUrl,
             String lastMessage,

@@ -1,3 +1,4 @@
+
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.ChatDTO;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -28,14 +30,13 @@ public class ChatController {
     public void sendMessage(
             @DestinationVariable Long conversationId,
             ChatDTO.SendMessageRequest request,
-            java.security.Principal principal
+            Principal principal
     ) {
         messageService.sendMessage(conversationId, request, principal);
     }
 
     @GetMapping
     public ResponseEntity<List<ChatDTO.ConversationSummary>> getMyConversations() {
-
         return ResponseEntity.ok(
                 conversationService.getMyConversations()
         );
@@ -45,7 +46,6 @@ public class ChatController {
     public ResponseEntity<List<ChatDTO.MessageResponse>> getHistory(
             @PathVariable Long id
     ) {
-
         return ResponseEntity.ok(
                 conversationService.getConversationHistory(id)
         );
@@ -53,11 +53,11 @@ public class ChatController {
 
     @GetMapping("/{id}/presence")
     public ResponseEntity<ChatDTO.PresenceStatus> getOtherParticipantPresence(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Principal principal
     ) {
-
         return ResponseEntity.ok(
-                conversationService.getOtherParticipantPresence(id)
+                conversationService.getOtherParticipantPresence(id, principal)
         );
     }
 
@@ -66,7 +66,6 @@ public class ChatController {
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-
         return ResponseEntity.ok(
                 attachmentService.uploadAttachment(id, file)
         );

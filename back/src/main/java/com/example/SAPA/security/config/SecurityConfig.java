@@ -136,23 +136,42 @@ public class SecurityConfig {
                         "/js/**"
                 ).permitAll()
 
-                // WebSocket y archivos del chat
+                // Imágenes públicas de perfiles
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/uploads/profiles/**"
+                ).permitAll()
+
+                // Archivos públicos del chat
+                .requestMatchers(
+                        "/uploads/chat/**"
+                ).permitAll()
+
+                // Imágenes públicas de foros
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/uploads/forums/images/**"
+                ).permitAll()
+
+                // WebSocket
                 .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/uploads/chat/**").permitAll()
-                .requestMatchers("/uploads/profiles/**").permitAll()
 
                 // Especialidades
                 .requestMatchers(HttpMethod.GET, "/specialities").permitAll()
-                .requestMatchers("/specialities/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/specialities/**")
+                    .hasAuthority("ROLE_ADMIN")
 
                 // Foros y publicaciones
                 .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                .requestMatchers("/forums/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
-                .requestMatchers("/posts/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/forums/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/posts/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
                 // Administración
-                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/admin/**")
+                    .hasAuthority("ROLE_ADMIN")
 
                 // Medicamentos
                 .requestMatchers("/medications/search/**").permitAll()
@@ -178,13 +197,18 @@ public class SecurityConfig {
 
                 // Cuestionarios y asignaciones
                 .requestMatchers("/questionnaires/**")
-    .hasAnyAuthority("PATIENT", "DOCTOR", "ROLE_PATIENT", "ROLE_DOCTOR")
+                    .hasAnyAuthority(
+                            "PATIENT", "DOCTOR",
+                            "ROLE_PATIENT", "ROLE_DOCTOR"
+                    )
+
                 .requestMatchers("/assignments/**")
                     .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
                 // Historias clínicas y tratamientos
                 .requestMatchers("/medical-records/**")
                     .hasAnyAuthority(PATIENT_AND_DOCTOR)
+
                 .requestMatchers("/treatments/**")
                     .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
@@ -195,6 +219,7 @@ public class SecurityConfig {
                 // Reportes
                 .requestMatchers(HttpMethod.POST, "/reports")
                     .hasAnyAuthority(PATIENT_AND_DOCTOR)
+
                 .requestMatchers("/reports/**")
                     .hasAuthority("ROLE_ADMIN")
 
@@ -216,12 +241,19 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // Médicos
-                .requestMatchers(HttpMethod.GET, "/doctors/profile").hasAuthority("ROLE_DOCTOR")
-                .requestMatchers(HttpMethod.GET, "/doctors/**").permitAll()
-                .requestMatchers("/doctors/**").hasAuthority("ROLE_DOCTOR")
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/doctors/profile"
+                ).hasAuthority("ROLE_DOCTOR")
+
+                .requestMatchers(HttpMethod.GET, "/doctors/**")
+                    .permitAll()
+
+                .requestMatchers("/doctors/**")
+                    .hasAuthority("ROLE_DOCTOR")
 
                 // Pacientes vinculados al médico
-                .requestMatchers(HttpMethod.GET, "/patients/my-patients")
+                .requestMatchers("/patients/my-patients")
                     .hasAnyAuthority("ROLE_DOCTOR", "DOCTOR")
 
                 .requestMatchers("/patients/**")
@@ -236,7 +268,7 @@ public class SecurityConfig {
                         "/webjars/**"
                 ).permitAll()
 
-                            .requestMatchers(HttpMethod.GET, "/uploads/forums/images/**").permitAll()
+                // Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )
 
@@ -247,6 +279,7 @@ public class SecurityConfig {
 
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(restAuthenticationEntryPoint)
+
                 .accessDeniedHandler((request, response, exceptionDenied) -> {
                     response.setContentType("application/json");
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);

@@ -1,3 +1,4 @@
+
 .questionnaires-page {
   width: min(1050px, 100%);
   box-sizing: border-box;
@@ -288,8 +289,6 @@
   gap: 7px;
 }
 
-/* Encabezado de cada cuestionario */
-
 .questionnaire-card-header {
   display: flex;
   justify-content: space-between;
@@ -300,8 +299,6 @@
 .questionnaire-card-header > div {
   min-width: 0;
 }
-
-/* Formulario para agregar preguntas */
 
 .add-question-panel {
   display: flex;
@@ -336,8 +333,6 @@
   margin-top: 0;
 }
 
-/* Asignaciones */
-
 .assignment-card {
   display: flex;
   align-items: center;
@@ -362,158 +357,6 @@
   color: var(--tone-amber-text);
   font-size: 12px;
   font-weight: 700;
-}
-
-/* ========================================
-   CONFIRMACIÓN PERSONALIZADA SAPA
-======================================== */
-
-.confirmation-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(3, 12, 11, 0.76);
-  backdrop-filter: blur(7px);
-  animation: confirmation-fade-in 0.2s ease;
-}
-
-.confirmation-modal {
-  width: min(440px, 100%);
-  box-sizing: border-box;
-  padding: 30px;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.4);
-  animation: confirmation-slide-in 0.25s ease;
-}
-
-.confirmation-icon {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 20px;
-  border-radius: 16px;
-  background: var(--tone-amber-bg);
-  color: var(--tone-amber-text);
-}
-
-.confirmation-icon span {
-  font-size: 27px;
-  font-weight: 800;
-}
-
-.confirmation-modal h2 {
-  margin: 0 0 10px;
-  font-size: 22px;
-  color: var(--primary);
-}
-
-.confirmation-description {
-  margin: 0 0 20px;
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.confirmation-details {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px;
-  margin-bottom: 22px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface-hover);
-  overflow-wrap: anywhere;
-}
-
-.confirmation-details strong {
-  margin-bottom: 9px;
-  font-size: 14px;
-}
-
-.confirmation-details strong:last-child {
-  margin-bottom: 0;
-}
-
-.detail-label {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.confirmation-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.cancel-confirmation-button,
-.accept-confirmation-button {
-  min-height: 43px;
-  padding: 10px 16px;
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s, background 0.2s;
-}
-
-.cancel-confirmation-button {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.accept-confirmation-button {
-  border-color: transparent;
-  background: var(--danger);
-  color: white;
-}
-
-.cancel-confirmation-button:hover,
-.accept-confirmation-button:hover {
-  transform: translateY(-1px);
-  opacity: 0.88;
-}
-
-.cancel-confirmation-button:disabled,
-.accept-confirmation-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cancel-confirmation-button:focus-visible,
-.accept-confirmation-button:focus-visible {
-  outline: 3px solid var(--primary);
-  outline-offset: 3px;
-}
-
-@keyframes confirmation-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes confirmation-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 @media (max-width: 600px) {
@@ -563,19 +406,6 @@
   .add-question-panel {
     padding: 13px;
   }
-
-  .confirmation-modal {
-    padding: 22px;
-  }
-
-  .confirmation-actions {
-    flex-direction: column-reverse;
-  }
-
-  .cancel-confirmation-button,
-  .accept-confirmation-button {
-    width: 100%;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -584,111 +414,7 @@
   .assignment-card,
   .primary-button,
   .secondary-button,
-  .danger-button,
-  .cancel-confirmation-button,
-  .accept-confirmation-button {
+  .danger-button {
     transition: none;
-  }
-
-  .confirmation-overlay,
-  .confirmation-modal {
-    animation: none;
-  }
-}
-
-/* Consulta de preguntas guardadas del cuestionario */
-
-.questionnaire-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.question-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 18px;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-hover);
-}
-
-.question-preview h4 {
-  margin: 0 0 4px;
-  color: var(--primary);
-  font-size: 16px;
-}
-
-.question-preview-item {
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface);
-}
-
-.question-preview-heading {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.question-preview-number {
-  display: grid;
-  place-items: center;
-  flex: 0 0 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--on-primary, #fff);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.question-preview-content {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
-
-.question-preview-content strong {
-  color: var(--text);
-  overflow-wrap: anywhere;
-}
-
-.question-preview-type {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.question-preview-options {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 12px 0 0 38px;
-  padding-left: 18px;
-  color: var(--text-muted);
-}
-
-.question-preview-scale {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin: 12px 0 0 38px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-@media (max-width: 600px) {
-  .questionnaire-card-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .questionnaire-card-actions .secondary-button {
-    width: 100%;
   }
 }
