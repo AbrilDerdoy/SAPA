@@ -1,3 +1,4 @@
+
 <div class="reg">
   <aside class="reg-brand">
     <img class="reg-brand__logo" src="/images/logo.png" alt="Logo SAPA">
@@ -68,7 +69,10 @@
             [attr.aria-pressed]="mostrarPassword()"
             (click)="alternarVisibilidadPassword()"
           >
-            <img [src]="mostrarPassword() ? '/images/eye-off.svg' : '/images/eye.svg'" alt="">
+            <img
+              [src]="mostrarPassword() ? '/images/eye.svg' : '/images/eye-off.svg'"
+              alt=""
+            >
           </button>
         </span>
         <app-form-error [field]="formulario.password()" />
