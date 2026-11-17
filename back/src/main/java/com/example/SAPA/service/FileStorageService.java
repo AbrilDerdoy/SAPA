@@ -61,10 +61,13 @@ public class FileStorageService {
         }
 
         String contentType = file.getContentType();
-        if (contentType == null || (!allowedMimeTypes.contains(contentType) && !contentType.equals("application/octet-stream"))) {
+        if (contentType == null ||
+                (imageOnly
+                        ? !allowedMimeTypes.contains(contentType)
+                        : (!allowedMimeTypes.contains(contentType) &&
+                        !contentType.equals("application/octet-stream")))) {
             throw new IllegalArgumentException("El tipo de archivo no coincide con su extensión.");
         }
-
         Path directory = BASE_PATH.resolve(folder).normalize();
 
         Files.createDirectories(directory);

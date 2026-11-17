@@ -21,16 +21,21 @@
         @for (forum of filteredForums(); track forum.forumId) {
         <article class="forum-card">
             <h2>{{ forum.title }}</h2>
+
+            @if (forum.imageUrl) {
+            <img class="forum-image" [src]="'http://localhost:8080' + forum.imageUrl"
+                [alt]="'Imagen del foro ' + forum.title" />
+            }
             <p>{{ forum.content }}</p>
             <button type="button" class="view" [routerLink]="['/forums', forum.title]">Ver publicaciones</button>
 
             @if(esPropietario(forum)){
-                <button type="button" class="edit" [routerLink]="['/forums/update', forum.title]">Editar</button>
-                <button type="button" class="delete" (click)="deleteForum(forum.forumId)">Eliminar</button>
+            <button type="button" class="edit" [routerLink]="['/forums/update', forum.title]">Editar</button>
+            <button type="button" class="delete" (click)="deleteForum(forum.forumId)">Eliminar</button>
             }
         </article>
         } @empty {
-            <p>No hay foros para mostrar.</p>
+        <p>No hay foros para mostrar.</p>
         }
     </div>
 
