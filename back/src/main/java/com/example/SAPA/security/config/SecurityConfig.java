@@ -147,12 +147,6 @@ public class SecurityConfig {
                         "/uploads/chat/**"
                 ).permitAll()
 
-                // Imágenes públicas de foros
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/uploads/forums/images/**"
-                ).permitAll()
-
                 // WebSocket
                 .requestMatchers("/ws/**").permitAll()
 
@@ -267,7 +261,7 @@ public class SecurityConfig {
                         "/swagger-resources/**",
                         "/webjars/**"
                 ).permitAll()
-
+                    .requestMatchers(HttpMethod.GET, "/uploads/forums/images/**").permitAll()
                 // Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )
