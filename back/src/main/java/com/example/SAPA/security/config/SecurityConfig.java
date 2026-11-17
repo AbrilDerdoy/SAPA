@@ -139,6 +139,7 @@ public class SecurityConfig {
                 // WebSocket y archivos del chat
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/uploads/chat/**").permitAll()
+                .requestMatchers("/uploads/profiles/**").permitAll()
 
                 // Especialidades
                 .requestMatchers(HttpMethod.GET, "/specialities").permitAll()
