@@ -34,12 +34,12 @@ export class ForumService {
 
     // Crear un nuevo foro.
   createForum(formData: FormData){
-    return this.http.post<ForumRequest>(this.BASE_URL, formData)
+    return this.http.post<ForumResponse>(this.BASE_URL, formData)
   }
 
     // Actualizar foro existente.
   updateForum(idForum: number, datosForo: ForumRequest){
-    return this.http.put<ForumRequest>(`${this.BASE_URL}/${idForum}`, datosForo)
+    return this.http.put<ForumResponse>(`${this.BASE_URL}/${idForum}`, datosForo)
   }
 
     // Eliminar un foro.
