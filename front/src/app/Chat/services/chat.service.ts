@@ -5,6 +5,11 @@ import { Observable } from 'rxjs';
 import { Conversation } from '../models/conversation.model';
 import { Message } from '../models/message.model';
 
+export interface PresenceStatus {
+  userId: number;
+  online: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -20,6 +25,12 @@ export class ChatService {
   getMessages(conversationId: number): Observable<Message[]> {
     return this.http.get<Message[]>(
       `${this.API_URL}/${conversationId}/messages`
+    );
+  }
+
+  getPresence(conversationId: number): Observable<PresenceStatus> {
+    return this.http.get<PresenceStatus>(
+      `${this.API_URL}/${conversationId}/presence`
     );
   }
 

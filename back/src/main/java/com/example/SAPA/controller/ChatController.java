@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -25,24 +24,41 @@ public class ChatController {
     private final MessageService messageService;
     private final AttachmentService attachmentService;
 
-
     @MessageMapping("/chat/{conversationId}")
     public void sendMessage(
             @DestinationVariable Long conversationId,
             ChatDTO.SendMessageRequest request,
-            Principal principal
+            java.security.Principal principal
     ) {
         messageService.sendMessage(conversationId, request, principal);
     }
 
     @GetMapping
     public ResponseEntity<List<ChatDTO.ConversationSummary>> getMyConversations() {
-        return ResponseEntity.ok(conversationService.getMyConversations());
+
+        return ResponseEntity.ok(
+                conversationService.getMyConversations()
+        );
     }
 
     @GetMapping("/{id}/messages")
-    public ResponseEntity<List<ChatDTO.MessageResponse>> getHistory(@PathVariable Long id) {
-        return ResponseEntity.ok(conversationService.getConversationHistory(id));
+    public ResponseEntity<List<ChatDTO.MessageResponse>> getHistory(
+            @PathVariable Long id
+    ) {
+
+        return ResponseEntity.ok(
+                conversationService.getConversationHistory(id)
+        );
+    }
+
+    @GetMapping("/{id}/presence")
+    public ResponseEntity<ChatDTO.PresenceStatus> getOtherParticipantPresence(
+            @PathVariable Long id
+    ) {
+
+        return ResponseEntity.ok(
+                conversationService.getOtherParticipantPresence(id)
+        );
     }
 
     @PostMapping("/{id}/attachments")
@@ -50,6 +66,9 @@ public class ChatController {
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        return ResponseEntity.ok(attachmentService.uploadAttachment(id, file));
+
+        return ResponseEntity.ok(
+                attachmentService.uploadAttachment(id, file)
+        );
     }
 }

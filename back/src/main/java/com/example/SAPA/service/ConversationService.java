@@ -1,4 +1,3 @@
-
 package com.example.SAPA.service;
 
 import com.example.SAPA.DTOs.ChatDTO;
@@ -30,50 +29,72 @@ public class ConversationService {
     private final DoctorRepository doctorRepository;
     private final MessageMapper messageMapper;
     private final UserContextService userContextService;
+    private final ChatPresenceService chatPresenceService;
 
     @Transactional
-    public ConversationEntity createConversation(PatientEntity patient, DoctorEntity doctor) {
+    public ConversationEntity createConversation(
+            PatientEntity patient,
+            DoctorEntity doctor
+    ) {
         return conversationRepository.findByPatientAndDoctor(patient, doctor)
                 .orElseGet(() -> {
-                    ConversationEntity conversation = ConversationEntity.builder()
-                            .patient(patient)
-                            .doctor(doctor)
-                            .build();
+
+                    ConversationEntity conversation =
+                            ConversationEntity.builder()
+                                    .patient(patient)
+                                    .doctor(doctor)
+                                    .build();
+
                     return conversationRepository.save(conversation);
                 });
     }
 
     @Transactional(readOnly = true)
     public List<ChatDTO.ConversationSummary> getMyConversations() {
+
         UserEntity user = userContextService.getAuthenticatedUser();
 
         boolean isPatient = patientRepository.findByUser(user).isPresent();
 
         List<ConversationEntity> conversations;
+
         if (isPatient) {
-            PatientEntity patient = patientRepository.findByUser(user).get();
+
+            PatientEntity patient = patientRepository.findByUser(user)
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "No se encontró el paciente"
+                    ));
+
             conversations = conversationRepository.findByPatient(patient);
+
         } else {
+
             DoctorEntity doctor = doctorRepository.findByUser(user)
                     .orElseThrow(() -> new EntityNotFoundException(
-                            "No se encontró perfil asociado al usuario"));
+                            "No se encontró perfil asociado al usuario"
+                    ));
+
             conversations = conversationRepository.findByDoctor(doctor);
         }
 
         return conversations.stream().map(conv -> {
-            List<MessageEntity> messages = messageRepository
-                    .findByConversationOrderBySentAtAsc(conv);
+
+            List<MessageEntity> messages =
+                    messageRepository.findByConversationOrderBySentAtAsc(conv);
 
             String otherName;
             String otherParticipantProfileImageUrl;
 
             if (isPatient) {
+
                 otherName = "Dr. " + conv.getDoctor().getFirstName()
                         + " " + conv.getDoctor().getLastName();
 
                 otherParticipantProfileImageUrl =
                         conv.getDoctor().getUser().getProfileImageUrl();
+
             } else {
+
                 otherName = conv.getPatient().getFirstName()
                         + " " + conv.getPatient().getLastName();
 
@@ -97,35 +118,87 @@ public class ConversationService {
                     lastMessageAt,
                     conv.getCreatedAt()
             );
+
         }).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<ChatDTO.MessageResponse> getConversationHistory(Long conversationId) {
+    public ChatDTO.PresenceStatus getOtherParticipantPresence(
+            Long conversationId
+    ) {
+
+        UserEntity authenticatedUser =
+                userContextService.getAuthenticatedUser();
+
+        ConversationEntity conversation =
+                conversationRepository.findById(conversationId)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Conversación no encontrada con id: "
+                                        + conversationId
+                        ));
+
+        validateParticipant(authenticatedUser, conversation);
+
+        UserEntity otherParticipant =
+                conversation.getPatient().getUser().getId()
+                        .equals(authenticatedUser.getId())
+                        ? conversation.getDoctor().getUser()
+                        : conversation.getPatient().getUser();
+
+        boolean online =
+                chatPresenceService.isOnline(otherParticipant.getEmail());
+
+        return new ChatDTO.PresenceStatus(
+                otherParticipant.getId(),
+                online
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChatDTO.MessageResponse> getConversationHistory(
+            Long conversationId
+    ) {
+
         UserEntity user = userContextService.getAuthenticatedUser();
 
-        ConversationEntity conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Conversación no encontrada con id: " + conversationId));
+        ConversationEntity conversation =
+                conversationRepository.findById(conversationId)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Conversación no encontrada con id: "
+                                        + conversationId
+                        ));
 
         validateParticipant(user, conversation);
 
-        return messageRepository.findByConversationOrderBySentAtAsc(conversation)
+        return messageRepository
+                .findByConversationOrderBySentAtAsc(conversation)
                 .stream()
                 .map(message -> {
-                    String senderName = userContextService.resolveName(message.getSender());
+
+                    String senderName =
+                            userContextService.resolveName(message.getSender());
+
                     return messageMapper.toResponse(message, senderName);
                 })
                 .toList();
     }
 
-    public void validateParticipant(UserEntity user, ConversationEntity conversation) {
-        boolean isPatient = conversation.getPatient().getUser().getId().equals(user.getId());
-        boolean isDoctor = conversation.getDoctor().getUser().getId().equals(user.getId());
+    public void validateParticipant(
+            UserEntity user,
+            ConversationEntity conversation
+    ) {
+
+        boolean isPatient = conversation.getPatient()
+                .getUser().getId().equals(user.getId());
+
+        boolean isDoctor = conversation.getDoctor()
+                .getUser().getId().equals(user.getId());
 
         if (!isPatient && !isDoctor) {
+
             throw new AccessDeniedException(
-                    "No tenés permiso para acceder a esta conversación");
+                    "No tenés permiso para acceder a esta conversación"
+            );
         }
     }
 }
