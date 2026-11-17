@@ -25,6 +25,50 @@
   }
 
   @if (loadStatus() === 'success') {
+    @if (sorted().length > 0) {
+      <div class="filters">
+        <div class="filters__field">
+          <label for="statusFilter">Estado</label>
+          <select
+            id="statusFilter"
+            [value]="statusFilter()"
+            (change)="statusFilter.set($any($event.target).value)"
+          >
+            <option value="ALL">Todos</option>
+            <option value="PENDING">{{ statusLabels.PENDING }}</option>
+            <option value="APPROVED">{{ statusLabels.APPROVED }}</option>
+            <option value="REJECTED">{{ statusLabels.REJECTED }}</option>
+            <option value="DISOLVED">{{ statusLabels.DISOLVED }}</option>
+          </select>
+        </div>
+
+        @if (mode === 'patient') {
+          <div class="filters__field filters__field--grow">
+            <label for="doctorFilter">Médico</label>
+            <input
+              id="doctorFilter"
+              type="text"
+              placeholder="Buscar por nombre del médico"
+              autocomplete="off"
+              [value]="doctorQuery()"
+              (input)="doctorQuery.set($any($event.target).value)"
+            />
+          </div>
+        }
+
+        <button type="button" class="btn btn--outline" [disabled]="!hasFilters()" (click)="clearFilters()">
+          Limpiar
+        </button>
+      </div>
+
+      @if (filtered().length === 0) {
+        <div class="notice">
+          <strong>Sin resultados</strong>
+          <p>No hay solicitudes que coincidan con los filtros.</p>
+        </div>
+      }
+    }
+
     @if (sorted().length === 0) {
       <div class="notice">
         <strong>No hay solicitudes por ahora</strong>
@@ -33,7 +77,7 @@
     }
 
     <ul class="list">
-      @for (req of sorted(); track req.id) {
+      @for (req of filtered(); track req.id) {
         <li class="card">
           @if (mode !== 'patient') {
             <div class="card__avatar" aria-hidden="true">
@@ -67,8 +111,14 @@
               {{ statusLabels[req.status] }}
             </span>
 
-            @if (mode === 'doctor' && req.status === 'PENDING') {
-              <div class="card__actions">
+            <div class="card__actions">
+              @if (mode === 'patient' && req.doctor) {
+                <a class="btn btn--outline" [routerLink]="['/perfil-medico-publico', req.doctor.id]">
+                  Ver perfil
+                </a>
+              }
+
+              @if (mode === 'doctor' && req.status === 'PENDING') {
                 <button
                   type="button"
                   class="btn btn--outline"
@@ -85,11 +135,9 @@
                 >
                   Aprobar
                 </button>
-              </div>
-            }
+              }
 
-            @if ((mode === 'patient' || mode === 'followers') && req.status === 'APPROVED') {
-              <div class="card__actions">
+              @if ((mode === 'patient' || mode === 'followers') && req.status === 'APPROVED') {
                 <button
                   type="button"
                   class="btn btn--danger"
@@ -98,8 +146,8 @@
                 >
                   Disolver seguimiento
                 </button>
-              </div>
-            }
+              }
+            </div>
           </div>
         </li>
       }

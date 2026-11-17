@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FollowRequestService } from '../../service/follow-request.service';
 import { FollowRequestStatus } from '../../interfaces/follow-request-status';
 import { FollowRequest } from '../../interfaces/follow-request';
@@ -29,7 +29,7 @@ const TEXTS: Record<ViewMode, { title: string; subtitle: string; empty: string }
 
 @Component({
   selector: 'app-follow-requests',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './follow-requests.html',
   styleUrl: './follow-requests.css',
 })
@@ -61,8 +61,35 @@ export class FollowRequests implements OnInit {
     DISOLVED: 'Disuelta',
   };
 
+  readonly statusFilter = signal<'ALL' | FollowRequestStatus>('ALL');
+  readonly doctorQuery = signal('');
+
+  readonly filtered = computed(() => {
+    const status = this.statusFilter();
+    const query = this.normalize(this.doctorQuery());
+    return this.sorted().filter((req) => {
+      if (status !== 'ALL' && req.status !== status) return false;
+      if (!query) return true;
+
+      const doctor = req.doctor;
+      const name = doctor ? this.normalize(`${doctor.firstName} ${doctor.lastName}`) : '';
+      return name.includes(query);
+    });
+  });
+
+  readonly hasFilters = computed(() => this.statusFilter() !== 'ALL' || this.doctorQuery().trim() !== '');
+
   ngOnInit(): void {
     this.load();
+  }
+
+  clearFilters(): void {
+    this.statusFilter.set('ALL');
+    this.doctorQuery.set('');
+  }
+
+  private normalize(text: string): string {
+    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
   load(): void {
