@@ -1,5 +1,4 @@
-
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   Client,
   IMessage,
@@ -36,8 +35,6 @@ export class ChatWebSocketService {
   readonly connectionStatus$: Observable<boolean> =
     this.connectionSubject.asObservable();
 
-  constructor(private readonly ngZone: NgZone) {}
-
   async connectToConversation(conversationId: number): Promise<void> {
     this.pendingConversationId = conversationId;
 
@@ -59,7 +56,7 @@ export class ChatWebSocketService {
     }
 
     this.initializing = true;
-    this.updateConnectionStatus(false);
+    this.connectionSubject.next(false);
 
     try {
       Reflect.set(globalThis, 'global', globalThis);
@@ -91,45 +88,36 @@ export class ChatWebSocketService {
         heartbeatOutgoing: 10000,
 
         onConnect: () => {
-          this.ngZone.run(() => {
-            this.connectionSubject.next(true);
+          this.connectionSubject.next(true);
 
-            if (this.pendingConversationId !== null) {
-              this.subscribeToConversation(
-                this.pendingConversationId
-              );
-            }
-          });
+          if (this.pendingConversationId !== null) {
+            this.subscribeToConversation(
+              this.pendingConversationId
+            );
+          }
         },
 
         onDisconnect: () => {
-          this.updateConnectionStatus(false);
+          this.connectionSubject.next(false);
         },
 
         onWebSocketClose: () => {
-          this.ngZone.run(() => {
-            this.connectionSubject.next(false);
-            this.subscription = null;
-          });
+          this.connectionSubject.next(false);
+          this.subscription = null;
         },
 
         onStompError: frame => {
-          this.ngZone.run(() => {
-            this.connectionSubject.next(false);
-
-            console.error(
-              'Error STOMP:',
-              frame.headers['message'],
-              frame.body
-            );
-          });
+          this.connectionSubject.next(false);
+          console.error(
+            'Error STOMP:',
+            frame.headers['message'],
+            frame.body
+          );
         },
 
         onWebSocketError: error => {
-          this.ngZone.run(() => {
-            this.connectionSubject.next(false);
-            console.error('Error WebSocket:', error);
-          });
+          this.connectionSubject.next(false);
+          console.error('Error WebSocket:', error);
         }
       });
 
@@ -137,7 +125,7 @@ export class ChatWebSocketService {
       client.activate();
 
     } catch (error) {
-      this.updateConnectionStatus(false);
+      this.connectionSubject.next(false);
       console.error('Error al inicializar WebSocket:', error);
 
     } finally {
@@ -160,11 +148,7 @@ export class ChatWebSocketService {
       (frame: IMessage) => {
         try {
           const message = JSON.parse(frame.body) as Message;
-
-          this.ngZone.run(() => {
-            this.incomingMessageSubject.next(message);
-          });
-
+          this.incomingMessageSubject.next(message);
         } catch (error) {
           console.error(
             'Error al procesar el mensaje recibido:',
@@ -222,7 +206,7 @@ export class ChatWebSocketService {
     this.subscription = null;
 
     this.pendingConversationId = null;
-    this.updateConnectionStatus(false);
+    this.connectionSubject.next(false);
 
     if (this.client) {
       const currentClient = this.client;
