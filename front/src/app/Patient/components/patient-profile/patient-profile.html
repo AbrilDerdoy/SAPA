@@ -50,55 +50,56 @@
           Elegí una imagen para que otros usuarios puedan reconocerte.
         </p>
 
-        <div class="profile-photo__actions">
+        @if (editing()) {
+          <div class="profile-photo__actions">
 
-          <label
-            class="photo-button"
-            [class.photo-button--disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'">
-
-            {{
-              photoStatus() === 'uploading'
-                ? 'Subiendo foto…'
-                : photoUrl()
-                  ? 'Cambiar foto'
-                  : 'Agregar foto'
-            }}
-
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              (change)="onPhotoSelected($event)"
-              [disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'"
-              hidden>
-          </label>
-
-          @if (photoUrl()) {
-            <button
-              type="button"
-              class="photo-remove"
-              (click)="removeProfilePhoto()"
-              [disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'">
+            <label
+              class="photo-button"
+              [class.photo-button--disabled]="status() === 'saving' || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
 
               {{
-                photoStatus() === 'deleting'
-                  ? 'Quitando foto…'
-                  : 'Quitar foto'
+                photoStatus() === 'uploading'
+                  ? 'Subiendo foto…'
+                  : photoUrl()
+                    ? 'Cambiar foto'
+                    : 'Agregar foto'
               }}
-            </button>
-          }
 
-        </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onPhotoSelected($event)"
+                [disabled]="status() === 'saving' || photoStatus() === 'uploading' || photoStatus() === 'deleting'"
+                hidden>
+            </label>
 
-        <p class="photo-hint">
-          JPG, PNG o WEBP. Tamaño máximo: 5 MB.
-        </p>
+            @if (photoUrl()) {
+              <button
+                type="button"
+                class="photo-remove"
+                (click)="removeProfilePhoto()"
+                [disabled]="status() === 'saving' || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
 
-        @if (photoError()) {
-          <p class="photo-error" role="alert">
-            {{ photoError() }}
+                {{
+                  photoStatus() === 'deleting'
+                    ? 'Quitando foto…'
+                    : 'Quitar foto'
+                }}
+              </button>
+            }
+
+          </div>
+
+          <p class="photo-hint">
+            JPG, PNG o WEBP. Tamaño máximo: 5 MB.
           </p>
-        }
 
+          @if (photoError()) {
+            <p class="photo-error" role="alert">
+              {{ photoError() }}
+            </p>
+          }
+        }
       </div>
 
     </section>

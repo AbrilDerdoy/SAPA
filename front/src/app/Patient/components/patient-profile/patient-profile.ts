@@ -1,5 +1,12 @@
 
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+
 import {
   FormField,
   disabled,
@@ -8,7 +15,7 @@ import {
   minLength,
   pattern,
   required,
-  validate
+  validate,
 } from '@angular/forms/signals';
 
 import { PatientService } from '../../service/patient.service';
@@ -34,6 +41,8 @@ type ProfileModel = {
   phoneNumber: string;
 };
 
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+
 function todayLocal(): string {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -50,6 +59,7 @@ function todayLocal(): string {
 })
 export class PatientProfile {
   private readonly patientService = inject(PatientService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly today = todayLocal();
 
@@ -61,6 +71,11 @@ export class PatientProfile {
   readonly photoError = signal('');
 
   readonly profileImageUrl = signal<string | null>(null);
+
+  // Cambios de foto pendientes de confirmación.
+  readonly pendingPhotoFile = signal<File | null>(null);
+  readonly photoPreviewUrl = signal<string | null>(null);
+  readonly photoRemovalPending = signal(false);
 
   readonly model = signal<ProfileModel>({
     firstName: '',
@@ -84,61 +99,71 @@ export class PatientProfile {
   });
 
   readonly photoUrl = computed(() => {
+    const preview = this.photoPreviewUrl();
+
+    if (preview) {
+      return preview;
+    }
+
+    if (this.photoRemovalPending()) {
+      return null;
+    }
+
     const url = this.profileImageUrl();
 
     if (!url) {
       return null;
     }
 
-    return url.startsWith('http')
+    return /^https?:\/\//i.test(url)
       ? url
-      : `http://localhost:8080${url}`;
+      : `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
   });
 
   readonly profileForm = form(this.model, (path) => {
     required(path.firstName, {
-      message: 'El nombre es obligatorio.'
+      message: 'El nombre es obligatorio.',
     });
 
     maxLength(path.firstName, 50, {
-      message: 'El nombre no puede superar los 50 caracteres.'
+      message: 'El nombre no puede superar los 50 caracteres.',
     });
 
     required(path.lastName, {
-      message: 'El apellido es obligatorio.'
+      message: 'El apellido es obligatorio.',
     });
 
     maxLength(path.lastName, 50, {
-      message: 'El apellido no puede superar los 50 caracteres.'
+      message: 'El apellido no puede superar los 50 caracteres.',
     });
 
     required(path.birthDate, {
-      message: 'La fecha de nacimiento es obligatoria.'
+      message: 'La fecha de nacimiento es obligatoria.',
     });
 
     validate(path.birthDate, ({ value }) =>
       value() >= this.today
         ? {
             kind: 'past',
-            message: 'La fecha de nacimiento debe ser una fecha pasada.'
+            message: 'La fecha de nacimiento debe ser una fecha pasada.',
           }
         : undefined
     );
 
     required(path.phoneNumber, {
-      message: 'El número de teléfono es obligatorio.'
+      message: 'El número de teléfono es obligatorio.',
     });
 
     minLength(path.phoneNumber, 7, {
-      message: 'El teléfono debe tener al menos 7 caracteres.'
+      message: 'El teléfono debe tener al menos 7 caracteres.',
     });
 
     maxLength(path.phoneNumber, 20, {
-      message: 'El teléfono no puede superar los 20 caracteres.'
+      message: 'El teléfono no puede superar los 20 caracteres.',
     });
 
     pattern(path.phoneNumber, /^\+?[0-9\s\-\(]+$/, {
-      message: 'Solo se permiten números, espacios, guiones o el signo +.'
+      message: 'Solo se permiten números, espacios, guiones o el signo +.',
     });
 
     disabled(path, () => !this.editing());
@@ -151,14 +176,24 @@ export class PatientProfile {
       initial.firstName !== this.profileForm.firstName().value() ||
       initial.lastName !== this.profileForm.lastName().value() ||
       initial.birthDate !== this.profileForm.birthDate().value() ||
-      initial.phoneNumber !== this.profileForm.phoneNumber().value()
+      initial.phoneNumber !== this.profileForm.phoneNumber().value() ||
+      this.pendingPhotoFile() !== null ||
+      this.photoRemovalPending()
     );
   });
 
   constructor() {
     this.loadProfile();
     this.loadProfilePhoto();
+
+    this.destroyRef.onDestroy(() => {
+      this.clearPhotoPreview();
+    });
   }
+
+  // -------------------------
+  // CARGA DEL PERFIL
+  // -------------------------
 
   loadProfile(): void {
     this.loadStatus.set('loading');
@@ -175,6 +210,7 @@ export class PatientProfile {
 
         this.model.set(values);
         this.initialModel.set({ ...values });
+
         this.loadStatus.set('ready');
       },
       error: (error) => {
@@ -183,6 +219,10 @@ export class PatientProfile {
       },
     });
   }
+
+  // -------------------------
+  // FOTO DE PERFIL
+  // -------------------------
 
   loadProfilePhoto(): void {
     this.patientService.getProfilePhoto().subscribe({
@@ -203,7 +243,7 @@ export class PatientProfile {
       return;
     }
 
-    if (this.photoStatus() !== 'idle') {
+    if (!this.editing() || this.status() === 'saving') {
       input.value = '';
       return;
     }
@@ -211,7 +251,7 @@ export class PatientProfile {
     const allowedTypes = [
       'image/jpeg',
       'image/png',
-      'image/webp'
+      'image/webp',
     ];
 
     if (!allowedTypes.includes(file.type)) {
@@ -221,68 +261,136 @@ export class PatientProfile {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_PHOTO_SIZE) {
       this.photoError.set('La imagen no puede superar los 5 MB.');
       this.photoStatus.set('error');
       input.value = '';
       return;
     }
 
+    // No se sube todavía. Se crea una vista previa temporal.
+    this.clearPhotoPreview();
+
+    this.pendingPhotoFile.set(file);
+    this.photoRemovalPending.set(false);
+    this.photoPreviewUrl.set(URL.createObjectURL(file));
+
     this.photoError.set('');
-    this.photoStatus.set('uploading');
+    this.photoStatus.set('idle');
 
-    this.patientService.uploadProfilePhoto(file).subscribe({
-      next: (response) => {
-        this.profileImageUrl.set(response.profileImageUrl ?? null);
-        this.photoStatus.set('idle');
-        this.photoError.set('');
-        input.value = '';
-      },
-      error: (error) => {
-        console.error('Error al subir foto de perfil:', error);
-
-        this.photoError.set(
-          error?.error?.message ??
-          error?.error?.error ??
-          'No se pudo subir la foto. Intentá nuevamente.'
-        );
-
-        this.photoStatus.set('error');
-        input.value = '';
-      },
-    });
+    input.value = '';
   }
 
   removeProfilePhoto(): void {
-    if (!this.profileImageUrl() || this.photoStatus() === 'uploading') {
+    if (!this.editing() || this.status() === 'saving') {
       return;
     }
 
     this.photoError.set('');
-    this.photoStatus.set('deleting');
 
-    this.patientService.removeProfilePhoto().subscribe({
-      next: (response) => {
-        this.profileImageUrl.set(response.profileImageUrl ?? null);
-        this.photoStatus.set('idle');
-        this.photoError.set('');
-      },
-      error: (error) => {
-        console.error('Error al eliminar foto de perfil:', error);
+    // Descarta una foto nueva que todavía no fue confirmada.
+    this.clearPhotoPreview();
+    this.pendingPhotoFile.set(null);
 
-        this.photoError.set(
-          error?.error?.message ??
-          error?.error?.error ??
-          'No se pudo quitar la foto. Intentá nuevamente.'
-        );
+    // La eliminación real queda pendiente de confirmación.
+    this.photoRemovalPending.set(!!this.profileImageUrl());
 
-        this.photoStatus.set('error');
-      },
-    });
+    this.photoStatus.set('idle');
   }
+
+  private clearPhotoPreview(): void {
+    const preview = this.photoPreviewUrl();
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
+    this.photoPreviewUrl.set(null);
+  }
+
+  private resetPendingPhotoChanges(): void {
+    this.clearPhotoPreview();
+
+    this.pendingPhotoFile.set(null);
+    this.photoRemovalPending.set(false);
+
+    this.photoStatus.set('idle');
+    this.photoError.set('');
+  }
+
+  private finishProfileSave(savedValues: ProfileModel): void {
+    this.model.set(savedValues);
+    this.initialModel.set({ ...savedValues });
+
+    this.resetPendingPhotoChanges();
+
+    this.editing.set(false);
+    this.status.set('success');
+  }
+
+  private savePendingPhoto(savedValues: ProfileModel): void {
+    const pendingFile = this.pendingPhotoFile();
+
+    if (pendingFile) {
+      this.photoStatus.set('uploading');
+
+      this.patientService.uploadProfilePhoto(pendingFile).subscribe({
+        next: (response) => {
+          this.profileImageUrl.set(response.profileImageUrl ?? null);
+          this.finishProfileSave(savedValues);
+        },
+        error: (error) => {
+          console.error('Error al subir foto de perfil:', error);
+
+          this.photoError.set(
+            error?.error?.message ??
+            error?.error?.error ??
+            'No se pudo subir la foto. Volvé a confirmar para reintentar.'
+          );
+
+          this.photoStatus.set('error');
+          this.status.set('error');
+        },
+      });
+
+      return;
+    }
+
+    if (this.photoRemovalPending()) {
+      this.photoStatus.set('deleting');
+
+      this.patientService.removeProfilePhoto().subscribe({
+        next: (response) => {
+          this.profileImageUrl.set(response.profileImageUrl ?? null);
+          this.finishProfileSave(savedValues);
+        },
+        error: (error) => {
+          console.error('Error al eliminar foto de perfil:', error);
+
+          this.photoError.set(
+            error?.error?.message ??
+            error?.error?.error ??
+            'No se pudo quitar la foto. Volvé a confirmar para reintentar.'
+          );
+
+          this.photoStatus.set('error');
+          this.status.set('error');
+        },
+      });
+
+      return;
+    }
+
+    this.finishProfileSave(savedValues);
+  }
+
+  // -------------------------
+  // EDICIÓN Y VALIDACIONES
+  // -------------------------
 
   invalid(field: ProfileField): boolean {
     const state = this.profileForm[field]();
+
     return state.touched() && state.invalid();
   }
 
@@ -295,14 +403,23 @@ export class PatientProfile {
       }
 
       this.profileForm().reset();
+
+      // Cancelar descarta cualquier cambio pendiente de foto.
+      this.resetPendingPhotoChanges();
+
       this.status.set('idle');
       this.editing.set(false);
+
       return;
     }
 
     this.status.set('idle');
     this.editing.set(true);
   }
+
+  // -------------------------
+  // GUARDADO
+  // -------------------------
 
   submit(event: Event): void {
     event.preventDefault();
@@ -340,8 +457,9 @@ export class PatientProfile {
 
         this.model.set(savedValues);
         this.initialModel.set({ ...savedValues });
-        this.editing.set(false);
-        this.status.set('success');
+
+        // La foto se sube o elimina recién después de confirmar.
+        this.savePendingPhoto(savedValues);
       },
       error: (error) => {
         console.error('Error al guardar perfil:', error);
