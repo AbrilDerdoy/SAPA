@@ -26,84 +26,84 @@
 
   @if (loadStatus() === 'ready') {
 
-    <section class="profile-photo">
+    <form class="form" (submit)="submit($event)" novalidate>
 
-      <div class="profile-photo__avatar">
+      <section class="profile-photo">
 
-        @if (photoUrl()) {
-          <img
-            [src]="photoUrl()"
-            alt="Foto de perfil"
-            class="profile-photo__image">
-        } @else {
-          <div class="profile-photo__initials">
-            {{ initials() }}
-          </div>
-        }
-
-      </div>
-
-      <div class="profile-photo__content">
-        <h2>Foto de perfil</h2>
-
-        <p>
-          Elegí una imagen para que otros usuarios puedan reconocerte.
-        </p>
-
-        <div class="profile-photo__actions">
-
-          <label
-            class="photo-button"
-            [class.photo-button--disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'">
-
-            {{
-              photoStatus() === 'uploading'
-                ? 'Subiendo foto…'
-                : photoUrl()
-                  ? 'Cambiar foto'
-                  : 'Agregar foto'
-            }}
-
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              (change)="onPhotoSelected($event)"
-              [disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'"
-              hidden>
-          </label>
+        <div class="profile-photo__avatar">
 
           @if (photoUrl()) {
-            <button
-              type="button"
-              class="photo-remove"
-              (click)="removeProfilePhoto()"
-              [disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'">
-
-              {{
-                photoStatus() === 'deleting'
-                  ? 'Quitando foto…'
-                  : 'Quitar foto'
-              }}
-            </button>
+            <img
+              [src]="photoUrl()"
+              alt="Foto de perfil"
+              class="profile-photo__image">
+          } @else {
+            <div class="profile-photo__initials">
+              {{ initials() }}
+            </div>
           }
 
         </div>
 
-        <p class="photo-hint">
-          JPG, PNG o WEBP. Tamaño máximo: 5 MB.
-        </p>
+        <div class="profile-photo__content">
+          <h2>Foto de perfil</h2>
 
-        @if (photoError()) {
-          <p class="photo-error" role="alert">
-            {{ photoError() }}
+          <p>
+            Elegí una imagen para que otros usuarios puedan reconocerte.
           </p>
-        }
 
-      </div>
+          <div class="profile-photo__actions">
 
-    </section>
+            <label
+              class="photo-button"
+              [class.photo-button--disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
 
-    <form class="form" (submit)="submit($event)" novalidate>
+              {{
+                photoStatus() === 'uploading'
+                  ? 'Subiendo foto…'
+                  : photoUrl()
+                    ? 'Cambiar foto'
+                    : 'Agregar foto'
+              }}
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onPhotoSelected($event)"
+                [disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'"
+                hidden>
+            </label>
+
+            @if (photoUrl()) {
+              <button
+                type="button"
+                class="photo-remove"
+                (click)="removeProfilePhoto()"
+                [disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
+
+                {{
+                  photoStatus() === 'deleting'
+                    ? 'Quitando foto…'
+                    : 'Quitar foto'
+                }}
+              </button>
+            }
+
+          </div>
+
+          <p class="photo-hint">
+            JPG, PNG o WEBP. Tamaño máximo: 5 MB.
+          </p>
+
+          @if (photoError()) {
+            <p class="photo-error" role="alert">
+              {{ photoError() }}
+            </p>
+          }
+
+        </div>
+
+      </section>
 
       <div class="field">
         <label for="firstName">Nombre</label>

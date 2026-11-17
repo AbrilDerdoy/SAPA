@@ -40,9 +40,15 @@
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
                             (change)="onPhotoSelected($event)"
-                            [disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'"
+                            [disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'"
                         />
-                        {{ photoStatus() === 'uploading' ? 'Subiendo…' : 'Agregar foto' }}
+                        {{
+                            photoStatus() === 'uploading'
+                                ? 'Subiendo…'
+                                : photoUrl()
+                                    ? 'Cambiar foto'
+                                    : 'Agregar foto'
+                        }}
                     </label>
 
                     @if (photoUrl()) {
@@ -50,7 +56,7 @@
                             type="button"
                             class="profile-photo__remove"
                             (click)="removeProfilePhoto()"
-                            [disabled]="photoStatus() === 'uploading' || photoStatus() === 'deleting'">
+                            [disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
                             {{ photoStatus() === 'deleting' ? 'Quitando…' : 'Quitar foto' }}
                         </button>
                     }

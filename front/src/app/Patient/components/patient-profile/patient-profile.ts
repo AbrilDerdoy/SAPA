@@ -203,7 +203,7 @@ export class PatientProfile {
       return;
     }
 
-    if (this.photoStatus() !== 'idle') {
+    if (!this.editing() || this.photoStatus() !== 'idle') {
       input.value = '';
       return;
     }
@@ -254,7 +254,11 @@ export class PatientProfile {
   }
 
   removeProfilePhoto(): void {
-    if (!this.profileImageUrl() || this.photoStatus() === 'uploading') {
+    if (
+      !this.profileImageUrl() ||
+      !this.editing() ||
+      this.photoStatus() === 'uploading'
+    ) {
       return;
     }
 
