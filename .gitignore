@@ -34,3 +34,6 @@ build/
 
 ### Custom Environment Variables ###
 .env
+
+# Archivos multimedia subidos
+uploads/

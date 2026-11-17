@@ -1,81 +1,97 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, finalize, shareReplay, switchMap, tap, throwError } from 'rxjs';
+import { catchError, finalize, Observable, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { Auth } from '../services/Auth/auth';
 import { AlertaService } from '../../Common/alerta/alerta-service';
+import { TokenResponse } from '../models/token-response';
 
-let refreshRequest: ReturnType<Auth['refreshToken']> | null = null;
+let refreshRequest: Observable<TokenResponse> | null = null;
 let sessionExpiredNoticeShown = false;
+
+function withBearerToken<T>(req: HttpRequest<T>, token: string): HttpRequest<T> {
+  return req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+}
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
-  const authService = inject(Auth);
+  const auth = inject(Auth);
   const alerta = inject(AlertaService);
 
-  const jwtData = localStorage.getItem('jwt');
-  let authReq = req;
   const isLoginRequest = req.url.includes('/auth/login');
   const isRefreshRequest = req.url.includes('/auth/refresh');
 
-  if (jwtData) {
-    try {
-      const tokens = JSON.parse(jwtData);
-      const token = tokens.AccessToken;
-      if (token) {
-        authReq = req.clone({
-          setHeaders: { Authorization: `Bearer ${token}` }
-        });
-      }
-    } catch (e) {
-      console.error("Error al parsear el token para la petición saliente", e);
-    }
+  // Los endpoints de autenticación no se firman ni se reintentan.
+  if (isLoginRequest || isRefreshRequest) {
+    return next(req).pipe(
+      tap(() => {
+        if (isLoginRequest) {
+          sessionExpiredNoticeShown = false;
+        }
+      })
+    );
   }
 
-  return next(authReq).pipe(
-    tap(() => {
-      if (isLoginRequest) {
+  const sessionExpired = (error: HttpErrorResponse) => {
+    // Solo se cierra la sesión si el backend rechazó explícitamente el refresh.
+    if (error.status !== 400 && error.status !== 401) {
+      return throwError(() => error);
+    }
+
+    auth.clearSession();
+
+    if (!sessionExpiredNoticeShown) {
+      sessionExpiredNoticeShown = true;
+      alerta.mostrarError(
+        'Tu sesión expiró. Iniciá sesión nuevamente.',
+        'Sesión expirada'
+      );
+    }
+
+    void router.navigate(['/login']);
+    return throwError(() => error);
+  };
+
+  /**
+   * Renueva el token y reintenta la petición original con el token nuevo.
+   * Si ya hay un refresh en curso, todos los llamadores comparten la misma
+   * petición para no rotar el refresh token varias veces en paralelo.
+   */
+  const retryWithRefreshedToken = () => {
+    if (!refreshRequest) {
+      refreshRequest = auth.refreshToken().pipe(
+        finalize(() => {
+          refreshRequest = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+
+    return refreshRequest.pipe(
+      switchMap((newTokens) => {
         sessionExpiredNoticeShown = false;
-      }
-    }),
-    catchError((error) => {
-      if (error.status === 401 && jwtData && !isLoginRequest && !isRefreshRequest) {
-        if (!refreshRequest) {
-          refreshRequest = authService.refreshToken().pipe(
-            shareReplay({ bufferSize: 1, refCount: false }),
-            finalize(() => {
-              refreshRequest = null;
-            })
-          );
-        }
+        return next(withBearerToken(req, newTokens.AccessToken));
+      }),
+      catchError(sessionExpired)
+    );
+  };
 
-        return refreshRequest.pipe(
-          switchMap((newTokens) => {
-            sessionExpiredNoticeShown = false;
-            const retryReq = req.clone({
-              setHeaders: { Authorization: `Bearer ${newTokens.AccessToken}` }
-            });
+  const tokens = auth.getTokens();
 
-            return next(retryReq);
-          }),
-          catchError((refreshError) => {
-            if (refreshError.status !== 400 && refreshError.status !== 401) {
-              return throwError(() => refreshError);
-            }
+  // Sin sesión guardada: la petición sigue su curso (puede ser un endpoint público).
+  if (!tokens?.RefreshToken) {
+    return next(tokens?.AccessToken ? withBearerToken(req, tokens.AccessToken) : req);
+  }
 
-            localStorage.removeItem('jwt');
-            localStorage.removeItem('usuario');
-            if (!sessionExpiredNoticeShown) {
-              sessionExpiredNoticeShown = true;
-              alerta.mostrarError(
-                'Tu sesión expiró. Iniciá sesión nuevamente.',
-                'Sesión expirada'
-              );
-            }
-            void router.navigate(['/login']);
-            return throwError(() => refreshError);
-          })
-        );
+  // Refresh proactivo: renueva antes de que el access token venza, evitando el 401.
+  if (!tokens.AccessToken || auth.isAccessTokenExpiring()) {
+    return retryWithRefreshedToken();
+  }
+
+  return next(withBearerToken(req, tokens.AccessToken)).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        return retryWithRefreshedToken();
       }
 
       return throwError(() => error);

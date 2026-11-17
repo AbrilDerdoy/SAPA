@@ -1,121 +1,73 @@
 .posts-container {
-  width: min(1100px, 92%);
-  margin: 36px auto;
-  padding: 30px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  width: min(100% - 32px, 1100px);
+  margin: 32px auto;
 }
 
 .posts-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
+  gap: 16px;
   margin-bottom: 24px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--border);
 }
 
-.posts-header h2 {
-  margin: 0 0 8px;
-  color: var(--primary-dark);
-  font-size: 2rem;
-  font-weight: 700;
+.posts-header h1 {
+  margin: 0;
+  color: var(--text);
 }
 
 .posts-header p {
-  margin: 0;
+  margin: 6px 0 0;
   color: var(--text-muted);
 }
 
+.primary-button,
+.edit-button,
+.delete-button {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.primary-button {
+  color: white;
+  background: var(--primary);
+}
+
+.primary-button:hover {
+  background: var(--primary-dark);
+}
+
 .posts-filter {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .posts-filter input {
   width: 100%;
-  max-width: 500px;
-}
-
-.post-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0 0 30px;
-  padding: 26px;
-  background: var(--primary-light);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.post-form h3 {
-  margin: 0 0 8px;
-  color: var(--primary-dark);
-  font-size: 1.4rem;
-}
-
-.post-form label {
+  padding: 12px 14px;
   color: var(--text);
-  font-weight: 600;
-}
-
-.post-form input,
-.post-form textarea {
-  width: 100%;
-}
-
-.post-form textarea {
-  min-height: 140px;
-}
-
-.form-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.form-actions button[type="button"] {
-  background: var(--neutral-bg);
-  color: var(--neutral-text);
-}
-
-.form-actions button[type="button"]:hover {
-  background: var(--neutral-hover);
-}
-
-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-sizing: border-box;
 }
 
 .posts-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .post-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px;
+  padding: 22px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--primary);
-  border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(0, 80, 73, 0.04);
-  overflow-wrap: anywhere;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.post-card:hover {
-  transform: translateY(-2px);
+  border-radius: 12px;
   box-shadow: var(--shadow);
 }
 
@@ -123,170 +75,177 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
 }
 
-.post-card-header h3 {
-  flex: 1;
-  min-width: 0;
+.post-card-header h2 {
   margin: 0;
-  color: var(--primary-dark);
-  font-size: 1.35rem;
+  color: var(--text);
+  font-size: 1.2rem;
   overflow-wrap: anywhere;
 }
 
-.post-card-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
 .post-content {
-  margin: 0;
+  margin: 16px 0;
   color: var(--text);
+  line-height: 1.6;
   white-space: pre-wrap;
-  line-height: 1.7;
-}
-
-.post-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.post-actions button {
-  padding: 7px 12px;
-  font-size: 0.9rem;
-}
-
-.post-actions button:last-child {
-  background: var(--danger-light);
-  color: var(--danger);
-  border: 1px solid var(--danger-border);
-}
-
-.post-actions button:last-child:hover {
-  background: var(--danger-hover);
+  overflow-wrap: anywhere;
 }
 
 .post-meta {
   display: flex;
-  justify-content: space-between;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 8px;
   padding-top: 14px;
-  border-top: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+  font-size: .85rem;
 }
 
-.post-meta time {
-  font-size: 0.85rem;
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.edit-button {
+  color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.edit-button:hover {
+    background-color: #d5efeb;
+}
+
+.delete-button {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.save-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.save-button img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  background: transparent;
 }
 
 .error-message {
-  margin: 8px 0;
-  padding: 10px 14px;
+  padding: 12px;
   color: var(--danger);
   background: var(--danger-light);
-  border: 1px solid var(--danger-border);
   border-radius: 8px;
-  font-size: 0.9rem;
 }
 
 .empty-state {
-  padding: 35px 20px;
+  padding: 32px;
   color: var(--text-muted);
   text-align: center;
-  background: var(--primary-light);
+  background: var(--surface);
   border: 1px dashed var(--border);
-  border-radius: var(--radius);
+  border-radius: 12px;
 }
 
-.empty-state p {
+.share-button,
+.save-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 7px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.share-button:hover,
+.save-button:hover {
+    background-color: var(--primary-light);
+    transform: scale(1.08);
+}
+
+.share-button img,
+.save-button img {
+    width: 21px;
+    height: 21px;
+    object-fit: contain;
+}
+
+.share-button img {
+    opacity: 0.75;
+}
+
+.share-button:hover img {
+    opacity: 1;
+}
+
+.forum-cover {
+  min-height: 230px;
+  padding: 28px;
+  margin-bottom: 24px;
+  border-radius: 14px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+
+  background-color: var(--primary);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  box-sizing: border-box;
+  box-shadow: var(--shadow);
+}
+
+.forum-cover-content h1 {
   margin: 0;
+  color: white;
+  font-size: 2rem;
+  overflow-wrap: anywhere;
 }
 
-.post-card button:focus-visible,
-.post-form button:focus-visible {
-  outline: 3px solid rgba(2, 150, 140, 0.3);
-  outline-offset: 3px;
-}
-.save {
-  border: none;
-  background: transparent;
-  padding: 6px;
-  cursor: pointer;
-}
-
-.save img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  transition: transform 0.2s ease;
-}
-
-.save:hover img {
-  transform: scale(1.15);
+.forum-cover-content p {
+  margin: 8px 0 0;
+  color: white;
 }
 
 @media (max-width: 600px) {
-  .posts-container {
-    width: 96%;
-    margin: 16px auto;
-    padding: 18px;
-  }
-
   .posts-header {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .posts-header h2 {
-    font-size: 1.7rem;
-  }
-
-  .posts-header > button {
+  .posts-header button {
     width: 100%;
   }
 
-  .post-form {
-    padding: 18px;
-  }
-
   .post-card {
-    padding: 18px;
+    padding: 16px;
   }
 
   .post-card-header {
     flex-direction: column;
+  }
+
+    .forum-cover {
+    min-height: 200px;
+    padding: 18px;
     align-items: stretch;
-  }
-
-  .post-card-controls {
-  width: 100%;
-  align-items: flex-end;
-}
-
-  .post-actions {
-    width: 100%;
-  }
-
-  .post-actions button {
-    flex: 1;
-  }
-
-  .form-actions {
     flex-direction: column;
-  }
-
-  .form-actions button {
-    width: 100%;
-  }
-
-  .post-meta {
-    flex-direction: column;
+    justify-content: flex-end;
   }
 }

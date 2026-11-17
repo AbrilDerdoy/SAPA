@@ -5,5 +5,6 @@ export interface ForumResponse {
     title: string
     content: string
     active: boolean
+    imageUrl: string | null
     createdAt: string
 }

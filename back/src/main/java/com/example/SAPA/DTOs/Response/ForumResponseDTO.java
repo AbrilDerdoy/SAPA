@@ -9,5 +9,6 @@ public record ForumResponseDTO(
         String title,
         String content,
         boolean active,
+        String imageUrl,
         LocalDateTime createdAt
 ) {}

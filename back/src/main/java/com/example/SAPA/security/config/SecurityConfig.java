@@ -89,194 +89,178 @@ public class SecurityConfig {
             throws Exception {
 
         http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
+            .cors(Customizer.withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
 
-                .headers(headers ->
-                        headers.frameOptions(
-                                HeadersConfigurer.FrameOptionsConfig::sameOrigin
-                        )
-                )
+            .headers(headers ->
+                    headers.frameOptions(
+                            HeadersConfigurer.FrameOptionsConfig::sameOrigin
+                    )
+            )
 
-                .sessionManagement(manager ->
-                        manager.sessionCreationPolicy(STATELESS)
-                )
+            .sessionManagement(manager ->
+                    manager.sessionCreationPolicy(STATELESS)
+            )
 
-                .authorizeHttpRequests(auth -> auth
+            .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Autenticación
-                        .requestMatchers("/auth/**").permitAll()
+                // Autenticación
+                .requestMatchers("/auth/**").permitAll()
 
-                        // Archivos y páginas públicas
-                        .requestMatchers(
-                                "/",
-                                "/index",
-                                "/index.html",
-                                "/login.html",
-                                "/registro-paciente.html",
-                                "/registro-medico.html",
-                                "/perfil.html",
-                                "/admin.html",
-                                "/doctor-panel.html",
-                                "/login",
-                                "/registro-paciente",
-                                "/registro-medico",
-                                "/perfil",
-                                "/admin",
-                                "/doctor-panel",
-                                "/error",
-                                "/favicon.ico"
-                        ).permitAll()
+                // Archivos y páginas públicas
+                .requestMatchers(
+                        "/",
+                        "/index",
+                        "/index.html",
+                        "/login.html",
+                        "/registro-paciente.html",
+                        "/registro-medico.html",
+                        "/perfil.html",
+                        "/admin.html",
+                        "/doctor-panel.html",
+                        "/login",
+                        "/registro-paciente",
+                        "/registro-medico",
+                        "/perfil",
+                        "/admin",
+                        "/doctor-panel",
+                        "/error",
+                        "/favicon.ico"
+                ).permitAll()
 
-                        .requestMatchers(
-                                "/css/**",
-                                "/img/**",
-                                "/js/**"
-                        ).permitAll()
+                .requestMatchers(
+                        "/css/**",
+                        "/img/**",
+                        "/js/**"
+                ).permitAll()
 
-                        // WebSocket y archivos
-                        .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/uploads/chat/**").permitAll()
-                        .requestMatchers("/uploads/profiles/**").permitAll()
+                // WebSocket y archivos del chat
+                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/uploads/chat/**").permitAll()
 
-                        // Especialidades
-                        .requestMatchers(HttpMethod.GET, "/specialities").permitAll()
-                        .requestMatchers("/specialities/**")
-                        .hasAuthority("ROLE_ADMIN")
+                // Especialidades
+                .requestMatchers(HttpMethod.GET, "/specialities").permitAll()
+                .requestMatchers("/specialities/**").hasAuthority("ROLE_ADMIN")
 
-                        // Foros y publicaciones
-                        .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                        .requestMatchers("/forums/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
-                        .requestMatchers("/posts/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                // Foros y publicaciones
+                .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                .requestMatchers("/forums/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/posts/**").hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        // Administración
-                        .requestMatchers("/admin/**")
-                        .hasAuthority("ROLE_ADMIN")
+                // Administración
+                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
 
-                        // Medicamentos
-                        .requestMatchers("/medications/search/**").permitAll()
-                        .requestMatchers("/medications/patient/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
-                        .requestMatchers(HttpMethod.PUT, "/medications/**")
-                        .hasAuthority("ROLE_DOCTOR")
-                        .requestMatchers(HttpMethod.DELETE, "/medications/**")
-                        .hasAuthority("ROLE_DOCTOR")
+                // Medicamentos
+                .requestMatchers("/medications/search/**").permitAll()
+                .requestMatchers("/medications/patient/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers(HttpMethod.PUT, "/medications/**")
+                    .hasAuthority("ROLE_DOCTOR")
+                .requestMatchers(HttpMethod.DELETE, "/medications/**")
+                    .hasAuthority("ROLE_DOCTOR")
 
-                        // Consejos de salud
-                        .requestMatchers(HttpMethod.GET, "/health-tips/**").permitAll()
-                        .requestMatchers("/health-tips/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                // Consejos de salud
+                .requestMatchers(HttpMethod.GET, "/health-tips/**").permitAll()
+                .requestMatchers("/health-tips/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        // Solicitudes de seguimiento
-                        .requestMatchers("/follow-requests/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                // Solicitudes de seguimiento
+                .requestMatchers("/follow-requests/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        // Conversaciones
-                        .requestMatchers("/conversations/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                // Conversaciones
+                .requestMatchers("/conversations/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        // Cuestionarios y asignaciones
-                        .requestMatchers("/questionnaires/**")
-                        .hasAnyAuthority(
-                                "PATIENT", "DOCTOR",
-                                "ROLE_PATIENT", "ROLE_DOCTOR"
-                        )
-                        .requestMatchers("/assignments/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                // Cuestionarios y asignaciones
+                .requestMatchers("/questionnaires/**")
+    .hasAnyAuthority("PATIENT", "DOCTOR", "ROLE_PATIENT", "ROLE_DOCTOR")
+                .requestMatchers("/assignments/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        // Historias clínicas y tratamientos
-                        .requestMatchers("/medical-records/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
-                        .requestMatchers("/treatments/**")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                // Historias clínicas y tratamientos
+                .requestMatchers("/medical-records/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/treatments/**")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
 
-                        // Notificaciones
-                        .requestMatchers("/notifications/**")
-                        .hasAnyAuthority(ALL_ROLES)
+                // Notificaciones
+                .requestMatchers("/notifications/**")
+                    .hasAnyAuthority(ALL_ROLES)
 
-                        // Reportes
-                        .requestMatchers(HttpMethod.POST, "/reports")
-                        .hasAnyAuthority(PATIENT_AND_DOCTOR)
-                        .requestMatchers("/reports/**")
-                        .hasAuthority("ROLE_ADMIN")
+                // Reportes
+                .requestMatchers(HttpMethod.POST, "/reports")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                .requestMatchers("/reports/**")
+                    .hasAuthority("ROLE_ADMIN")
 
-                        // Usuarios
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/users/all",
-                                "/users/active",
-                                "/users/inactive"
-                        ).hasAuthority("ROLE_ADMIN")
+                // Usuarios
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/users/all",
+                        "/users/active",
+                        "/users/inactive"
+                ).hasAuthority("ROLE_ADMIN")
 
-                        .requestMatchers("/users/**")
-                        .hasAnyAuthority(ALL_ROLES)
+                .requestMatchers("/users/**")
+                    .hasAnyAuthority(ALL_ROLES)
 
-                        // Búsqueda de medicamentos FDA
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/fda/search-medication"
-                        ).permitAll()
+                // Búsqueda de medicamentos FDA
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/fda/search-medication"
+                ).permitAll()
 
-                        // Médicos
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/doctors/profile"
-                        ).hasAuthority("ROLE_DOCTOR")
+                // Médicos
+                .requestMatchers(HttpMethod.GET, "/doctors/profile").hasAuthority("ROLE_DOCTOR")
+                .requestMatchers(HttpMethod.GET, "/doctors/**").permitAll()
+                .requestMatchers("/doctors/**").hasAuthority("ROLE_DOCTOR")
 
-                        .requestMatchers(HttpMethod.GET, "/doctors/**").permitAll()
-                        .requestMatchers("/doctors/**")
-                        .hasAuthority("ROLE_DOCTOR")
+                // Pacientes vinculados al médico
+                .requestMatchers(HttpMethod.GET, "/patients/my-patients")
+                    .hasAnyAuthority("ROLE_DOCTOR", "DOCTOR")
 
-                        // Pacientes vinculados al médico
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/patients/my-patients"
-                        ).hasAnyAuthority("ROLE_DOCTOR", "DOCTOR")
+                .requestMatchers("/patients/**")
+                    .hasAuthority("ROLE_PATIENT")
 
-                        .requestMatchers("/patients/**")
-                        .hasAuthority("ROLE_PATIENT")
+                // Documentación
+                .requestMatchers(
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                ).permitAll()
 
-                        // Documentación
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
+                            .requestMatchers(HttpMethod.GET, "/uploads/forums/images/**").permitAll()
+                .anyRequest().authenticated()
+            )
 
-                        .anyRequest().authenticated()
-                )
+            .addFilterBefore(
+                    jwtAuthenticationFilter,
+                    UsernamePasswordAuthenticationFilter.class
+            )
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                )
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .accessDeniedHandler((request, response, exceptionDenied) -> {
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(restAuthenticationEntryPoint)
-                        .accessDeniedHandler((request, response, exceptionDenied) -> {
-                            response.setContentType("application/json");
-                            response.setStatus(
-                                    HttpServletResponse.SC_FORBIDDEN
-                            );
+                    String jsonResponse = String.format(
+                            "{\"error\":\"%s\",\"status\":%d,\"path\":\"%s\"}",
+                            "Acceso denegado",
+                            HttpServletResponse.SC_FORBIDDEN,
+                            request.getRequestURI()
+                    );
 
-                            String jsonResponse = String.format(
-                                    "{\"error\":\"%s\",\"status\":%d,\"path\":\"%s\"}",
-                                    "Acceso denegado",
-                                    HttpServletResponse.SC_FORBIDDEN,
-                                    request.getRequestURI()
-                            );
-
-                            response.getWriter().write(jsonResponse);
-                            response.getWriter().flush();
-                        })
-                );
+                    response.getWriter().write(jsonResponse);
+                    response.getWriter().flush();
+                })
+            );
 
         return http.build();
     }

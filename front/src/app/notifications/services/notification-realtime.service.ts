@@ -22,20 +22,8 @@ export class NotificationRealtimeService {
       return;
     }
 
-    const jwtData = localStorage.getItem('jwt');
-    if (!jwtData) {
-      return;
-    }
-
-    let accessToken: string;
-    try {
-      accessToken = JSON.parse(jwtData).AccessToken;
-      if (!accessToken) {
-        console.error('No se encontró AccessToken para las notificaciones.');
-        return;
-      }
-    } catch (error) {
-      console.error('Error al leer el token para las notificaciones:', error);
+    const accessToken = this.readAccessToken();
+    if (!accessToken) {
       return;
     }
 
@@ -52,6 +40,17 @@ export class NotificationRealtimeService {
         webSocketFactory: () => new SockJS(this.wsUrl),
         connectHeaders: {
           Authorization: `Bearer ${accessToken}`,
+        },
+        // Toma el token más reciente en cada reconexión, así el refresh
+        // del interceptor también aplica a las notificaciones en tiempo real.
+        beforeConnect: (stompClient: Client) => {
+          const latestToken = this.readAccessToken();
+
+          if (latestToken) {
+            stompClient.connectHeaders = {
+              Authorization: `Bearer ${latestToken}`,
+            };
+          }
         },
         reconnectDelay: 5000,
         heartbeatIncoming: 10000,
@@ -96,6 +95,19 @@ export class NotificationRealtimeService {
       const client = this.client;
       this.client = null;
       void client.deactivate();
+    }
+  }
+
+  private readAccessToken(): string | null {
+    try {
+      const tokens = JSON.parse(localStorage.getItem('jwt') ?? '{}') as {
+        AccessToken?: string;
+      };
+
+      return tokens.AccessToken ?? null;
+    } catch (error) {
+      console.error('Error al leer el token para las notificaciones:', error);
+      return null;
     }
   }
 

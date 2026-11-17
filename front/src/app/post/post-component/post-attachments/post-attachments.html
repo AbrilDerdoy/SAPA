@@ -1,0 +1,44 @@
+@if (attachments().length > 0) {
+<section class="post-attachments">
+    <h3>Archivos adjuntos</h3>
+
+    <div class="attachments-list">
+        @if (!isAuthenticated()) {
+        <div class="attachments-locked">
+            <span>{{ attachments().length }} archivos adjuntos</span>
+
+            <p>Iniciá sesión para ver los archivos de esta publicación.</p>
+
+            <button type="button" (click)="goToLogin()">
+                Iniciar sesión
+            </button>
+        </div>
+        } @else {
+        <div class="attachments-list">
+            @for (attachment of attachments(); track attachment.attachmentId) {
+            @if (attachmentUrls()[attachment.attachmentId]; as url) {
+            @if (isImage(attachment)) {
+            <a class="attachment-image" [href]="url" target="_blank" rel="noopener noreferrer">
+                <img [src]="url" [alt]="attachment.fileName">
+            </a>
+            } @else {
+            <a class="attachment-document" [href]="url" [download]="attachment.fileName" target="_blank"
+                rel="noopener noreferrer">
+                <span class="document-icon">
+                    {{ attachment.fileName.split('.').pop()?.toUpperCase() }}
+                </span>
+                <span class="document-info">
+                    <strong>{{ attachment.fileName }}</strong>
+                    <small>{{ formatSize(attachment.size) }}</small>
+                </span>
+            </a>
+            }
+            } @else {
+            <div class="attachment-loading">Cargando archivo...</div>
+            }
+            }
+        </div>
+        }
+    </div>
+</section>
+}

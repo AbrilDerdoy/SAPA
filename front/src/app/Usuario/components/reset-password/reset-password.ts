@@ -16,7 +16,7 @@ export interface datos{
   selector: 'app-reset-password',
   imports: [FormField,FormError,RouterLink],
   templateUrl: './reset-password.html',
-  styleUrl: '../../shared/form.css',
+  styleUrls: ['./reset-password.css', '../../shared/form.css']
 })
 export class ResetPassword {
   private readonly route = inject(ActivatedRoute);
