@@ -12,6 +12,7 @@ import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.enums.NotificationType;
 import com.example.SAPA.enums.UserCategory;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -56,12 +57,13 @@ public class FollowRequestService {
             PatientEntity patient =
                     userContextService.getAuthenticatedPatient();
 
-            if (followRequestRepository.existsByPatientAndDoctorAndStatus(
-                    patient, targetDoctor, FollowRequestStatus.PENDING)
-                    || followRequestRepository.existsByPatientAndDoctorAndStatus(
-                    patient, targetDoctor, FollowRequestStatus.APPROVED)) {
+            if (followRequestRepository.existsByPatientAndDoctorAndStatusIn(
+                    patient,
+                    targetDoctor,
+                    List.of(FollowRequestStatus.PENDING, FollowRequestStatus.APPROVED)
+            )) {
 
-                throw new RuntimeException(
+                throw new EntityExistsException(
                         "Ya existe una solicitud pendiente o un seguimiento activo con este médico."
                 );
             }
@@ -91,12 +93,13 @@ public class FollowRequestService {
                 );
             }
 
-            if (followRequestRepository.existsByDoctorFollowerAndDoctorAndStatus(
-                    doctorFollower, targetDoctor, FollowRequestStatus.PENDING)
-                    || followRequestRepository.existsByDoctorFollowerAndDoctorAndStatus(
-                    doctorFollower, targetDoctor, FollowRequestStatus.APPROVED)) {
+            if (followRequestRepository.existsByDoctorFollowerAndDoctorAndStatusIn(
+                    doctorFollower,
+                    targetDoctor,
+                    List.of(FollowRequestStatus.PENDING, FollowRequestStatus.APPROVED)
+            )) {
 
-                throw new RuntimeException(
+                throw new EntityExistsException(
                         "Ya existe una solicitud pendiente o un seguimiento activo con este médico."
                 );
             }
@@ -137,6 +140,12 @@ public class FollowRequestService {
         if (request.getStatus() != FollowRequestStatus.PENDING) {
             throw new RuntimeException(
                     "La solicitud ya fue respondida o no está pendiente."
+            );
+        }
+
+        if (hasAnotherApprovedFollow(request)) {
+            throw new EntityExistsException(
+                    "Ya existe un seguimiento activo con esta persona."
             );
         }
 
@@ -194,6 +203,25 @@ public class FollowRequestService {
         }
 
         return saved;
+    }
+
+    private boolean hasAnotherApprovedFollow(FollowRequestEntity request) {
+        if (request.getPatient() != null) {
+            return followRequestRepository.existsByPatientAndDoctorAndStatusAndIdNot(
+                    request.getPatient(),
+                    request.getDoctor(),
+                    FollowRequestStatus.APPROVED,
+                    request.getId()
+            );
+        }
+
+        return request.getDoctorFollower() != null
+                && followRequestRepository.existsByDoctorFollowerAndDoctorAndStatusAndIdNot(
+                        request.getDoctorFollower(),
+                        request.getDoctor(),
+                        FollowRequestStatus.APPROVED,
+                        request.getId()
+                );
     }
 
     @Transactional

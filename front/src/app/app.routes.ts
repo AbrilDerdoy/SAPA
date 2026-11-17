@@ -25,6 +25,7 @@ import { MyMedicalRecord } from './medical-record/components/my-medical-record/m
 import { PatientMedicalRecord } from './medical-record/components/patient-medical-record/patient-medical-record';
 import { DoctorProfilePublic } from './Doctor/components/doctor-profile-public/doctor-profile-public';
 import { SharedPost } from './post/post-component/shared-post/shared-post';
+import { NotFound } from './Common/not-found/not-found';
 
 export const routes: Routes = [
 
@@ -166,5 +167,5 @@ export const routes: Routes = [
   },
 
   // Ruta inexistente
-  { path: '**', redirectTo: 'home' }
+  { path: '**', component: NotFound }
 ];
