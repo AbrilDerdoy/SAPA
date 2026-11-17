@@ -15,6 +15,22 @@ import { TreatmentForm } from '../treatment-form/treatment-form';
 
 type LoadStatus = 'loading' | 'success' | 'error';
 
+type SortOption = 'default' | 'recent' | 'name-asc' | 'name-desc' | 'freq-asc' | 'freq-desc' | 'dur-asc' | 'dur-desc';
+
+export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'default', label: 'Sin ordenar' },
+  { value: 'recent', label: 'Recién agregados' },
+  { value: 'name-asc', label: 'Nombre (A → Z)' },
+  { value: 'name-desc', label: 'Nombre (Z → A)' },
+  { value: 'freq-asc', label: 'Frecuencia: más seguido primero' },
+  { value: 'freq-desc', label: 'Frecuencia: menos seguido primero' },
+  { value: 'dur-asc', label: 'Duración: más corta primero' },
+  { value: 'dur-desc', label: 'Duración: más larga primero' },
+];
+
+const FREQ_HOURS: Record<string, number> = { HOUR: 1, DAY: 24, WEEK: 168, MONTH: 720 };
+const DUR_DAYS: Record<string, number> = { DAY: 1, WEEK: 7, MONTH: 30, YEAR: 365, SESSIONS: 1 };
+
 function readRole(): string {
   try {
     const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
@@ -53,7 +69,60 @@ export class Treatments {
   readonly filterForm = form(this.filterModel);
   readonly hasFilter = computed(() => this.filterModel().filter.trim().length > 0);
 
+  readonly filtersOpen = signal(false);
+  readonly sortOptions = SORT_OPTIONS;
+  readonly durationUnits = DURATION_UNITS;
+  readonly frequencyUnits = FREQUENCY_UNITS;
+
+  readonly sortBy = signal<SortOption>('default');
+  readonly durationUnitFilter = signal<string>('ALL');
+  readonly frequencyUnitFilter = signal<string>('ALL');
+
+  readonly activeFilters = computed(
+    () =>
+      (this.sortBy() !== 'default' ? 1 : 0) +
+      (this.durationUnitFilter() !== 'ALL' ? 1 : 0) +
+      (this.frequencyUnitFilter() !== 'ALL' ? 1 : 0)
+  );
+
   readonly treatments = signal<Treatment[]>([]);
+
+  readonly visibleTreatments = computed(() => {
+    const dUnit = this.durationUnitFilter();
+    const fUnit = this.frequencyUnitFilter();
+    let list = this.treatments().filter(
+      (t) =>
+        (dUnit === 'ALL' || t.duration.unit === dUnit) &&
+        (fUnit === 'ALL' || t.frequency.unit === fUnit)
+    );
+
+    const freq = (t: Treatment) => t.frequency.length * (FREQ_HOURS[t.frequency.unit] ?? 1);
+    const dur = (t: Treatment) =>
+      t.duration.unit === 'INDETERMINATE'
+        ? Number.MAX_SAFE_INTEGER
+        : t.duration.length * (DUR_DAYS[t.duration.unit] ?? 1);
+
+list = [...list];
+    switch (this.sortBy()) {
+      case 'recent':
+        return list.sort((a, b) => b.treatmentId - a.treatmentId);
+      case 'name-asc':
+        return list.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+      case 'name-desc':
+        return list.sort((a, b) => b.name.localeCompare(a.name, 'es'));
+      case 'freq-asc':
+        return list.sort((a, b) => freq(a) - freq(b));
+      case 'freq-desc':
+        return list.sort((a, b) => freq(b) - freq(a));
+      case 'dur-asc':
+        return list.sort((a, b) => dur(a) - dur(b));
+      case 'dur-desc':
+        return list.sort((a, b) => dur(b) - dur(a));
+      default:
+        return list;
+    }
+  });
+
   readonly loadStatus = signal<LoadStatus>('loading');
   readonly loadError = signal('');
 
@@ -77,6 +146,16 @@ export class Treatments {
     toObservable(computed(() => this.filterModel().filter.trim()))
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe(() => this.load());
+  }
+
+  toggleFilters(): void {
+    this.filtersOpen.update((open) => !open);
+  }
+
+  clearFilters(): void {
+    this.sortBy.set('default');
+    this.durationUnitFilter.set('ALL');
+    this.frequencyUnitFilter.set('ALL');
   }
 
   retry(): void {
@@ -117,13 +196,15 @@ export class Treatments {
     });
   }
 
-  openCreate(): void {
+openCreate(): void {
+    if (!this.isDoctor) return;
     this.clearFeedback();
     this.editing.set(null);
     this.formOpen.set(true);
   }
 
   openEdit(treatment: Treatment): void {
+    if (!this.isDoctor) return;
     this.clearFeedback();
     this.confirmId.set(null);
     this.editing.set(treatment);

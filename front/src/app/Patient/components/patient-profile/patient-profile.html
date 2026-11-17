@@ -26,36 +26,37 @@
 
   @if (loadStatus() === 'ready') {
 
-    <section class="profile-photo">
+    <form class="form" (submit)="submit($event)" novalidate>
 
-      <div class="profile-photo__avatar">
+      <section class="profile-photo">
 
-        @if (photoUrl()) {
-          <img
-            [src]="photoUrl()"
-            alt="Foto de perfil"
-            class="profile-photo__image">
-        } @else {
-          <div class="profile-photo__initials">
-            {{ initials() }}
-          </div>
-        }
+        <div class="profile-photo__avatar">
 
-      </div>
+          @if (photoUrl()) {
+            <img
+              [src]="photoUrl()"
+              alt="Foto de perfil"
+              class="profile-photo__image">
+          } @else {
+            <div class="profile-photo__initials">
+              {{ initials() }}
+            </div>
+          }
 
-      <div class="profile-photo__content">
-        <h2>Foto de perfil</h2>
+        </div>
 
-        <p>
-          Elegí una imagen para que otros usuarios puedan reconocerte.
-        </p>
+        <div class="profile-photo__content">
+          <h2>Foto de perfil</h2>
 
-        @if (editing()) {
+          <p>
+            Elegí una imagen para que otros usuarios puedan reconocerte.
+          </p>
+
           <div class="profile-photo__actions">
 
             <label
               class="photo-button"
-              [class.photo-button--disabled]="status() === 'saving' || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
+              [class.photo-button--disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
 
               {{
                 photoStatus() === 'uploading'
@@ -69,7 +70,7 @@
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 (change)="onPhotoSelected($event)"
-                [disabled]="status() === 'saving' || photoStatus() === 'uploading' || photoStatus() === 'deleting'"
+                [disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'"
                 hidden>
             </label>
 
@@ -78,7 +79,7 @@
                 type="button"
                 class="photo-remove"
                 (click)="removeProfilePhoto()"
-                [disabled]="status() === 'saving' || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
+                [disabled]="!editing() || photoStatus() === 'uploading' || photoStatus() === 'deleting'">
 
                 {{
                   photoStatus() === 'deleting'
@@ -99,12 +100,10 @@
               {{ photoError() }}
             </p>
           }
-        }
-      </div>
 
-    </section>
+        </div>
 
-    <form class="form" (submit)="submit($event)" novalidate>
+      </section>
 
       <div class="field">
         <label for="firstName">Nombre</label>

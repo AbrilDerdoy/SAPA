@@ -186,6 +186,7 @@ export class DoctorProfile {
     if (!file) return;
 
     if (
+      !this.editing() ||
       this.photoStatus() === 'uploading' ||
       this.photoStatus() === 'deleting'
     ) {
@@ -238,6 +239,7 @@ export class DoctorProfile {
   removeProfilePhoto(): void {
     if (
       !this.profileImageUrl() ||
+      !this.editing() ||
       this.photoStatus() === 'uploading' ||
       this.photoStatus() === 'deleting'
     ) {
