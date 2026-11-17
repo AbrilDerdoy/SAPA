@@ -227,6 +227,7 @@ public class SecurityConfig {
                         "/webjars/**"
                 ).permitAll()
 
+                            .requestMatchers(HttpMethod.GET, "/uploads/forums/images/**").permitAll()
                 .anyRequest().authenticated()
             )
 

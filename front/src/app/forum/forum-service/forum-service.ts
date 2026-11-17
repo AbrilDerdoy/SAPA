@@ -33,8 +33,8 @@ export class ForumService {
   }
 
     // Crear un nuevo foro.
-  createForum(datosForo: ForumRequest){
-    return this.http.post<ForumRequest>(this.BASE_URL, datosForo)
+  createForum(formData: FormData){
+    return this.http.post<ForumRequest>(this.BASE_URL, formData)
   }
 
     // Actualizar foro existente.
