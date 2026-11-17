@@ -44,14 +44,18 @@ El objetivo principal del sistema es centralizar la información médica de los 
 
 * MySQL
 
+## Frontend
+* Angular 21
+* Leaflet + OpenStreetMap + Photon - Mapa interactivo
+
 ## Documentación
 
 * Swagger / OpenAPI
 
 ## Servicios externos
 
-* Mailtrap (envío de correos electrónicos)
-    * ACLARACION: esta API la usamos de manera temporal para pruebas, en el futuro vamos a migrar a la API de Gmail.
+* Gmail (envío de correos electrónicos)
+* Leaflet + OpenStreetMap (Mapa interactivo)
 * OpenFDA API (consulta de medicamentos)
 
 ---
@@ -65,6 +69,9 @@ git clone https://github.com/AbrilDerdoy/SAPA
 cd SAPA
 ```
 
+* Para el front -> cd front -> ng serve
+* Para el back -> cd back -> mvn spring-boot:run
+
 ## 2. Crear la base de datos
 
 Ingresar a MySQL y ejecutar:
@@ -72,6 +79,7 @@ Ingresar a MySQL y ejecutar:
 ```sql
 CREATE DATABASE sapa;
 ```
+* La API REST-ful crea automaticamente las tablas y las dependencias.
 
 ## 3. Configurar application.properties
 
@@ -89,18 +97,16 @@ spring.datasource.username=root
 spring.datasource.password=
 ```
 
-## 4. Configurar Mailtrap
+## 4. Configurar GMAIL
 
-Crear una cuenta en Mailtrap y configurar
+Crear una cuenta en GMAIL y configurar
 
 ```properties
-spring.mail.host=sandbox.smtp.mailtrap.io
-spring.mail.port=2525
+spring.mail.host=smtp.gmail.io
+spring.mail.port=587
 spring.mail.username=TU_USERNAME
 spring.mail.password=TU_PASSWORD
 
-mailtrap.api.token=TU_TOKEN
-mailtrap.api.inbox-id=TU_INBOX_ID
 ```
 
 ## 5. Ejecutar la aplicación
@@ -114,13 +120,6 @@ Desde IntelliJ:
 ```java
 SapaApplication.java
 ```
-
-O desde consola:
-
-```bash
-./mvnw spring-boot:run
-```
-
 ---
 
 # Configuración necesaria
@@ -137,8 +136,6 @@ Las siguientes variables deben configurarse antes de iniciar el sistema:
 | jwt.refresh-expiration     | Duración del Refresh Token       |
 | spring.mail.username       | Usuario SMTP                     |
 | spring.mail.password       | Contraseña SMTP                  |
-| mailtrap.api.token         | Token API de Mailtrap            |
-| mailtrap.api.inbox-id      | Inbox de Mailtrap                |
 
 ---
 
@@ -536,17 +533,8 @@ Rol: ROLE_PATIENT
 # Enlace al despliegue
 
 ```text
-https://URL-DEL-DESPLIEGUE
+Pendiente
 ```
-
-Ejemplos:
-
-```text
-https://sapa.onrender.com
-https://sapa.up.railway.app
-https://sapa.azurewebsites.net
-```
-
 ---
 
 # Aclaraciones importantes para la corrección
