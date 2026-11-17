@@ -1,8 +1,12 @@
+
 package com.example.SAPA.Models.Questionnaire;
 
 import com.example.SAPA.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -11,10 +15,10 @@ import lombok.*;
 @Entity
 @Table(name = "question")
 public class QuestionEntity {
-    //Entidad de pregunta para el cuestionario.
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="question_id")
+    @Column(name = "question_id")
     private Long id;
 
     @ManyToOne
@@ -30,4 +34,26 @@ public class QuestionEntity {
 
     @Column(nullable = false)
     private Integer orderIndex;
+
+    // Opciones disponibles para las preguntas de opción múltiple.
+    @ElementCollection
+    @CollectionTable(
+            name = "question_option",
+            joinColumns = @JoinColumn(name = "question_id")
+    )
+    @OrderColumn(name = "option_order")
+    @Column(name = "option_text", nullable = false, length = 100)
+    @Builder.Default
+    private List<String> options = new ArrayList<>();
+
+    // Configuración de las preguntas de escala.
+    private Integer scaleMin;
+
+    private Integer scaleMax;
+
+    @Column(length = 50)
+    private String scaleMinLabel;
+
+    @Column(length = 50)
+    private String scaleMaxLabel;
 }

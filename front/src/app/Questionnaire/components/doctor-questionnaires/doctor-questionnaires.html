@@ -5,7 +5,7 @@
     <div>
       <span class="eyebrow">SAPA · Seguimiento de pacientes</span>
       <h1>Cuestionarios</h1>
-      <p>Creá cuestionarios y asignáselos a tus pacientes vinculados.</p>
+      <p>Creá cuestionarios, agregá preguntas y asignáselos a tus pacientes vinculados.</p>
     </div>
   </header>
 
@@ -45,7 +45,6 @@
         id="frequency"
         name="frequency"
         [(ngModel)]="frequency">
-
         <option value="DAILY">Diaria</option>
         <option value="WEEKLY">Semanal</option>
         <option value="MONTHLY">Mensual</option>
@@ -53,7 +52,6 @@
 
       <div class="section-heading">
         <h3>Preguntas</h3>
-
         <button
           type="button"
           class="secondary-button"
@@ -65,9 +63,7 @@
       @for (question of questions; track $index) {
         <div class="question-row">
 
-          <div class="question-number">
-            {{ $index + 1 }}
-          </div>
+          <div class="question-number">{{ $index + 1 }}</div>
 
           <div class="question-fields">
 
@@ -77,14 +73,101 @@
               placeholder="Escribí la pregunta"
               required>
 
+            <label [for]="'type-' + $index">Tipo de respuesta</label>
+
             <select
+              [id]="'type-' + $index"
               [name]="'type-' + $index"
               [(ngModel)]="question.type">
-
               <option value="TEXT">Respuesta de texto</option>
               <option value="MULTIPLE_CHOICE">Opción múltiple</option>
-              <option value="SCALE">Escala del 1 al 10</option>
+              <option value="SCALE">Escala configurable</option>
             </select>
+
+            @if (question.type === 'MULTIPLE_CHOICE') {
+              <div class="question-configuration">
+                <strong>Opciones de respuesta</strong>
+
+                @for (option of question.options; track $index) {
+                  <div class="option-row">
+                    <input
+                      [name]="'option-' + $index"
+                      [(ngModel)]="question.options[$index]"
+                      placeholder="Escribí una opción"
+                      required>
+
+                    <button
+                      type="button"
+                      class="remove-button"
+                      (click)="removeOption(question, $index)"
+                      [disabled]="question.options.length <= 2"
+                      aria-label="Eliminar opción">
+                      ×
+                    </button>
+                  </div>
+                }
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="addOption(question)">
+                  + Agregar opción
+                </button>
+              </div>
+            }
+
+            @if (question.type === 'SCALE') {
+              <div class="question-configuration">
+                <strong>Configuración de la escala</strong>
+
+                <div class="scale-fields">
+                  <div>
+                    <label [for]="'scale-min-' + $index">Valor mínimo</label>
+                    <input
+                      type="number"
+                      [id]="'scale-min-' + $index"
+                      [name]="'scale-min-' + $index"
+                      [(ngModel)]="question.scaleMin"
+                      required>
+                  </div>
+
+                  <div>
+                    <label [for]="'scale-max-' + $index">Valor máximo</label>
+                    <input
+                      type="number"
+                      [id]="'scale-max-' + $index"
+                      [name]="'scale-max-' + $index"
+                      [(ngModel)]="question.scaleMax"
+                      required>
+                  </div>
+                </div>
+
+                <div class="scale-fields">
+                  <div>
+                    <label [for]="'scale-min-label-' + $index">Etiqueta del mínimo</label>
+                    <input
+                      [id]="'scale-min-label-' + $index"
+                      [name]="'scale-min-label-' + $index"
+                      [(ngModel)]="question.scaleMinLabel"
+                      placeholder="Ej. Nada">
+                  </div>
+
+                  <div>
+                    <label [for]="'scale-max-label-' + $index">Etiqueta del máximo</label>
+                    <input
+                      [id]="'scale-max-label-' + $index"
+                      [name]="'scale-max-label-' + $index"
+                      [(ngModel)]="question.scaleMaxLabel"
+                      placeholder="Ej. Muchísimo">
+                  </div>
+                </div>
+
+                <p class="section-description">
+                  El paciente podrá seleccionar un valor entre
+                  {{ question.scaleMin }} y {{ question.scaleMax }}.
+                </p>
+              </div>
+            }
 
           </div>
 
@@ -96,7 +179,6 @@
             aria-label="Eliminar pregunta">
             ×
           </button>
-
         </div>
       }
 
@@ -104,9 +186,7 @@
         class="primary-button"
         type="submit"
         [disabled]="saving()">
-
         {{ saving() ? 'Guardando...' : 'Crear cuestionario' }}
-
       </button>
 
     </form>
@@ -135,7 +215,6 @@
           {{ item.title }}
         </option>
       }
-
     </select>
 
     <label for="patient">Paciente</label>
@@ -155,7 +234,6 @@
           {{ patient.firstName }} {{ patient.lastName }}
         </option>
       }
-
     </select>
 
     @if (!loadingPatients() && patients().length === 0) {
@@ -169,14 +247,12 @@
       class="primary-button"
       (click)="assignQuestionnaire()"
       [disabled]="assigning() || loadingPatients() || patients().length === 0">
-
       {{ assigning() ? 'Asignando...' : 'Asignar cuestionario' }}
-
     </button>
 
   </section>
 
-  <!-- LISTADO DE CUESTIONARIOS -->
+  <!-- MIS CUESTIONARIOS -->
   <section class="panel">
 
     <h2>Mis cuestionarios</h2>
@@ -194,21 +270,168 @@
         @for (item of questionnaires(); track item.questionnaireId) {
           <article class="questionnaire-card">
 
-            <div>
-              <h3>{{ item.title }}</h3>
+            <div class="questionnaire-card-header">
+              <div>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
 
-              <p>{{ item.description }}</p>
+                <span class="frequency">
+                  Frecuencia:
+                  {{ item.frequency === 'DAILY' ? 'Diaria' :
+                     item.frequency === 'WEEKLY' ? 'Semanal' : 'Mensual' }}
+                </span>
 
-              <span class="frequency">
-                Frecuencia:
-                {{ item.frequency === 'DAILY' ? 'Diaria' :
-                   item.frequency === 'WEEKLY' ? 'Semanal' : 'Mensual' }}
-              </span>
+                <span class="question-count">
+                  {{ item.questions.length }} preguntas
+                </span>
+              </div>
 
-              <span class="question-count">
-                {{ item.questions.length }} preguntas
-              </span>
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="openAddQuestion(item.questionnaireId)">
+                {{ addingQuestionToId() === item.questionnaireId
+                  ? 'Cerrar'
+                  : '+ Agregar preguntas' }}
+              </button>
             </div>
+
+            @if (addingQuestionToId() === item.questionnaireId) {
+              <div class="add-question-panel">
+
+                <h4>Agregar una pregunta nueva</h4>
+
+                <p class="section-description">
+                  Las {{ item.questions.length }} preguntas existentes se conservarán.
+                  La nueva pregunta se agregará al final.
+                </p>
+
+                <label [for]="'new-text-' + item.questionnaireId">
+                  Pregunta
+                </label>
+
+                <input
+                  [id]="'new-text-' + item.questionnaireId"
+                  [name]="'new-text-' + item.questionnaireId"
+                  [(ngModel)]="newQuestion.text"
+                  placeholder="Escribí la nueva pregunta">
+
+                <label [for]="'new-type-' + item.questionnaireId">
+                  Tipo de respuesta
+                </label>
+
+                <select
+                  [id]="'new-type-' + item.questionnaireId"
+                  [name]="'new-type-' + item.questionnaireId"
+                  [(ngModel)]="newQuestion.type">
+                  <option value="TEXT">Respuesta de texto</option>
+                  <option value="MULTIPLE_CHOICE">Opción múltiple</option>
+                  <option value="SCALE">Escala configurable</option>
+                </select>
+
+                @if (newQuestion.type === 'MULTIPLE_CHOICE') {
+                  <div class="question-configuration">
+                    <strong>Opciones de respuesta</strong>
+
+                    @for (option of newQuestion.options; track $index) {
+                      <div class="option-row">
+                        <input
+                          [name]="'new-option-' + item.questionnaireId + '-' + $index"
+                          [(ngModel)]="newQuestion.options[$index]"
+                          placeholder="Escribí una opción">
+
+                        <button
+                          type="button"
+                          class="remove-button"
+                          (click)="removeOption(newQuestion, $index)"
+                          [disabled]="newQuestion.options.length <= 2"
+                          aria-label="Eliminar opción">
+                          ×
+                        </button>
+                      </div>
+                    }
+
+                    <button
+                      type="button"
+                      class="secondary-button"
+                      (click)="addOption(newQuestion)">
+                      + Agregar opción
+                    </button>
+                  </div>
+                }
+
+                @if (newQuestion.type === 'SCALE') {
+                  <div class="question-configuration">
+
+                    <strong>Configuración de la escala</strong>
+
+                    <div class="scale-fields">
+                      <div>
+                        <label [for]="'new-min-' + item.questionnaireId">
+                          Valor mínimo
+                        </label>
+                        <input
+                          type="number"
+                          [id]="'new-min-' + item.questionnaireId"
+                          [name]="'new-min-' + item.questionnaireId"
+                          [(ngModel)]="newQuestion.scaleMin">
+                      </div>
+
+                      <div>
+                        <label [for]="'new-max-' + item.questionnaireId">
+                          Valor máximo
+                        </label>
+                        <input
+                          type="number"
+                          [id]="'new-max-' + item.questionnaireId"
+                          [name]="'new-max-' + item.questionnaireId"
+                          [(ngModel)]="newQuestion.scaleMax">
+                      </div>
+                    </div>
+
+                    <div class="scale-fields">
+                      <div>
+                        <label [for]="'new-min-label-' + item.questionnaireId">
+                          Etiqueta del mínimo
+                        </label>
+                        <input
+                          [id]="'new-min-label-' + item.questionnaireId"
+                          [name]="'new-min-label-' + item.questionnaireId"
+                          [(ngModel)]="newQuestion.scaleMinLabel">
+                      </div>
+
+                      <div>
+                        <label [for]="'new-max-label-' + item.questionnaireId">
+                          Etiqueta del máximo
+                        </label>
+                        <input
+                          [id]="'new-max-label-' + item.questionnaireId"
+                          [name]="'new-max-label-' + item.questionnaireId"
+                          [(ngModel)]="newQuestion.scaleMaxLabel">
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <div class="add-question-actions">
+                  <button
+                    type="button"
+                    class="primary-button"
+                    (click)="saveNewQuestion(item.questionnaireId)"
+                    [disabled]="savingNewQuestion()">
+                    {{ savingNewQuestion() ? 'Guardando...' : 'Guardar pregunta' }}
+                  </button>
+
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    (click)="openAddQuestion(item.questionnaireId)">
+                    Cancelar
+                  </button>
+                </div>
+
+              </div>
+            }
 
           </article>
         }
@@ -217,5 +440,119 @@
     }
 
   </section>
+
+  <!-- ASIGNACIONES ACTIVAS -->
+  <section class="panel">
+
+    <h2>Cuestionarios asignados a pacientes</h2>
+
+    <p class="section-description">
+      Desde acá podés consultar las asignaciones pendientes y desasignarlas.
+    </p>
+
+    @if (loadingAssignments()) {
+      <p>Cargando asignaciones...</p>
+    } @else if (assignments().length === 0) {
+      <p class="empty-state">
+        No hay cuestionarios asignados actualmente.
+      </p>
+    } @else {
+
+      <div class="assignment-list">
+
+        @for (assignment of assignments(); track assignment.assignmentId) {
+          <article class="assignment-card">
+
+            <div class="assignment-info">
+              <h3>{{ assignment.questionnaireTitle }}</h3>
+
+              <p>
+                <strong>Paciente:</strong>
+                {{ assignment.patientName }}
+              </p>
+
+              <p>
+                <strong>Fecha de asignación:</strong>
+                {{ assignment.assignedAt | date:'dd/MM/yyyy HH:mm' }}
+              </p>
+
+              <span class="assignment-status">
+                Pendiente
+              </span>
+            </div>
+
+            <button
+              type="button"
+              class="danger-button"
+              (click)="unassignQuestionnaire(assignment)"
+              [disabled]="unassigningIds().includes(assignment.assignmentId)">
+              {{ unassigningIds().includes(assignment.assignmentId)
+                ? 'Desasignando...'
+                : 'Desasignar' }}
+            </button>
+
+          </article>
+        }
+
+      </div>
+    }
+
+  </section>
+
+  <!-- CONFIRMACIÓN PERSONALIZADA SAPA -->
+  @if (assignmentToUnassign(); as assignment) {
+    <div
+      class="confirmation-overlay"
+      (click)="cancelUnassign()">
+
+      <section
+        class="confirmation-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirmation-title"
+        (click)="$event.stopPropagation()">
+
+        <div class="confirmation-icon">
+          <span>!</span>
+        </div>
+
+        <h2 id="confirmation-title">¿Desasignar cuestionario?</h2>
+
+        <p class="confirmation-description">
+          Estás por quitar una asignación pendiente. El paciente dejará de
+          tener disponible este cuestionario.
+        </p>
+
+        <div class="confirmation-details">
+          <span class="detail-label">Cuestionario</span>
+          <strong>{{ assignment.questionnaireTitle }}</strong>
+
+          <span class="detail-label">Paciente</span>
+          <strong>{{ assignment.patientName }}</strong>
+        </div>
+
+        <div class="confirmation-actions">
+          <button
+            type="button"
+            class="cancel-confirmation-button"
+            (click)="cancelUnassign()"
+            [disabled]="unassigningIds().includes(assignment.assignmentId)">
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="accept-confirmation-button"
+            (click)="confirmUnassign()"
+            [disabled]="unassigningIds().includes(assignment.assignmentId)">
+            {{ unassigningIds().includes(assignment.assignmentId)
+              ? 'Desasignando...'
+              : 'Sí, desasignar' }}
+          </button>
+        </div>
+
+      </section>
+    </div>
+  }
 
 </main>

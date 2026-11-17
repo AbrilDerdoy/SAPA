@@ -1,3 +1,4 @@
+
 export interface PublicDoctorProfile {
   id: number;
   firstName: string;
@@ -10,4 +11,5 @@ export interface PublicDoctorProfile {
   hospitalLongitude: number | null;
   specialityId: number | null;
   specialityName: string | null;
+  profileImageUrl: string | null;
 }

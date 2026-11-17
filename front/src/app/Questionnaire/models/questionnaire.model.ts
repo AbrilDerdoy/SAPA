@@ -7,6 +7,11 @@ export interface CreateQuestionRequest {
   text: string;
   type: QuestionType;
   orderIndex: number;
+  options: string[];
+  scaleMin: number | null;
+  scaleMax: number | null;
+  scaleMinLabel: string | null;
+  scaleMaxLabel: string | null;
 }
 
 export interface CreateQuestionnaireRequest {
@@ -40,6 +45,11 @@ export interface QuestionResponse {
   text: string;
   type: QuestionType;
   orderIndex: number;
+  options: string[];
+  scaleMin: number | null;
+  scaleMax: number | null;
+  scaleMinLabel: string | null;
+  scaleMaxLabel: string | null;
 }
 
 export interface QuestionnaireResponse {
@@ -69,6 +79,10 @@ export interface AnswerResponse {
   questionText: string;
   type: QuestionType;
   value: string;
+  scaleMin: number | null;
+  scaleMax: number | null;
+  scaleMinLabel: string | null;
+  scaleMaxLabel: string | null;
 }
 
 export interface QuestionnaireResponseDTO {

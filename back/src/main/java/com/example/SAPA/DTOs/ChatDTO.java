@@ -1,3 +1,4 @@
+
 package com.example.SAPA.DTOs;
 
 import com.example.SAPA.enums.AttachmentType;
@@ -42,6 +43,7 @@ public class ChatDTO {
     public record ConversationSummary(
             Long conversationId,
             String otherParticipantName,
+            String otherParticipantProfileImageUrl,
             String lastMessage,
             LocalDateTime lastMessageAt,
             LocalDateTime createdAt

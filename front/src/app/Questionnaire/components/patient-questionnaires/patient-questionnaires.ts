@@ -1,8 +1,16 @@
 
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  NgZone,
+  inject,
+  signal
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { QuestionnaireService } from '../../services/questionnaire.service';
+
 import {
   AssignmentResponse,
   SubmitAnswerRequest
@@ -18,9 +26,14 @@ import {
 export class PatientQuestionnaires implements OnInit {
 
   private readonly questionnaireService = inject(QuestionnaireService);
+  private readonly zone = inject(NgZone);
+  private readonly changeDetector = inject(ChangeDetectorRef);
 
   assignments = signal<AssignmentResponse[]>([]);
-  loading = signal(false);
+
+  // Comienza cargando para evitar mostrar un estado vacío prematuramente.
+  loading = signal(true);
+
   error = signal<string | null>(null);
   success = signal<string | null>(null);
   submittingIds = signal<number[]>([]);
@@ -34,16 +47,26 @@ export class PatientQuestionnaires implements OnInit {
   loadAssignments(): void {
     this.loading.set(true);
     this.error.set(null);
+    this.changeDetector.markForCheck();
 
     this.questionnaireService.getMyAssignments().subscribe({
-      next: (assignments) => {
-        this.assignments.set(assignments ?? []);
-        this.loading.set(false);
+      next: assignments => {
+        this.zone.run(() => {
+          this.assignments.set(assignments ?? []);
+          this.loading.set(false);
+          this.changeDetector.markForCheck();
+        });
       },
-      error: (err) => {
+      error: err => {
         console.error('Error al cargar cuestionarios:', err);
-        this.error.set('No se pudieron cargar los cuestionarios pendientes.');
-        this.loading.set(false);
+
+        this.zone.run(() => {
+          this.error.set(
+            'No se pudieron cargar los cuestionarios pendientes.'
+          );
+          this.loading.set(false);
+          this.changeDetector.markForCheck();
+        });
       }
     });
   }
@@ -73,18 +96,30 @@ export class PatientQuestionnaires implements OnInit {
       return;
     }
 
-    const invalidScale = assignment.questions.some(question => {
-      if (question.type !== 'SCALE') {
-        return false;
+    const invalidAnswer = assignment.questions.some(question => {
+      const value = this.answers[question.questionId].trim();
+
+      if (question.type === 'MULTIPLE_CHOICE') {
+        return !question.options?.includes(value);
       }
 
-      const value = Number(this.answers[question.questionId]);
+      if (question.type === 'SCALE') {
+        const numericValue = Number(value);
 
-      return !Number.isInteger(value) || value < 1 || value > 10;
+        return (
+          !Number.isInteger(numericValue) ||
+          question.scaleMin === null ||
+          question.scaleMax === null ||
+          numericValue < question.scaleMin ||
+          numericValue > question.scaleMax
+        );
+      }
+
+      return false;
     });
 
-    if (invalidScale) {
-      this.error.set('Las respuestas de escala deben ser números enteros del 1 al 10.');
+    if (invalidAnswer) {
+      this.error.set('Revisá las opciones y los valores de las escalas.');
       return;
     }
 
@@ -95,32 +130,42 @@ export class PatientQuestionnaires implements OnInit {
 
     this.submittingIds.update(ids => [...ids, assignment.assignmentId]);
 
-    this.questionnaireService.submitResponse(assignment.assignmentId, {
-      answers: response
-    }).subscribe({
+    this.questionnaireService.submitResponse(
+      assignment.assignmentId,
+      { answers: response }
+    ).subscribe({
       next: () => {
-        this.success.set('¡Tus respuestas se enviaron correctamente!');
+        this.zone.run(() => {
+          this.success.set('¡Tus respuestas se enviaron correctamente!');
+          this.answers = {};
 
-        this.answers = {};
+          this.submittingIds.update(ids =>
+            ids.filter(id => id !== assignment.assignmentId)
+          );
 
-        this.submittingIds.update(ids =>
-          ids.filter(id => id !== assignment.assignmentId)
-        );
+          this.changeDetector.markForCheck();
 
-        this.loadAssignments();
+          // Recarga automáticamente los cuestionarios pendientes.
+          this.loadAssignments();
+        });
       },
-      error: (err) => {
+      error: err => {
         console.error('Error al enviar respuestas:', err);
 
-        this.error.set(
-          err.status === 409
-            ? 'Este cuestionario ya fue respondido.'
-            : 'No se pudieron enviar las respuestas. Intentá nuevamente.'
-        );
+        this.zone.run(() => {
+          this.error.set(
+            err.status === 409
+              ? 'Este cuestionario ya fue respondido.'
+              : err.error?.message ||
+                'No se pudieron enviar las respuestas. Intentá nuevamente.'
+          );
 
-        this.submittingIds.update(ids =>
-          ids.filter(id => id !== assignment.assignmentId)
-        );
+          this.submittingIds.update(ids =>
+            ids.filter(id => id !== assignment.assignmentId)
+          );
+
+          this.changeDetector.markForCheck();
+        });
       }
     });
   }

@@ -21,7 +21,7 @@ public class AssigmentController {
     private final AssignmentService assignmentService;
     private final ResponseService responseService;
 
-    // Asignar un cuestionario a un paciente: solamente doctores.
+    // Asignar un cuestionario a un paciente.
     @PostMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('DOCTOR', 'ROLE_DOCTOR')")
     public ResponseEntity<QuestionnaireDTO.AssignmentResponse> assignQuestionnaire(
@@ -32,6 +32,28 @@ public class AssigmentController {
                 .body(assignmentService.assignQuestionnaire(id, request));
     }
 
+    // Desasignar un cuestionario pendiente.
+    @DeleteMapping("/{assignmentId}")
+    @PreAuthorize("hasAnyAuthority('DOCTOR', 'ROLE_DOCTOR')")
+    public ResponseEntity<Void> unassignQuestionnaire(
+            @PathVariable Long assignmentId) {
+
+        assignmentService.unassignQuestionnaire(assignmentId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // Obtener las asignaciones activas del médico.
+    @GetMapping("/my-assigned")
+    @PreAuthorize("hasAnyAuthority('DOCTOR', 'ROLE_DOCTOR')")
+    public ResponseEntity<List<QuestionnaireDTO.AssignmentResponse>>
+    getMyAssignedQuestionnaires() {
+
+        return ResponseEntity.ok(
+                assignmentService.getMyAssignedQuestionnaires()
+        );
+    }
+
     // Obtener los cuestionarios pendientes del paciente.
     @GetMapping("/my-assignments")
     @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
@@ -40,36 +62,40 @@ public class AssigmentController {
         return ResponseEntity.ok(assignmentService.getMyAssignments());
     }
 
-    // Consultar las respuestas de un cuestionario: solamente doctores.
+    // Consultar las respuestas de un cuestionario.
     @GetMapping("/{id}/responses")
     @PreAuthorize("hasAnyAuthority('DOCTOR', 'ROLE_DOCTOR')")
-    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>> getResponsesByQuestionnaire(
-            @PathVariable Long id) {
+    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>>
+    getResponsesByQuestionnaire(@PathVariable Long id) {
 
         return ResponseEntity.ok(
-                assignmentService.getResponsesByQuestionnaire(id));
+                assignmentService.getResponsesByQuestionnaire(id)
+        );
     }
 
-    // Consultar las respuestas de un paciente: solamente doctores.
+    // Consultar las respuestas de un paciente.
     @GetMapping("/patient/{patientId}/responses")
     @PreAuthorize("hasAnyAuthority('DOCTOR', 'ROLE_DOCTOR')")
-    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>> getPatientResponses(
-            @PathVariable Long patientId) {
+    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>>
+    getPatientResponses(@PathVariable Long patientId) {
 
         return ResponseEntity.ok(
-                assignmentService.getPatientResponses(patientId));
+                assignmentService.getPatientResponses(patientId)
+        );
     }
 
-    // Consultar el historial propio: solamente pacientes.
+    // Consultar el historial propio del paciente.
     @GetMapping("/my-responses")
     @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
-    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>> getMyResponses() {
+    public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>>
+    getMyResponses() {
 
         return ResponseEntity.ok(
-                assignmentService.getMyResponses());
+                assignmentService.getMyResponses()
+        );
     }
 
-    // Responder un cuestionario: solamente pacientes.
+    // Responder un cuestionario.
     @PostMapping("/{assignmentId}/submit")
     @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
     public ResponseEntity<QuestionnaireDTO.QuestionnaireResponseDTO> submitResponse(

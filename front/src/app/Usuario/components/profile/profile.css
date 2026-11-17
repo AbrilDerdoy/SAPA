@@ -45,6 +45,108 @@
   background: var(--primary-light);
 }
 
+.profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-photo__image,
+.profile-photo__initials {
+  width: 104px;
+  height: 104px;
+  flex: 0 0 104px;
+  border-radius: 50%;
+}
+
+.profile-photo__image {
+  display: block;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+
+.profile-photo__initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.profile-photo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.8rem;
+}
+
+.profile-photo__controls strong {
+  width: 100%;
+}
+
+.profile-photo__controls p {
+  width: 100%;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.photo-button,
+.photo-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.photo-button {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.photo-remove {
+  color: var(--danger);
+}
+
+.photo-button:has(input:disabled),
+.photo-remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-profile-label {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-profile-label span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .profile-photo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .card {
   display: grid;
   gap: 1.5rem;
@@ -222,6 +324,6 @@
   }
 
   .form__actions {
-  flex-direction: column-reverse;
-}
+    flex-direction: column-reverse;
+  }
 }

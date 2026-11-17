@@ -1,3 +1,4 @@
+
 package com.example.SAPA.DTOs.Response;
 
 public record PublicDoctorProfileResponseDTO(
@@ -11,6 +12,7 @@ public record PublicDoctorProfileResponseDTO(
         Double hospitalLatitude,
         Double hospitalLongitude,
         Long specialityId,
-        String specialityName
+        String specialityName,
+        String profileImageUrl
 ) {
 }

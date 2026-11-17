@@ -1,3 +1,4 @@
+
 package com.example.SAPA.service;
 
 import com.example.SAPA.DTOs.ChatDTO;
@@ -54,7 +55,8 @@ public class ConversationService {
             conversations = conversationRepository.findByPatient(patient);
         } else {
             DoctorEntity doctor = doctorRepository.findByUser(user)
-                    .orElseThrow(() -> new EntityNotFoundException("No se encontró perfil asociado al usuario"));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "No se encontró perfil asociado al usuario"));
             conversations = conversationRepository.findByDoctor(doctor);
         }
 
@@ -62,9 +64,22 @@ public class ConversationService {
             List<MessageEntity> messages = messageRepository
                     .findByConversationOrderBySentAtAsc(conv);
 
-            String otherName = isPatient
-                    ? "Dr. " + conv.getDoctor().getFirstName() + " " + conv.getDoctor().getLastName()
-                    : conv.getPatient().getFirstName() + " " + conv.getPatient().getLastName();
+            String otherName;
+            String otherParticipantProfileImageUrl;
+
+            if (isPatient) {
+                otherName = "Dr. " + conv.getDoctor().getFirstName()
+                        + " " + conv.getDoctor().getLastName();
+
+                otherParticipantProfileImageUrl =
+                        conv.getDoctor().getUser().getProfileImageUrl();
+            } else {
+                otherName = conv.getPatient().getFirstName()
+                        + " " + conv.getPatient().getLastName();
+
+                otherParticipantProfileImageUrl =
+                        conv.getPatient().getUser().getProfileImageUrl();
+            }
 
             String lastMessage = messages.isEmpty()
                     ? "Sin mensajes aún"
@@ -77,6 +92,7 @@ public class ConversationService {
             return new ChatDTO.ConversationSummary(
                     conv.getId(),
                     otherName,
+                    otherParticipantProfileImageUrl,
                     lastMessage,
                     lastMessageAt,
                     conv.getCreatedAt()
@@ -89,7 +105,8 @@ public class ConversationService {
         UserEntity user = userContextService.getAuthenticatedUser();
 
         ConversationEntity conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new EntityNotFoundException("Conversación no encontrada con id: " + conversationId));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Conversación no encontrada con id: " + conversationId));
 
         validateParticipant(user, conversation);
 
@@ -107,7 +124,8 @@ public class ConversationService {
         boolean isDoctor = conversation.getDoctor().getUser().getId().equals(user.getId());
 
         if (!isPatient && !isDoctor) {
-            throw new AccessDeniedException("No tenés permiso para acceder a esta conversación");
+            throw new AccessDeniedException(
+                    "No tenés permiso para acceder a esta conversación");
         }
     }
 }

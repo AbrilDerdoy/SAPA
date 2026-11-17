@@ -1,3 +1,4 @@
+
 :host {
   display: block;
   color: var(--text);
@@ -23,6 +24,118 @@
   margin: 0;
   color: var(--text-muted);
   line-height: 1.55;
+}
+
+.profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.profile-photo__avatar {
+  width: 112px;
+  height: 112px;
+  flex: 0 0 112px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.profile-photo__image,
+.profile-photo__initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.profile-photo__image {
+  display: block;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+
+.profile-photo__initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.profile-photo__content {
+  min-width: 0;
+}
+
+.profile-photo__content h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+.profile-photo__content > p {
+  margin: 0 0 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.profile-photo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.photo-button,
+.photo-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.photo-button {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.photo-button--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.photo-remove {
+  background: var(--surface);
+  color: var(--danger);
+}
+
+.photo-remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.photo-hint {
+  margin-top: 0.65rem !important;
+  font-size: 0.78rem !important;
+}
+
+.photo-error {
+  margin-top: 0.5rem !important;
+  color: var(--danger) !important;
+  font-size: 0.85rem !important;
 }
 
 .form {
@@ -126,6 +239,11 @@
 
   .form {
     padding: 1.1rem;
+  }
+
+  .profile-photo {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .form__actions button {
