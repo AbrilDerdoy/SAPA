@@ -10,11 +10,23 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ConversationRepository extends JpaRepository<ConversationEntity, Long> {
+public interface ConversationRepository
+        extends JpaRepository<ConversationEntity, Long> {
 
-    Optional<ConversationEntity> findByPatientAndDoctor(PatientEntity patient, DoctorEntity doctor);
+    Optional<ConversationEntity> findByPatientAndDoctor(
+            PatientEntity patient,
+            DoctorEntity doctor
+    );
+
+    Optional<ConversationEntity> findByDoctorAndDoctorFollower(
+            DoctorEntity doctor,
+            DoctorEntity doctorFollower
+    );
 
     List<ConversationEntity> findByPatient(PatientEntity patient);
 
-    List<ConversationEntity> findByDoctor(DoctorEntity doctor);
+    List<ConversationEntity> findByDoctorOrDoctorFollower(
+            DoctorEntity doctor,
+            DoctorEntity doctorFollower
+    );
 }

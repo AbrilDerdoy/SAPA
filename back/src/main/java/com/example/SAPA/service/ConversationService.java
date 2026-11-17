@@ -17,6 +17,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.List;
 
 @Service
@@ -38,12 +39,27 @@ public class ConversationService {
     ) {
         return conversationRepository.findByPatientAndDoctor(patient, doctor)
                 .orElseGet(() -> {
+                    ConversationEntity conversation = ConversationEntity.builder()
+                            .patient(patient)
+                            .doctor(doctor)
+                            .build();
 
-                    ConversationEntity conversation =
-                            ConversationEntity.builder()
-                                    .patient(patient)
-                                    .doctor(doctor)
-                                    .build();
+                    return conversationRepository.save(conversation);
+                });
+    }
+
+    @Transactional
+    public ConversationEntity createDoctorConversation(
+            DoctorEntity doctorFollower,
+            DoctorEntity doctor
+    ) {
+        return conversationRepository
+                .findByDoctorAndDoctorFollower(doctor, doctorFollower)
+                .orElseGet(() -> {
+                    ConversationEntity conversation = ConversationEntity.builder()
+                            .doctor(doctor)
+                            .doctorFollower(doctorFollower)
+                            .build();
 
                     return conversationRepository.save(conversation);
                 });
@@ -54,52 +70,68 @@ public class ConversationService {
 
         UserEntity user = userContextService.getAuthenticatedUser();
 
-        boolean isPatient = patientRepository.findByUser(user).isPresent();
+        PatientEntity patient = patientRepository.findByUser(user)
+                .orElse(null);
 
         List<ConversationEntity> conversations;
+        DoctorEntity authenticatedDoctor = null;
+
+        boolean isPatient = patient != null;
 
         if (isPatient) {
-
-            PatientEntity patient = patientRepository.findByUser(user)
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "No se encontró el paciente"
-                    ));
-
             conversations = conversationRepository.findByPatient(patient);
-
         } else {
-
-            DoctorEntity doctor = doctorRepository.findByUser(user)
+            authenticatedDoctor = doctorRepository.findByUser(user)
                     .orElseThrow(() -> new EntityNotFoundException(
                             "No se encontró perfil asociado al usuario"
                     ));
 
-            conversations = conversationRepository.findByDoctor(doctor);
+            conversations = conversationRepository.findByDoctorOrDoctorFollower(
+                    authenticatedDoctor,
+                    authenticatedDoctor
+            );
         }
 
-        return conversations.stream().map(conv -> {
+        DoctorEntity currentDoctor = authenticatedDoctor;
+
+        return conversations.stream().map(conversation -> {
 
             List<MessageEntity> messages =
-                    messageRepository.findByConversationOrderBySentAtAsc(conv);
+                    messageRepository.findByConversationOrderBySentAtAsc(conversation);
 
+            UserEntity otherParticipant;
             String otherName;
-            String otherParticipantProfileImageUrl;
 
             if (isPatient) {
 
-                otherName = "Dr. " + conv.getDoctor().getFirstName()
-                        + " " + conv.getDoctor().getLastName();
+                otherParticipant = conversation.getDoctor().getUser();
 
-                otherParticipantProfileImageUrl =
-                        conv.getDoctor().getUser().getProfileImageUrl();
+                otherName = "Dr. "
+                        + conversation.getDoctor().getFirstName()
+                        + " "
+                        + conversation.getDoctor().getLastName();
+
+            } else if (conversation.getPatient() != null) {
+
+                otherParticipant = conversation.getPatient().getUser();
+
+                otherName = conversation.getPatient().getFirstName()
+                        + " "
+                        + conversation.getPatient().getLastName();
 
             } else {
 
-                otherName = conv.getPatient().getFirstName()
-                        + " " + conv.getPatient().getLastName();
+                DoctorEntity otherDoctor =
+                        conversation.getDoctor().getId().equals(currentDoctor.getId())
+                                ? conversation.getDoctorFollower()
+                                : conversation.getDoctor();
 
-                otherParticipantProfileImageUrl =
-                        conv.getPatient().getUser().getProfileImageUrl();
+                otherParticipant = otherDoctor.getUser();
+
+                otherName = "Dr. "
+                        + otherDoctor.getFirstName()
+                        + " "
+                        + otherDoctor.getLastName();
             }
 
             String lastMessage = messages.isEmpty()
@@ -107,16 +139,17 @@ public class ConversationService {
                     : messages.get(messages.size() - 1).getContent();
 
             java.time.LocalDateTime lastMessageAt = messages.isEmpty()
-                    ? conv.getCreatedAt()
+                    ? conversation.getCreatedAt()
                     : messages.get(messages.size() - 1).getSentAt();
 
             return new ChatDTO.ConversationSummary(
-                    conv.getId(),
+                    conversation.getId(),
+                    otherParticipant.getId(),
                     otherName,
-                    otherParticipantProfileImageUrl,
+                    otherParticipant.getProfileImageUrl(),
                     lastMessage,
                     lastMessageAt,
-                    conv.getCreatedAt()
+                    conversation.getCreatedAt()
             );
 
         }).toList();
@@ -124,33 +157,26 @@ public class ConversationService {
 
     @Transactional(readOnly = true)
     public ChatDTO.PresenceStatus getOtherParticipantPresence(
-            Long conversationId
+            Long conversationId,
+            Principal principal
     ) {
 
         UserEntity authenticatedUser =
-                userContextService.getAuthenticatedUser();
+                userContextService.getUserFromPrincipal(principal);
 
-        ConversationEntity conversation =
-                conversationRepository.findById(conversationId)
-                        .orElseThrow(() -> new EntityNotFoundException(
-                                "Conversación no encontrada con id: "
-                                        + conversationId
-                        ));
+        ConversationEntity conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Conversación no encontrada con id: " + conversationId
+                ));
 
         validateParticipant(authenticatedUser, conversation);
 
         UserEntity otherParticipant =
-                conversation.getPatient().getUser().getId()
-                        .equals(authenticatedUser.getId())
-                        ? conversation.getDoctor().getUser()
-                        : conversation.getPatient().getUser();
-
-        boolean online =
-                chatPresenceService.isOnline(otherParticipant.getEmail());
+                getOtherParticipant(conversation, authenticatedUser);
 
         return new ChatDTO.PresenceStatus(
                 otherParticipant.getId(),
-                online
+                chatPresenceService.isOnline(otherParticipant.getEmail())
         );
     }
 
@@ -161,20 +187,16 @@ public class ConversationService {
 
         UserEntity user = userContextService.getAuthenticatedUser();
 
-        ConversationEntity conversation =
-                conversationRepository.findById(conversationId)
-                        .orElseThrow(() -> new EntityNotFoundException(
-                                "Conversación no encontrada con id: "
-                                        + conversationId
-                        ));
+        ConversationEntity conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Conversación no encontrada con id: " + conversationId
+                ));
 
         validateParticipant(user, conversation);
 
-        return messageRepository
-                .findByConversationOrderBySentAtAsc(conversation)
+        return messageRepository.findByConversationOrderBySentAtAsc(conversation)
                 .stream()
                 .map(message -> {
-
                     String senderName =
                             userContextService.resolveName(message.getSender());
 
@@ -183,19 +205,53 @@ public class ConversationService {
                 .toList();
     }
 
+    public UserEntity getOtherParticipant(
+            ConversationEntity conversation,
+            UserEntity currentUser
+    ) {
+
+        if (conversation.getPatient() != null) {
+
+            UserEntity patientUser =
+                    conversation.getPatient().getUser();
+
+            UserEntity doctorUser =
+                    conversation.getDoctor().getUser();
+
+            return patientUser.getId().equals(currentUser.getId())
+                    ? doctorUser
+                    : patientUser;
+        }
+
+        UserEntity doctorUser =
+                conversation.getDoctor().getUser();
+
+        UserEntity doctorFollowerUser =
+                conversation.getDoctorFollower().getUser();
+
+        return doctorUser.getId().equals(currentUser.getId())
+                ? doctorFollowerUser
+                : doctorUser;
+    }
+
     public void validateParticipant(
             UserEntity user,
             ConversationEntity conversation
     ) {
 
-        boolean isPatient = conversation.getPatient()
-                .getUser().getId().equals(user.getId());
+        boolean isPatient = conversation.getPatient() != null
+                && conversation.getPatient().getUser().getId()
+                .equals(user.getId());
 
-        boolean isDoctor = conversation.getDoctor()
-                .getUser().getId().equals(user.getId());
+        boolean isDoctor = conversation.getDoctor() != null
+                && conversation.getDoctor().getUser().getId()
+                .equals(user.getId());
 
-        if (!isPatient && !isDoctor) {
+        boolean isDoctorFollower = conversation.getDoctorFollower() != null
+                && conversation.getDoctorFollower().getUser().getId()
+                .equals(user.getId());
 
+        if (!isPatient && !isDoctor && !isDoctorFollower) {
             throw new AccessDeniedException(
                     "No tenés permiso para acceder a esta conversación"
             );

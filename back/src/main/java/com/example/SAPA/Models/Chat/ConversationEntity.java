@@ -14,32 +14,45 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "conversation",
-            // Restricción para que no existan
-            // dos conversaciones entre el mismo médico y paciente.
-            uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_patient_doctor",
-                        columnNames = {"patient_id", "doctor_id"}
-                )
-            }
+@Table(
+    name = "conversation",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_patient_doctor",
+            columnNames = {"patient_id", "doctor_id"}
+        ),
+        @UniqueConstraint(
+            name = "uk_doctor_follower",
+            columnNames = {"doctor_id", "doctor_follower_id"}
         )
+    }
+)
 public class ConversationEntity {
-    // Vinculación de chat entre paciente y médico.
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="conversation_id")
+    @Column(name = "conversation_id")
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "patient_id", nullable = false)
+    @JoinColumn(name = "patient_id")
     private PatientEntity patient;
 
+    // Médico receptor de la solicitud.
     @ManyToOne
     @JoinColumn(name = "doctor_id", nullable = false)
     private DoctorEntity doctor;
 
-    @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Médico que inició el seguimiento, cuando es un chat médico-médico.
+    @ManyToOne
+    @JoinColumn(name = "doctor_follower_id")
+    private DoctorEntity doctorFollower;
+
+    @OneToMany(
+        mappedBy = "conversation",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     @Builder.Default
     private List<MessageEntity> messages = new ArrayList<>();
 

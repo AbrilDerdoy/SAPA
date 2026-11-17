@@ -28,11 +28,20 @@ public class MessageService {
     private final UserContextService userContextService;
     private final NotificationService notificationService;
 
-    public void sendMessage(Long conversationId, ChatDTO.SendMessageRequest request, Principal principal) {
-        UserEntity sender = userContextService.getUserFromPrincipal(principal);
+    public void sendMessage(
+            Long conversationId,
+            ChatDTO.SendMessageRequest request,
+            Principal principal
+    ) {
 
-        ConversationEntity conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new EntityNotFoundException("Conversación no encontrada con id: " + conversationId));
+        UserEntity sender =
+                userContextService.getUserFromPrincipal(principal);
+
+        ConversationEntity conversation =
+                conversationRepository.findById(conversationId)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Conversación no encontrada con id: " + conversationId
+                        ));
 
         conversationService.validateParticipant(sender, conversation);
 
@@ -40,33 +49,46 @@ public class MessageService {
                 .conversation(conversation)
                 .sender(sender)
                 .content(request.content())
-                .type(request.type() != null ? request.type() : MessageType.TEXT)
+                .type(request.type() != null
+                        ? request.type()
+                        : MessageType.TEXT)
                 .build();
 
         MessageEntity saved = messageRepository.save(message);
 
         String senderName = userContextService.resolveName(sender);
-        ChatDTO.MessageResponse response = messageMapper.toResponse(saved, senderName);
+
+        ChatDTO.MessageResponse response =
+                messageMapper.toResponse(saved, senderName);
 
         messagingTemplate.convertAndSend(
                 "/queue/conversation/" + conversationId,
                 response
         );
 
-        UserEntity receiver = conversation.getPatient().getUser().getId().equals(sender.getId())
-                ? conversation.getDoctor().getUser()
-                : conversation.getPatient().getUser();
+        UserEntity receiver =
+                conversationService.getOtherParticipant(conversation, sender);
 
         notificationService.createNotification(
                 receiver,
                 "Nuevo mensaje",
-                userContextService.resolveName(sender) + " te envió un mensaje.",
+                senderName + " te envió un mensaje.",
                 NotificationType.MESSAGE
         );
     }
 
-    public void sendSystemMessage(ConversationEntity conversation, String content) {
-        UserEntity systemSender = conversation.getPatient().getUser();
+    public void sendSystemMessage(
+            ConversationEntity conversation,
+            String content
+    ) {
+
+        UserEntity systemSender;
+
+        if (conversation.getPatient() != null) {
+            systemSender = conversation.getPatient().getUser();
+        } else {
+            systemSender = conversation.getDoctor().getUser();
+        }
 
         MessageEntity systemMessage = MessageEntity.builder()
                 .conversation(conversation)
@@ -77,8 +99,11 @@ public class MessageService {
 
         MessageEntity saved = messageRepository.save(systemMessage);
 
-        String senderName = userContextService.resolveName(systemSender);
-        ChatDTO.MessageResponse response = messageMapper.toResponse(saved, senderName);
+        String senderName =
+                userContextService.resolveName(systemSender);
+
+        ChatDTO.MessageResponse response =
+                messageMapper.toResponse(saved, senderName);
 
         messagingTemplate.convertAndSend(
                 "/queue/conversation/" + conversation.getId(),
