@@ -1,3 +1,4 @@
+
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.ChatDTO;
@@ -25,7 +26,6 @@ public class ChatController {
     private final MessageService messageService;
     private final AttachmentService attachmentService;
 
-
     @MessageMapping("/chat/{conversationId}")
     public void sendMessage(
             @DestinationVariable Long conversationId,
@@ -37,12 +37,28 @@ public class ChatController {
 
     @GetMapping
     public ResponseEntity<List<ChatDTO.ConversationSummary>> getMyConversations() {
-        return ResponseEntity.ok(conversationService.getMyConversations());
+        return ResponseEntity.ok(
+                conversationService.getMyConversations()
+        );
     }
 
     @GetMapping("/{id}/messages")
-    public ResponseEntity<List<ChatDTO.MessageResponse>> getHistory(@PathVariable Long id) {
-        return ResponseEntity.ok(conversationService.getConversationHistory(id));
+    public ResponseEntity<List<ChatDTO.MessageResponse>> getHistory(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(
+                conversationService.getConversationHistory(id)
+        );
+    }
+
+    @GetMapping("/{id}/presence")
+    public ResponseEntity<ChatDTO.PresenceStatus> getOtherParticipantPresence(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        return ResponseEntity.ok(
+                conversationService.getOtherParticipantPresence(id, principal)
+        );
     }
 
     @PostMapping("/{id}/attachments")
@@ -50,6 +66,8 @@ public class ChatController {
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        return ResponseEntity.ok(attachmentService.uploadAttachment(id, file));
+        return ResponseEntity.ok(
+                attachmentService.uploadAttachment(id, file)
+        );
     }
 }

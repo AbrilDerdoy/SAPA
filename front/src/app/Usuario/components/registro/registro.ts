@@ -8,10 +8,8 @@ import { Router } from '@angular/router';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
-type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'specialities'> & {
+type RegistroFormModel = Omit<registerRequest, 'licenseNumber'> & {
   licenseNumber: string;
-  speciality: number | null;
-  relationship: string;
 };
 
 @Component({
@@ -34,23 +32,13 @@ export class Registro {
     birthDate:'',
     phoneNumber:'',
     licenseNumber:'',
-    speciality:null,
-    relationship:''
+    speciality:null
   });
   readonly fechaMaxima = (() => {
     const hoy = new Date();
     hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
     return hoy.toISOString().slice(0, 10);
   })();
-  readonly relationships = [
-    'Madre',
-    'Padre',
-    'Tutor legal',
-    'Abuelo/a',
-    'Hermano/a',
-    'Tío/a',
-    'Otro familiar'
-  ];
   readonly errorRegistro = signal<string | null>(null);
   readonly mostrarPassword = signal(false);
   readonly formulario = form(this.modelo, (ruta) => {
@@ -73,11 +61,6 @@ export class Registro {
     (ruta) => {
       required(ruta.licenseNumber, {message: 'La matricula es obligatoria'});
       required(ruta.speciality, {message: 'La especialidad es obligatoria'});
-    });
-    applyWhen(ruta, ({valueOf}) =>
-      valueOf(ruta.role) === 'ROLE_TUTOR',
-    (ruta) => {
-      required(ruta.relationship, {message: 'El parentesco es obligatorio'});
     })
   })
 
@@ -99,7 +82,6 @@ export class Registro {
     this.formulario.phoneNumber().markAsTouched();
     this.formulario.licenseNumber().markAsTouched();
     this.formulario.speciality().markAsTouched();
-    this.formulario.relationship().markAsTouched();
 
     if (this.formulario().invalid()) return;
 
@@ -114,10 +96,7 @@ export class Registro {
         phoneNumber:datos.phoneNumber,
         birthDate:datos.birthDate,
         licenseNumber: datos.role === 'ROLE_DOCTOR' ? datos.licenseNumber : null,
-        specialities: datos.role === 'ROLE_DOCTOR' && datos.speciality !== null
-          ? [datos.speciality]
-          : null,
-        relationship: datos.role === 'ROLE_TUTOR' ? datos.relationship.trim() : null
+        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null
       }
 
     this.errorRegistro.set(null);
@@ -125,44 +104,12 @@ export class Registro {
       next: (res) => {
         console.log('Registro exitoso', res);
         if(this.modelo().role === 'ROLE_DOCTOR'){
-          this.alerta.mostrarInfo('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión','Espere la aprobacion de un administrador');
-          this.router.navigate(['/home']);
-          return;
+          this.alerta.mostrarInfo('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión','Espere la aprobacion de un administrador')
+        } else {
+          localStorage.setItem('jwt',JSON.stringify(res));  
+          this.auth.guardarDatosUsuario()
         }
-
-        localStorage.setItem('jwt', JSON.stringify(res));
-
-        this.auth.guardarDatosUsuario().subscribe({
-          next: (user) => {
-            const usuario = {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              role: user.role
-            };
-
-            localStorage.setItem('usuario', JSON.stringify(usuario));
-
-            if (this.modelo().role === 'ROLE_TUTOR') {
-              this.alerta.mostrarInfo(
-                'Tu cuenta de tutor fue creada. Ya podés invitar a tus pacientes.',
-                'Registro exitoso'
-              );
-              this.router.navigate(['/tutor']);
-              return;
-            }
-
-            this.router.navigate(['/home']);
-          },
-          error: (error) => {
-            console.error('No se pudo obtener el usuario:', error);
-            localStorage.removeItem('jwt');
-            localStorage.removeItem('usuario');
-            this.errorRegistro.set(
-              'La cuenta fue creada, pero no se pudo iniciar la sesión. Iniciá sesión manualmente.'
-            );
-          }
-        });
+          this.router.navigate(['/home'])
       },
       error: (err: HttpErrorResponse) => {
         const detalle = this.mensajeError(err);
@@ -217,19 +164,6 @@ export class Registro {
   }    
   cambiarMedico(): void {
     this.modelo.update((datos) => ({...datos, role: 'ROLE_DOCTOR'}));
-  }
-
-  cambiarTutor(): void {
-    this.modelo.update((datos) => ({...datos, role: 'ROLE_TUTOR'}));
-  }
-
-  actualizarParentesco(evento: Event): void {
-    const select = evento.target;
-
-    if (!(select instanceof HTMLSelectElement)) return;
-
-    this.modelo.update((datos) => ({...datos, relationship: select.value}));
-    this.formulario.relationship().markAsTouched();
   }
 
   seleccionarEspecialidad(evento: Event): void {

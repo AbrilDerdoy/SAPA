@@ -1,5 +1,16 @@
+
 import { DatePipe } from '@angular/common';
-import { Component, computed, DestroyRef, ElementRef, HostListener, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationResponse } from '../../models/notification-response';
 import { NotificationRealtimeService } from '../../services/notification-realtime.service';
@@ -22,15 +33,18 @@ export class NotificationMenu implements OnDestroy, OnInit {
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly processingIds = signal<ReadonlySet<number>>(new Set());
+
   readonly unreadCount = computed(
     () => this.notifications().filter((notification) => !notification.readed).length,
   );
 
   ngOnInit(): void {
     this.loadNotifications();
+
     this.notificationRealtime.notifications$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((notification) => this.upsertNotification(notification));
+
     void this.notificationRealtime.connect();
   }
 
@@ -39,7 +53,13 @@ export class NotificationMenu implements OnDestroy, OnInit {
   }
 
   toggleMenu(): void {
-    this.menuAbierto.update((open) => !open);
+    const opening = !this.menuAbierto();
+    this.menuAbierto.set(opening);
+
+    if (opening) {
+      this.loadNotifications();
+      void this.notificationRealtime.connect();
+    }
   }
 
   @HostListener('document:click', ['$event'])
@@ -63,17 +83,11 @@ export class NotificationMenu implements OnDestroy, OnInit {
 
     this.notificationService.getMyNotifications().subscribe({
       next: (notifications) => {
-        const currentNotifications = this.notifications();
-        const mergedNotifications = new Map(
-          notifications.map((notification) => [notification.notificationId, notification]),
-        );
-        currentNotifications.forEach((notification) => {
-          mergedNotifications.set(notification.notificationId, notification);
-        });
         this.notifications.set(
-          [...mergedNotifications.values()].sort(
+          [...notifications].sort(
             (left, right) =>
-              new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+              new Date(right.createdAt).getTime() -
+              new Date(left.createdAt).getTime(),
           ),
         );
       },
@@ -87,12 +101,17 @@ export class NotificationMenu implements OnDestroy, OnInit {
   }
 
   markAsRead(notification: NotificationResponse): void {
-    if (notification.readed || this.processingIds().has(notification.notificationId)) {
+    if (
+      notification.readed ||
+      this.processingIds().has(notification.notificationId)
+    ) {
       return;
     }
 
     this.errorMessage.set(null);
-    this.processingIds.update((ids) => new Set(ids).add(notification.notificationId));
+    this.processingIds.update(
+      (ids) => new Set(ids).add(notification.notificationId),
+    );
 
     this.notificationService.markAsRead(notification.notificationId).subscribe({
       next: (updatedNotification) => {
@@ -126,10 +145,13 @@ export class NotificationMenu implements OnDestroy, OnInit {
       const updatedNotifications = new Map(
         notifications.map((item) => [item.notificationId, item]),
       );
+
       updatedNotifications.set(notification.notificationId, notification);
+
       return [...updatedNotifications.values()].sort(
         (left, right) =>
-          new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+          new Date(right.createdAt).getTime() -
+          new Date(left.createdAt).getTime(),
       );
     });
   }

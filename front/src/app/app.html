@@ -1,4 +1,3 @@
-
 <header class="main-header">
   <nav class="navbar">
 
@@ -29,6 +28,8 @@
             Inicio
           </a>
         </li>
+
+        <li></li>
 
         <li>
           <a
@@ -68,36 +69,13 @@
           </a>
         </li>
 
-        <li>
-          <a
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact: true}"
-            #buscar="routerLinkActive">
-
-            <img
-              [src]="buscar.isActive
-                ? '/images/magnifying-glass-t.png'
-                : '/images/magnifying-glass.png'">
-
-            Buscar
-          </a>
-        </li>
+        @if (role() === 'PATIENT' || role() === 'DOCTOR') {
+          <li class="nav-search">
+            <app-doctor-quick-search />
+          </li>
+        }
 
         <li>
-
-          @if (auth.isDoctor()) {
-            <a routerLink="/solicitudes">
-              Solicitudes de seguimiento
-            </a>
-          }
-
-          @if (auth.isPatient()) {
-            <a routerLink="/mis-solicitudes">
-              Seguimiento
-            </a>
-          }
-
-        </li>
 
       }
 

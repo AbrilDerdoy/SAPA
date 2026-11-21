@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -41,14 +40,17 @@ public class DoctorEntity {
 
     private String hospitalUrl;
 
+    @Column(length = 255)
+    private String hospitalAddress;
+
+    private Double hospitalLatitude;
+
+    private Double hospitalLongitude;
+
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 
-    @ManyToMany
-    @JoinTable(
-            name = "doctor_speciality",
-            joinColumns = @JoinColumn(name = "doctor_id"),
-            inverseJoinColumns = @JoinColumn(name = "speciality_id")
-    )
-    private List<SpecialityEntity> specialities;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "speciality_id")
+    private SpecialityEntity speciality;
 }

@@ -9,7 +9,7 @@ import { AlertaService } from '../../../Common/alerta/alerta-service';
   selector: 'app-forgot-password',
   imports: [FormField,FormError],
   templateUrl: './forgot-password.html',
-  styleUrl: '../../shared/form.css',
+  styleUrls: ['./forgot-password.css', '../../shared/form.css']
 })
 export class ForgotPassword {
   readonly modelo = signal<string>('');

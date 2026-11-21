@@ -79,7 +79,7 @@ public class DataInitializer {
                 doc1.setBirthDate(LocalDate.of(1985, 4, 10));
                 doc1.setPhoneNumber("+541111111111");
                 doc1.setLicenseNumber("MN-12345");
-                if (!specialities.isEmpty()) doc1.setSpecialities(List.of(specialities.get(0)));
+                if (!specialities.isEmpty()) doc1.setSpeciality(specialities.get(0));
 
                 doctorRepository.save(doc1);
                 System.out.println("🌱 Médico 1 inicializado (ACTIVE).");
@@ -97,7 +97,8 @@ public class DataInitializer {
                 doc2.setBirthDate(LocalDate.of(1979, 11, 23));
                 doc2.setPhoneNumber("+541122222222");
                 doc2.setLicenseNumber("MP-98765");
-                if (specialities.size() > 1) doc2.setSpecialities(List.of(specialities.get(1)));
+                if (specialities.size() > 1) doc2.setSpeciality(specialities.get(1));
+                else if (!specialities.isEmpty()) doc2.setSpeciality(specialities.get(0));
 
                 doctorRepository.save(doc2);
                 System.out.println("🌱 Médico 2 inicializado (ACTIVE).");

@@ -383,7 +383,7 @@
                         <p><strong>Matricula:</strong> ${doctor.licenseNumber}</p>
                         <p><strong>Telefono:</strong> ${doctor.phoneNumber || 'No especificado'}</p>
                         <p><strong>Fecha de nacimiento:</strong> ${doctor.birthDate || 'No especificada'}</p>
-                        <p class="specialities"><strong>Especialidades:</strong> ${doctor.specialities && doctor.specialities.length > 0 ? doctor.specialities.join(', ') : 'No especificadas'}</p>
+                        <p class="specialities"><strong>Especialidad:</strong> ${doctor.speciality || 'No especificada'}</p>
                     </div>
                     <div class="doctor-actions">
                         <button class="btn-approve" onclick="approveDoctor(${doctor.userId}, this)">Aprobar</button>

@@ -1,151 +1,156 @@
-
 <section class="fr">
-    <header class="fr__header">
-        <h1 class="fr__title">{{ title() }}</h1>
-        <p class="fr__lead">{{ subtitle() }}</p>
-    </header>
+  <header class="fr__header">
+    <h1 class="fr__title">{{ title }}</h1>
+    <p class="fr__lead">{{ subtitle }}</p>
+  </header>
 
-    @if (auth.isTutor()) {
-        <app-tutor-patient-selector
-            label="Paciente"
-            [selectedPatientId]="selectedPatientId()"
-            (patientSelected)="onPatientSelected($event)" />
-    }
+  @if (actionError()) {
+    <div class="notice notice--error" role="alert">{{ actionError() }}</div>
+  }
 
-    @if (auth.isTutor() && selectedPatientId() === null) {
-        <div class="notice">
-            <strong>Seleccioná un paciente</strong>
-            <p>Elegí un paciente para consultar el estado de sus solicitudes de seguimiento.</p>
+  @if (loadStatus() === 'loading') {
+    <div class="skeleton">
+      <span class="skeleton__row"></span>
+      <span class="skeleton__row"></span>
+      <span class="skeleton__row"></span>
+    </div>
+  }
+
+  @if (loadStatus() === 'error') {
+    <div class="notice notice--error" role="alert">
+      <strong>No pudimos cargar las solicitudes</strong>
+      <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
+      <button type="button" class="btn btn--outline" (click)="load()">Reintentar</button>
+    </div>
+  }
+
+  @if (loadStatus() === 'success') {
+    @if (sorted().length > 0) {
+      <div class="filters">
+        <div class="filters__field">
+          <label for="statusFilter">Estado</label>
+          <select
+            id="statusFilter"
+            [value]="statusFilter()"
+            (change)="statusFilter.set($any($event.target).value)"
+          >
+            <option value="ALL">Todos</option>
+            <option value="PENDING">{{ statusLabels.PENDING }}</option>
+            <option value="APPROVED">{{ statusLabels.APPROVED }}</option>
+            <option value="REJECTED">{{ statusLabels.REJECTED }}</option>
+            <option value="DISOLVED">{{ statusLabels.DISOLVED }}</option>
+          </select>
         </div>
-    }
 
-    @if (actionError()) {
-        <div class="notice notice--error" role="alert">
-            {{ actionError() }}
-        </div>
-    }
-
-    @if (loadStatus() === 'loading' && !(auth.isTutor() && selectedPatientId() === null)) {
-        <div class="skeleton">
-            <span class="skeleton__row"></span>
-            <span class="skeleton__row"></span>
-            <span class="skeleton__row"></span>
-        </div>
-    }
-
-    @if (loadStatus() === 'error') {
-        <div class="notice notice--error" role="alert">
-            <strong>No pudimos cargar las solicitudes</strong>
-            <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
-            <button type="button" class="btn btn--outline" (click)="load()">
-                Reintentar
-            </button>
-        </div>
-    }
-
-    @if (loadStatus() === 'success' && !(auth.isTutor() && selectedPatientId() === null)) {
-        @if (sorted().length === 0) {
-            <div class="notice">
-                <strong>No hay solicitudes por ahora</strong>
-                <p>
-                    {{ mode === 'doctor'
-                        ? 'Cuando recibas una solicitud de seguimiento, va a aparecer acá.'
-                        : auth.isTutor()
-                            ? 'El paciente seleccionado todavía no envió ninguna solicitud de seguimiento.'
-                            : 'Todavía no enviaste ninguna solicitud.' }}
-                </p>
-            </div>
+        @if (mode === 'patient') {
+          <div class="filters__field filters__field--grow">
+            <label for="doctorFilter">Médico</label>
+            <input
+              id="doctorFilter"
+              type="text"
+              placeholder="Buscar por nombre del médico"
+              autocomplete="off"
+              [value]="doctorQuery()"
+              (input)="doctorQuery.set($any($event.target).value)"
+            />
+          </div>
         }
 
-        <ul class="list">
-            @for (req of sorted(); track req.id) {
-                <li class="card">
+        <button type="button" class="btn btn--outline" [disabled]="!hasFilters()" (click)="clearFilters()">
+          Limpiar
+        </button>
+      </div>
 
-                    @if (mode === 'doctor') {
-                        <div class="card__avatar" aria-hidden="true">
-                            @if (req.patient) {
-                                {{ initials(req.patient.firstName, req.patient.lastName) }}
-                            } @else if (req.doctorFollower) {
-                                {{ initials(req.doctorFollower.firstName, req.doctorFollower.lastName) }}
-                            }
-                        </div>
-                    }
-
-                    <div class="card__info">
-                        <h2 class="card__name">
-                            @if (mode === 'doctor') {
-                                @if (req.patient) {
-                                    {{ req.patient.firstName }} {{ req.patient.lastName }}
-                                } @else if (req.doctorFollower) {
-                                    Dr. {{ req.doctorFollower.firstName }} {{ req.doctorFollower.lastName }}
-                                } @else {
-                                    Solicitud #{{ req.id }}
-                                }
-                            } @else {
-                                @if (req.doctorFollower) {
-                                    Dr. {{ req.doctorFollower.firstName }} {{ req.doctorFollower.lastName }}
-                                } @else {
-                                    Solicitud #{{ req.id }}
-                                }
-                            }
-                        </h2>
-
-                        <p class="card__meta">
-                            @if (mode === 'doctor' && req.patient?.phoneNumber) {
-                                <span>{{ req.patient?.phoneNumber }}</span>
-                            }
-
-                            <span>
-                                Enviada el {{ req.requestedAt | date: 'dd/MM/yyyy HH:mm' }}
-                            </span>
-
-                            @if (req.respondedAt) {
-                                <span>
-                                    Respondida el {{ req.respondedAt | date: 'dd/MM/yyyy HH:mm' }}
-                                </span>
-                            }
-                        </p>
-                    </div>
-
-                    <div class="card__side">
-                        <span [class]="'badge badge--' + req.status.toLowerCase()">
-                            {{ statusLabels[req.status] }}
-                        </span>
-
-                        @if (mode === 'doctor' && req.status === 'PENDING') {
-                            <div class="card__actions">
-                                <button
-                                    type="button"
-                                    class="btn btn--outline"
-                                    [disabled]="busyId() === req.id"
-                                    (click)="reject(req.id)">
-                                    Rechazar
-                                </button>
-
-                                <button
-                                    type="button"
-                                    class="btn btn--primary"
-                                    [disabled]="busyId() === req.id"
-                                    (click)="approve(req.id)">
-                                    Aprobar
-                                </button>
-                            </div>
-                        }
-
-                        @if (mode === 'patient' && req.status === 'APPROVED') {
-                            <div class="card__actions">
-                                <button
-                                    type="button"
-                                    class="btn btn--danger"
-                                    [disabled]="busyId() === req.id"
-                                    (click)="dissolve(req.id)">
-                                    Disolver seguimiento
-                                </button>
-                            </div>
-                        }
-                    </div>
-                </li>
-            }
-        </ul>
+      @if (filtered().length === 0) {
+        <div class="notice">
+          <strong>Sin resultados</strong>
+          <p>No hay solicitudes que coincidan con los filtros.</p>
+        </div>
+      }
     }
+
+    @if (sorted().length === 0) {
+      <div class="notice">
+        <strong>No hay solicitudes por ahora</strong>
+        <p>{{ emptyMessage }}</p>
+      </div>
+    }
+
+    <ul class="list">
+      @for (req of filtered(); track req.id) {
+        <li class="card">
+          @if (mode !== 'patient') {
+            <div class="card__avatar" aria-hidden="true">
+              {{ followerInitials(req) }}
+            </div>
+          }
+
+          <div class="card__info">
+            <h2 class="card__name">
+              @if (mode !== 'patient') {
+                {{ followerName(req) }}
+              } @else if (req.doctor) {
+                Dr/a. {{ req.doctor.firstName }} {{ req.doctor.lastName }}
+              } @else {
+                Solicitud #{{ req.id }}
+              }
+            </h2>
+            <p class="card__meta">
+              @if (mode !== 'patient' && followerPhone(req)) {
+                <span>{{ followerPhone(req) }}</span>
+              }
+              <span>Enviada el {{ req.requestedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              @if (req.respondedAt) {
+                <span>Respondida el {{ req.respondedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              }
+            </p>
+          </div>
+
+          <div class="card__side">
+            <span [class]="'badge badge--' + req.status.toLowerCase()">
+              {{ statusLabels[req.status] }}
+            </span>
+
+            <div class="card__actions">
+              @if (mode === 'patient' && req.doctor) {
+                <a class="btn btn--outline" [routerLink]="['/perfil-medico-publico', req.doctor.id]">
+                  Ver perfil
+                </a>
+              }
+
+              @if (mode === 'doctor' && req.status === 'PENDING') {
+                <button
+                  type="button"
+                  class="btn btn--outline"
+                  [disabled]="busyId() === req.id"
+                  (click)="reject(req.id)"
+                >
+                  Rechazar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn--primary"
+                  [disabled]="busyId() === req.id"
+                  (click)="approve(req.id)"
+                >
+                  Aprobar
+                </button>
+              }
+
+              @if ((mode === 'patient' || mode === 'followers') && req.status === 'APPROVED') {
+                <button
+                  type="button"
+                  class="btn btn--danger"
+                  [disabled]="busyId() === req.id"
+                  (click)="dissolve(req.id)"
+                >
+                  Disolver seguimiento
+                </button>
+              }
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
 </section>

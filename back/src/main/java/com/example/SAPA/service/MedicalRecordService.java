@@ -16,9 +16,11 @@ import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.mappers.MedicalRecordMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -108,10 +110,7 @@ public class MedicalRecordService {
     }
 
     @Transactional
-    public MedicationDetailResponseDTO addMedication(
-            Long patientId,
-            AddMedicationRequestDTO request
-    ) {
+    public MedicationDetailResponseDTO addMedication(Long patientId, AddMedicationRequestDTO request) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
 
         validateDoctorPatientRelationship(doctor, patientId);
@@ -121,22 +120,23 @@ public class MedicalRecordService {
 
         MedicalRecordEntity record = getOrCreateMedicalRecord(patient);
 
+        String normalizedDrugName = request.fdaDrugName().trim();
+
+        if (patientMedicationRepository.existsByMedicalRecordAndFdaDrugNameIgnoreCase(record, normalizedDrugName)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,  "Este medicamento ya está registrado en la ficha médica. Si se encuentra suspendido, podés volver a recetarlo desde la sección «Medicaciones suspendidas».");
+        }
+
         PatientMedicationEntity medication = new PatientMedicationEntity();
         medication.setMedicalRecord(record);
-        medication.setFdaDrugName(request.fdaDrugName());
+        medication.setFdaDrugName(normalizedDrugName);
         medication.setNotes(request.notes());
         medication.setStartDate(request.startDate());
         medication.setEndDate(request.endDate());
 
-        return toMedicationResponse(
-                patientMedicationRepository.save(medication)
-        );
+        return toMedicationResponse(patientMedicationRepository.save(medication));
     }
 
-    private void validateDoctorPatientRelationship(
-            DoctorEntity doctor,
-            Long patientId
-    ) {
+    private void validateDoctorPatientRelationship(DoctorEntity doctor, Long patientId) {
         boolean assigned = followRequestRepository
                 .existsByDoctorIdAndPatientIdAndStatus(
                         doctor.getId(),
@@ -151,24 +151,20 @@ public class MedicalRecordService {
         }
     }
 
-    private MedicationDetailResponseDTO toMedicationResponse(
-            PatientMedicationEntity medication
-    ) {
+    private MedicationDetailResponseDTO toMedicationResponse(PatientMedicationEntity medication) {
         return new MedicationDetailResponseDTO(
                 medication.getId(),
                 medication.getFdaDrugName(),
                 medication.getNotes(),
                 medication.getStartDate(),
                 medication.getEndDate(),
-                medication.getAddedAt()
+                medication.getAddedAt(),
+                medication.getStatus()
         );
     }
 
     @Transactional
-    public MedicationDetailResponseDTO updateMedication(
-            Long medicationId,
-            UpdateMedicationRequestDTO request
-    ) {
+    public MedicationDetailResponseDTO updateMedication(Long medicationId, UpdateMedicationRequestDTO request) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
 
         PatientMedicationEntity medication = patientMedicationRepository.findById(medicationId)
@@ -198,6 +194,10 @@ public class MedicalRecordService {
             throw new IllegalArgumentException(
                     "La fecha de finalización no puede ser anterior a la fecha de inicio."
             );
+        }
+
+        if (request.status() != null) {
+            medication.setStatus(request.status());
         }
 
         return toMedicationResponse(patientMedicationRepository.save(medication));

@@ -10,18 +10,12 @@
   <form class="search" (submit)="onSubmit($event)" novalidate>
     <label class="search__label" for="medName">Nombre del medicamento</label>
     <div class="search__bar" [class.search__bar--error]="searchForm.name().touched() && searchForm.name().invalid()">
-  
-      <input
-        id="medName"
-        class="search__input"
-        type="text"
-        placeholder="Ej: Tylenol, Advil, Ibuprofen..."
-        autocomplete="off"
-        [formField]="searchForm.name"
-      />
+
+      <input id="medName" class="search__input" type="text" placeholder="Ej: Tylenol, Advil, Ibuprofen..."
+        autocomplete="off" [formField]="searchForm.name" />
 
       @if (searchModel().name) {
-        <button type="button" class="search__clear" (click)="reset()" aria-label="Limpiar búsqueda">×</button>
+      <button type="button" class="search__clear" (click)="reset()" aria-label="Limpiar búsqueda">×</button>
       }
 
       <button type="submit" class="search__btn" [disabled]="status() === 'loading'">
@@ -30,11 +24,11 @@
     </div>
 
     @if (searchForm.name().touched() && searchForm.name().invalid()) {
-      <ul class="search__errors" role="alert">
-        @for (error of searchForm.name().errors(); track error.kind) {
-          <li>{{ error.message }}</li>
-        }
-      </ul>
+    <ul class="search__errors" role="alert">
+      @for (error of searchForm.name().errors(); track error.kind) {
+      <li>{{ error.message }}</li>
+      }
+    </ul>
     }
 
     <p class="search__hint">La base de la FDA usa nombres comerciales de EE.UU.</p>
@@ -42,64 +36,67 @@
 
   <div class="results" aria-live="polite">
     @if (status() === 'loading') {
-      <div class="skeleton">
-        <span class="skeleton__line skeleton__line--title"></span>
-        <span class="skeleton__line"></span>
-        <span class="skeleton__line"></span>
-        <span class="skeleton__line skeleton__line--short"></span>
-      </div>
+    <div class="skeleton">
+      <span class="skeleton__line skeleton__line--title"></span>
+      <span class="skeleton__line"></span>
+      <span class="skeleton__line"></span>
+      <span class="skeleton__line skeleton__line--short"></span>
+    </div>
     }
 
     @if (status() === 'empty') {
-      <div class="notice">
-        <strong>No encontramos "{{ lastSearch() }}"</strong>
-        <p>Revisá que esté bien escrito o probá con otro nombre comercial.</p>
-      </div>
+    <div class="notice">
+      <strong>No encontramos "{{ lastSearch() }}"</strong>
+      <p>Revisá que esté bien escrito o probá con otro nombre comercial.</p>
+    </div>
     }
 
     @if (status() === 'error') {
-      <div class="notice notice--error" role="alert">
-        <strong>Algo salió mal</strong>
-        <p>{{ errorMessage() }}</p>
-      </div>
+    <div class="notice notice--error" role="alert">
+      <strong>Algo salió mal</strong>
+      <p>{{ errorMessage() }}</p>
+    </div>
     }
 
     @if (status() === 'success') {
-      <article class="leaflet">
-        <header class="leaflet__head">
-          <span class="leaflet__tag">Prospecto</span>
-          <h2 class="leaflet__name">{{ brandNames() }}</h2>
-          <p class="leaflet__generic">
-            <span>Principio activo</span>
-            {{ genericNames() }}
-          </p>
-        </header>
+    <article class="leaflet">
+      <header class="leaflet__head">
+        <span class="leaflet__tag">Prospecto</span>
+        <h2 class="leaflet__name">{{ brandNames() }}</h2>
+        <p class="leaflet__generic">
+          <span>Principio activo</span>
+          {{ genericNames() }}
+        </p>
+      </header>
 
-        <div class="leaflet__body">
-          @if (sections().length === 0) {
-            <p class="leaflet__empty">La FDA no informa detalles para este medicamento.</p>
-          }
-          @for (section of sections(); track section.key; let i = $index) {
-            <details class="item" [open]="i === 0" [class.item--warn]="section.key === 'warnings'">
-              <summary class="item__summary">
-                <span class="item__num">{{ i + 1 }}</span>
-                <span class="item__title">{{ section.title }}</span>
-                <span class="item__chevron" aria-hidden="true"></span>
-              </summary>
+      <div class="leaflet__body">
+        @if (sections().length === 0) {
+        <p class="leaflet__empty">La FDA no informa detalles para este medicamento.</p>
+        }
+        @for (section of sections(); track section.key; let i = $index) {
+        <details class="item" [open]="i === 0" [class.item--warn]="section.key === 'warnings'">
+          <summary class="item__summary">
+            <span class="item__num">{{ i + 1 }}</span>
+            <span class="item__title">{{ section.title }}</span>
+            <span class="item__chevron" aria-hidden="true"></span>
+          </summary>
 
-              <div class="item__content">
-                @for (text of section.content; track $index) {
-                  <p>{{ text }}</p>
-                }
-              </div>
-            </details>
-          }
-        </div>
+          <div class="item__content">
+            @for (text of section.content; track $index) {
+            <p>{{ text }}</p>
+            }
+          </div>
+        </details>
+        }
+      </div>
 
-        <footer class="leaflet__foot">
-          Información de carácter orientativo. No reemplaza la consulta con un profesional de la salud.
-        </footer>
-      </article>
+      <footer class="leaflet__foot">
+        Información de carácter orientativo. No reemplaza la consulta con un profesional de la salud.
+        <button type="button" class="search__btn" (click)="seleccionarMedicamento()">
+          Agregar a la ficha médica
+        </button>
+      </footer>
+    </article>
     }
   </div>
 </section>

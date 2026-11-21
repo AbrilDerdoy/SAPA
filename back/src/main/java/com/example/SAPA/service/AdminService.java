@@ -29,10 +29,6 @@ public class AdminService {
             DoctorEntity doctor = doctorRepository.findByUser(user)
                     .orElseThrow(() -> new RuntimeException("No se encontró el perfil de médico para el usuario: " + user.getEmail()));
 
-            List<String> specialityNames = doctor.getSpecialities() != null
-                    ? doctor.getSpecialities().stream().map(s -> s.getName()).toList()
-                    : List.of();
-
             return PendingDoctorResponseDTO.builder()
                     .userId(user.getId())
                     .doctorId(doctor.getId())
@@ -42,7 +38,7 @@ public class AdminService {
                     .licenseNumber(doctor.getLicenseNumber())
                     .phoneNumber(doctor.getPhoneNumber())
                     .birthDate(doctor.getBirthDate())
-                    .specialities(specialityNames)
+                    .speciality(doctor.getSpeciality() == null ? null : doctor.getSpeciality().getName())
                     .status(user.getStatus().name())
                     .build();
         }).toList();

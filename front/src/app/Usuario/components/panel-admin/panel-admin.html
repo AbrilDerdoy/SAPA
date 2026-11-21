@@ -1,75 +1,182 @@
-<h2>Panel de administracion</h2>
-@if (accionError()) {
-    <p role="alert">{{accionError()}}</p>
-}
-@if (accionMensaje()) {
-    <p role="status">{{accionMensaje()}}</p>
-}
-@if(cantidadPendientes() === 0) {
-    <p>No hay solicitudes pendientes</p>
-} @else {
-    <p>Doctores pendientes: {{cantidadPendientes()}}</p>
-    <h3>Solicitudes de registro</h3>
-    @if(this.pendingDoctors.isLoading()) {
-        <p>Cargando solicitudes...</p>
-    }
-    @if(this.pendingDoctors.error()) {
-    <p>Error al cargar solicitudes</p>
-    }
-    @if(this.pendingDoctors.hasValue()){
-        <ul class="lista">
-        @for(solicitud of this.pendingDoctors.value();track solicitud.userId) {
-            <li class="item">
-                <div class="item-info">
-                    <p>Solicitud de {{solicitud.firstName}} {{solicitud.lastName}}</p>
-                    <p>Matricula: {{solicitud.licenseNumber}}</p>
-                </div>
-                <div class="botones">
-                    <button class="btn btn-success" [disabled]="solicitudesEnProceso().has(solicitud.userId)"
-                        (click)="aceptarSolicitud(solicitud.userId)">Aceptar</button>
-                    <button class="btn btn-danger" [disabled]="solicitudesEnProceso().has(solicitud.userId)"
-                        (click)="rechazarSolicitud(solicitud.userId)">Rechazar</button>
-                </div>
-            </li>
+<div class="panel">
+  <header class="panel__header">
+    <h1 class="panel__title">Panel de administración</h1>
+    <p class="panel__lead">Aprobá a los médicos que se registran y mantené actualizadas las especialidades.</p>
+  </header>
+
+  @if (accionError()) {
+    <div class="notice notice--error" role="alert">{{ accionError() }}</div>
+  }
+  @if (accionMensaje()) {
+    <div class="notice" role="status">{{ accionMensaje() }}</div>
+  }
+
+  <div class="panel__grid">
+    <section class="box" aria-labelledby="titulo-solicitudes">
+      <header class="box__head">
+        <h2 id="titulo-solicitudes" class="box__title">Solicitudes de registro</h2>
+        @if (cantidadPendientes() > 0) {
+          <span class="count" [attr.aria-label]="cantidadPendientes() + ' pendientes'">{{ cantidadPendientes() }}</span>
         }
-    </ul>
-    }
-}
-<h2>Gestion de especialidades</h2>
-@if(this.specialities.isLoading()) {
-    <p>Cargando especialidades...</p>
-}
-@if(this.specialities.error()) {
-    <p>Error al cargar especialidades</p>
-}
-@if(this.specialities.hasValue()){
-    <form novalidate (submit)="agregarEspecialidad($event)">
-        <input type="text" placeholder="Nueva especialidad" [formField]="formulario.name">
-        <app-form-error [field]="formulario.name()"/>
-        <button type="submit" [disabled]="procesandoEspecialidad()">
-            {{ procesandoEspecialidad() ? 'Agregando...' : 'Agregar' }}
-        </button>
-    </form>
-    <ul class="lista">
-        @for(especialidad of this.specialities.value(); track especialidad.id) {
-            <li class="item">
-                @if(especialidadEnEdicion()?.id === especialidad.id) {
-                    <form class="edicion" novalidate (submit)="guardarEdicion($event)">
-                        <input type="text" [formField]="formularioEdicion.name">
-                        <app-form-error [field]="formularioEdicion.name()"/>
-                        <div class="botones">
-                            <button class="btn btn-success" type="submit" [disabled]="guardandoEdicion()">{{guardandoEdicion() ? 'Guardando...' : 'Guardar'}}</button>
-                            <button class="btn btn-secondary" (click)="cancelarEdicion()" type="button" [disabled]="guardandoEdicion()">Cancelar</button>
-                        </div>
+      </header>
+
+      <div class="box__body">
+        @if (pendingDoctors.error()) {
+          <div class="notice notice--error notice--inline" role="alert">
+            <strong>No pudimos cargar las solicitudes</strong>
+            <p>Recargá la página para intentar de nuevo.</p>
+          </div>
+        } @else if (pendingDoctors.hasValue()) {
+          @if (pendingDoctors.value().length === 0) {
+            <div class="empty">
+              <strong>No hay solicitudes pendientes</strong>
+              <p>Cuando un médico se registre, su solicitud aparece acá.</p>
+            </div>
+          } @else {
+            <ul class="rows">
+              @for (solicitud of pendingDoctors.value(); track solicitud.userId) {
+                <li class="row row--pending">
+                  <div class="avatar" aria-hidden="true">{{ solicitud.firstName.charAt(0) }}{{ solicitud.lastName.charAt(0) }}</div>
+                  <div class="row__info">
+                    <strong class="row__name">{{ solicitud.firstName }} {{ solicitud.lastName }}</strong>
+                    <span class="row__meta">Matrícula {{ solicitud.licenseNumber }}</span>
+                  </div>
+                  <div class="row__actions">
+                    <button
+                      type="button"
+                      class="btn btn--primary"
+                      [attr.aria-label]="'Aceptar solicitud de ' + solicitud.firstName + ' ' + solicitud.lastName"
+                      [disabled]="solicitudesEnProceso().has(solicitud.userId)"
+                      (click)="aceptarSolicitud(solicitud.userId)"
+                    >
+                      Aceptar
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--danger"
+                      [attr.aria-label]="'Rechazar solicitud de ' + solicitud.firstName + ' ' + solicitud.lastName"
+                      [disabled]="solicitudesEnProceso().has(solicitud.userId)"
+                      (click)="rechazarSolicitud(solicitud.userId)"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <p class="hint" role="status">Cargando solicitudes…</p>
+        }
+      </div>
+    </section>
+
+    <section class="box" aria-labelledby="titulo-especialidades">
+      <header class="box__head">
+        <h2 id="titulo-especialidades" class="box__title">Especialidades</h2>
+        @if (specialities.hasValue()) {
+          <span class="count count--soft" [attr.aria-label]="specialities.value().length + ' especialidades'">{{ specialities.value().length }}</span>
+        }
+      </header>
+
+      <div class="box__body">
+        @if (specialities.error()) {
+          <div class="notice notice--error notice--inline" role="alert">
+            <strong>No pudimos cargar las especialidades</strong>
+            <p>Recargá la página para intentar de nuevo.</p>
+          </div>
+        } @else if (specialities.hasValue()) {
+          <form class="add" novalidate (submit)="agregarEspecialidad($event)">
+            <div class="add__field">
+              <label class="sr-only" for="nuevaEspecialidad">Nueva especialidad</label>
+              <input
+                id="nuevaEspecialidad"
+                type="text"
+                placeholder="Nueva especialidad"
+                autocomplete="off"
+                [formField]="formulario.name"
+              />
+              <app-form-error [field]="formulario.name()" />
+            </div>
+            <button type="submit" class="btn btn--primary" [disabled]="procesandoEspecialidad()">
+              {{ procesandoEspecialidad() ? 'Agregando…' : 'Agregar' }}
+            </button>
+          </form>
+
+          @if (specialities.value().length === 0) {
+            <div class="empty">
+              <strong>Todavía no hay especialidades</strong>
+              <p>Agregá la primera con el campo de arriba.</p>
+            </div>
+          } @else {
+            <ul class="rows">
+              @for (especialidad of specialities.value(); track especialidad.id) {
+                <li class="row" [class.row--confirm]="especialidadPorEliminar() === especialidad.id">
+                  @if (especialidadEnEdicion()?.id === especialidad.id) {
+                    <form class="edit" novalidate (submit)="guardarEdicion($event)">
+                      <div class="edit__field">
+                        <label class="sr-only" for="nombreEdicion">Nombre de la especialidad</label>
+                        <input id="nombreEdicion" type="text" autocomplete="off" [formField]="formularioEdicion.name" />
+                        <app-form-error [field]="formularioEdicion.name()" />
+                      </div>
+                      <div class="row__actions">
+                        <button type="submit" class="btn btn--primary" [disabled]="guardandoEdicion()">
+                          {{ guardandoEdicion() ? 'Guardando…' : 'Guardar' }}
+                        </button>
+                        <button type="button" class="btn btn--neutral" (click)="cancelarEdicion()" [disabled]="guardandoEdicion()">
+                          Cancelar
+                        </button>
+                      </div>
                     </form>
-                } @else {
-                    <span class="item-nombre">{{especialidad.name}}</span>
-                    <div class="botones">
-                        <button class="btn btn-success" (click)="editarEspecialidad(especialidad)">Editar</button>
-                        <button class="btn btn-danger" (click)="eliminarEspecialidad(especialidad.name)">Eliminar</button>
+                  } @else if (especialidadPorEliminar() === especialidad.id) {
+                    <span class="row__name row__name--grow">¿Eliminar {{ especialidad.name }}?</span>
+                    <div class="row__actions">
+                      <button
+                        type="button"
+                        class="btn btn--danger-solid"
+                        [disabled]="eliminandoEspecialidad()"
+                        (click)="eliminarEspecialidad(especialidad.name)"
+                      >
+                        {{ eliminandoEspecialidad() ? 'Eliminando…' : 'Sí, eliminar' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--neutral"
+                        [disabled]="eliminandoEspecialidad()"
+                        (click)="cancelarEliminacion()"
+                      >
+                        Cancelar
+                      </button>
                     </div>
-                }
-            </li>
+                  } @else {
+                    <span class="row__name row__name--grow">{{ especialidad.name }}</span>
+                    <div class="row__actions">
+                      <button
+                        type="button"
+                        class="btn btn--neutral"
+                        [attr.aria-label]="'Editar ' + especialidad.name"
+                        (click)="editarEspecialidad(especialidad)"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--danger"
+                        [attr.aria-label]="'Eliminar ' + especialidad.name"
+                        (click)="pedirConfirmacionEliminar(especialidad.id)"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <p class="hint" role="status">Cargando especialidades…</p>
         }
-    </ul>
-}
+      </div>
+    </section>
+  </div>
+</div>

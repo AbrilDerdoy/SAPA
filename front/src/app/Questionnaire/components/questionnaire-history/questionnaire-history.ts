@@ -4,8 +4,6 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { QuestionnaireService } from '../../services/questionnaire.service';
-import { Auth } from '../../../Usuario/services/Auth/auth';
-import { TutorPatientSelector } from '../../../Tutor/components/tutor-patient-selector/tutor-patient-selector';
 
 import {
   AnswerResponse,
@@ -17,18 +15,25 @@ interface ScalePoint {
   responseId: number;
   answeredAt: string;
   value: number;
+  min: number;
+  max: number;
+  percentage: number;
 }
 
 interface ScaleGroup {
   questionId: number;
   questionText: string;
+  min: number;
+  max: number;
+  minLabel: string;
+  maxLabel: string;
   points: ScalePoint[];
 }
 
 @Component({
   selector: 'app-questionnaire-history',
   standalone: true,
-  imports: [CommonModule, TutorPatientSelector],
+  imports: [CommonModule],
   templateUrl: './questionnaire-history.html',
   styleUrl: './questionnaire-history.css'
 })
@@ -37,8 +42,6 @@ export class QuestionnaireHistory implements OnInit {
   private readonly questionnaireService = inject(QuestionnaireService);
   private readonly route = inject(ActivatedRoute);
 
-  readonly auth = inject(Auth);
-
   mode = signal<'patient' | 'doctor'>('patient');
 
   patients = signal<PatientQuestionnaire[]>([]);
@@ -46,7 +49,7 @@ export class QuestionnaireHistory implements OnInit {
 
   selectedPatientId = signal<number | null>(null);
 
-  loading = signal(false);
+  loading = signal(true);
   error = signal('');
 
   scaleGroups = computed<ScaleGroup[]>(() => {
@@ -60,8 +63,17 @@ export class QuestionnaireHistory implements OnInit {
         }
 
         const value = Number(answer.value);
+        const min = answer.scaleMin;
+        const max = answer.scaleMax;
 
-        if (!Number.isFinite(value)) {
+        if (
+          !Number.isFinite(value) ||
+          min === null ||
+          max === null ||
+          min === undefined ||
+          max === undefined ||
+          max <= min
+        ) {
           continue;
         }
 
@@ -69,14 +81,23 @@ export class QuestionnaireHistory implements OnInit {
           groups.set(answer.questionId, {
             questionId: answer.questionId,
             questionText: answer.questionText,
+            min,
+            max,
+            minLabel: answer.scaleMinLabel ?? 'Mínimo',
+            maxLabel: answer.scaleMaxLabel ?? 'Máximo',
             points: []
           });
         }
 
-        groups.get(answer.questionId)!.points.push({
+        const percentage = ((value - min) / (max - min)) * 100;
+
+        groups.get(answer.questionId)?.points.push({
           responseId: response.responseId,
           answeredAt: response.answeredAt,
-          value
+          value,
+          min,
+          max,
+          percentage: Math.max(0, Math.min(100, percentage))
         });
       }
     }
@@ -98,43 +119,23 @@ export class QuestionnaireHistory implements OnInit {
 
     if (this.mode() === 'doctor') {
       this.loadPatients();
-      return;
+    } else {
+      this.loadMyHistory();
     }
-
-    if (this.auth.isTutor()) {
-      const initialPatientId = Number(
-        this.route.snapshot.queryParamMap.get('patientId')
-      );
-
-      if (Number.isFinite(initialPatientId) && initialPatientId > 0) {
-        this.selectedPatientId.set(initialPatientId);
-        this.loadMyHistory();
-      }
-
-      return;
-    }
-
-    this.loadMyHistory();
   }
 
   loadMyHistory(): void {
-    if (this.auth.isTutor() && this.selectedPatientId() === null) {
-      return;
-    }
-
     this.loading.set(true);
     this.error.set('');
 
-    this.questionnaireService.getMyResponses(this.selectedPatientId()).subscribe({
+    this.questionnaireService.getMyResponses().subscribe({
       next: (responses: QuestionnaireResponseDTO[]) => {
         this.responses.set(responses ?? []);
         this.loading.set(false);
       },
       error: (err: unknown) => {
         console.error('Error al cargar el historial:', err);
-        this.error.set(
-          'No se pudo cargar tu historial de cuestionarios.'
-        );
+        this.error.set('No se pudo cargar tu historial de cuestionarios.');
         this.loading.set(false);
       }
     });
@@ -169,24 +170,14 @@ export class QuestionnaireHistory implements OnInit {
     this.loading.set(true);
     this.error.set('');
 
-    if (this.auth.isTutor()) {
-      this.loadMyHistory();
-      return;
-    }
-
     this.questionnaireService.getPatientResponses(patientId).subscribe({
       next: (responses: QuestionnaireResponseDTO[]) => {
         this.responses.set(responses ?? []);
         this.loading.set(false);
       },
       error: (err: unknown) => {
-        console.error(
-          'Error al cargar respuestas del paciente:',
-          err
-        );
-        this.error.set(
-          'No se pudo cargar el historial de este paciente.'
-        );
+        console.error('Error al cargar respuestas del paciente:', err);
+        this.error.set('No se pudo cargar el historial de este paciente.');
         this.loading.set(false);
       }
     });
@@ -200,24 +191,28 @@ export class QuestionnaireHistory implements OnInit {
     return response.answers ?? [];
   }
 
-  getScaleLabel(value: number): string {
-    if (value <= 3) {
+  getScaleLabel(value: number, min: number, max: number): string {
+    const percentage = ((value - min) / (max - min)) * 100;
+
+    if (percentage <= 33) {
       return 'Bajo';
     }
 
-    if (value <= 6) {
+    if (percentage <= 66) {
       return 'Moderado';
     }
 
     return 'Alto';
   }
 
-  getScaleColor(value: number): string {
-    if (value <= 3) {
+  getScaleColor(value: number, min: number, max: number): string {
+    const percentage = ((value - min) / (max - min)) * 100;
+
+    if (percentage <= 33) {
       return 'scale-low';
     }
 
-    if (value <= 6) {
+    if (percentage <= 66) {
       return 'scale-medium';
     }
 

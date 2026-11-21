@@ -1,20 +1,245 @@
-.botones-tipo-usuario {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    margin-bottom: 1rem;
+:host {
+  display: block;
+  color: var(--text);
 }
 
-.botones-usuario {
-    background-color: var(--surface);
-    color: var(--primary-dark);
-    width: 100%;
-    border: 2px solid var(--primary);
-    padding: 0.5rem 1rem;
-    border-radius: 0;
-    cursor: pointer;
+.reg {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100%;
 }
 
-.botones-usuario:hover {
-    background-color: var(--primary-light);
+.reg-brand {
+  display: grid;
+  place-items: center;
+  padding: 1.25rem 1rem;
+  background: var(--primary-light);
+}
+
+.reg-brand__logo {
+  display: block;
+  width: auto;
+  max-width: 70%;
+  height: 56px;
+  object-fit: contain;
+}
+
+.reg-side {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.reg-form {
+  container-type: inline-size;
+  display: grid;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 540px;
+  margin: 0;
+  padding: 1.5rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.reg-form__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.6rem, 4.5vw, 2rem);
+  line-height: 1.15;
+}
+
+.reg-form__lead {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.reg-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.reg-switch button {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.reg-switch button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.reg-switch button.is-active,
+.reg-switch button.is-active:hover {
+  background: var(--surface);
+  color: var(--primary-dark);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+.reg-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem;
+}
+
+.reg-field {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.reg-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.reg-field input,
+.reg-field select {
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.reg-password {
+  position: relative;
+  display: block;
+}
+
+.reg-password input {
+  padding-right: 3rem;
+}
+
+.reg-password__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  transform: translateY(-50%);
+}
+
+.reg-password__toggle:hover {
+  background: var(--surface-hover);
+}
+
+.reg-password__toggle img {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  opacity: 0.75;
+}
+
+:host-context([data-theme='dark']) .reg-password__toggle img {
+  filter: brightness(0) invert(1);
+}
+
+.reg-field app-form-error {
+  display: block;
+  min-height: 1rem;
+}
+
+:host ::ng-deep .reg-field .error {
+  margin: 0;
+  max-width: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1rem;
+  color: var(--danger-strong);
+}
+
+.reg-help {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.reg-help--error {
+  color: var(--danger-strong);
+  font-weight: 600;
+}
+
+.reg-notice {
+  margin: 0;
+  max-width: none;
+  padding: 0.8rem 1rem;
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.reg-notice--error {
+  background: var(--danger-light);
+  border-left-color: var(--danger);
+}
+
+.reg-submit {
+  width: 100%;
+  min-height: 2.9rem;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+@container (min-width: 440px) {
+  .reg-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .reg {
+    grid-template-columns: minmax(280px, 5fr) minmax(0, 7fr);
+  }
+
+  .reg-brand {
+    align-items: start;
+    padding: 20vh 2rem 3rem;
+  }
+
+  .reg-brand__logo {
+    position: sticky;
+    top: 20vh;
+    width: min(100%, 280px);
+    max-width: none;
+    height: auto;
+  }
+
+  .reg-side {
+    padding: 3rem 2rem 4rem;
+  }
+
+  .reg-form {
+    padding: 2rem;
+  }
 }

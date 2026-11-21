@@ -41,9 +41,16 @@ public class ChatDTO {
 
     public record ConversationSummary(
             Long conversationId,
+            Long otherParticipantId,
             String otherParticipantName,
+            String otherParticipantProfileImageUrl,
             String lastMessage,
             LocalDateTime lastMessageAt,
             LocalDateTime createdAt
+    ) {}
+
+    public record PresenceStatus(
+            Long userId,
+            boolean online
     ) {}
 }

@@ -139,6 +139,14 @@
   padding: 30px;
 }
 
+.forum-image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
 @media (max-width: 600px) {
   .forum {
     width: 96%;

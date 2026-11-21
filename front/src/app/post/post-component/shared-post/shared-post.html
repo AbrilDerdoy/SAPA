@@ -1,0 +1,19 @@
+@if (loading()) {
+  <p>Cargando publicación...</p>
+} @else if (unavailable()) {
+  <section class="message">
+    <h2>Publicación no disponible</h2>
+    <p>La publicación no existe o fue eliminada.</p>
+  </section>
+} @else if (error()) {
+  <section class="message">
+    <h2>No se pudo cargar la publicación</h2>
+    <p>Intentá nuevamente más tarde.</p>
+  </section>
+} @else if (post(); as publication) {
+  <section class="shared-post">
+    <h2>{{ publication.title }}</h2>
+    <p>{{ publication.content }}</p>
+    <!-- Después incorporamos los adjuntos y datos del autor -->
+  </section>
+}

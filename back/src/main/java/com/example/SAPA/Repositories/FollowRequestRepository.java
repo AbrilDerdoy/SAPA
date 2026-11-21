@@ -7,16 +7,30 @@ import com.example.SAPA.enums.FollowRequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
 public interface FollowRequestRepository extends JpaRepository<FollowRequestEntity, Long> {
 
     // Seguimiento paciente -> médico.
+    boolean existsByPatientAndDoctorAndStatusIn(
+            PatientEntity patient,
+            DoctorEntity doctor,
+            Collection<FollowRequestStatus> statuses
+    );
+
     boolean existsByPatientAndDoctorAndStatus(
             PatientEntity patient,
             DoctorEntity doctor,
             FollowRequestStatus status
+    );
+
+    boolean existsByPatientAndDoctorAndStatusAndIdNot(
+            PatientEntity patient,
+            DoctorEntity doctor,
+            FollowRequestStatus status,
+            Long id
     );
 
     // Se conserva para las validaciones clínicas existentes.
@@ -36,15 +50,27 @@ public interface FollowRequestRepository extends JpaRepository<FollowRequestEnti
     List<FollowRequestEntity> findByPatientIn(List<PatientEntity> patients);
 
     // Seguimiento médico -> médico.
-    boolean existsByDoctorFollowerAndDoctorAndStatus(
+    boolean existsByDoctorFollowerAndDoctorAndStatusIn(
             DoctorEntity doctorFollower,
             DoctorEntity doctor,
-            FollowRequestStatus status
+            Collection<FollowRequestStatus> statuses
+    );
+
+    boolean existsByDoctorFollowerAndDoctorAndStatusAndIdNot(
+            DoctorEntity doctorFollower,
+            DoctorEntity doctor,
+            FollowRequestStatus status,
+            Long id
     );
 
     List<FollowRequestEntity> findByDoctorFollower(DoctorEntity doctorFollower);
 
     List<FollowRequestEntity> findByDoctorAndPatientIsNotNullAndStatus(
+            DoctorEntity doctor,
+            FollowRequestStatus status
+    );
+
+    List<FollowRequestEntity> findByDoctorAndDoctorFollowerIsNotNullAndStatus(
             DoctorEntity doctor,
             FollowRequestStatus status
     );

@@ -5,14 +5,15 @@ import { TokenResponse } from '../../models/token-response';
 import { PendingDoctorResponse } from '../../models/pending-doctor-response';
 import { SpecialityDTO } from '../../models/SpecialityDTO';
 
-export interface datosUsuario{
-  firstName:string,
-  lastName:string,
-  email:string,
-  role:string,
-  birthDate:Date,
-  phoneNumber:number,
-  licenseNumber:number|null
+export interface datosUsuario {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  birthDate: Date;
+  phoneNumber: number;
+  licenseNumber: number | null;
+  profileImageUrl: string | null;
 }
 
 @Injectable({
@@ -22,32 +23,84 @@ export class UsuarioService {
   private readonly http = inject(HttpClient);
   private readonly BASE_URL = 'http://localhost:8080';
 
-  readonly specialities = httpResource<especialidad[]>(()=>`${this.BASE_URL}/specialities`)
+  readonly specialities = httpResource<especialidad[]>(
+    () => `${this.BASE_URL}/specialities`
+  );
 
-  readonly pendingDoctors = httpResource<PendingDoctorResponse[]>(()=>`${this.BASE_URL}/admin/pending-doctors`)
-
-  getMyProfile(){
-    return httpResource<datosUsuario>(()=>`${this.BASE_URL}/users/me`)
+  getPendingDoctors() {
+    return httpResource<PendingDoctorResponse[]>(
+      () => `${this.BASE_URL}/admin/pending-doctors`
+    );
   }
-  
-  modifyData(datos:Partial<Omit<datosUsuario,'role'>>){
-    return this.http.put<TokenResponse>(`${this.BASE_URL}/users/modify`,datos)
+
+  getMyProfile() {
+    return httpResource<datosUsuario>(
+      () => `${this.BASE_URL}/users/me`
+    );
+  }
+
+  modifyData(datos: Partial<Omit<datosUsuario, 'role' | 'profileImageUrl'>>) {
+    return this.http.put<TokenResponse>(
+      `${this.BASE_URL}/users/modify`,
+      datos
+    );
+  }
+
+  uploadProfilePhoto(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<{ profileImageUrl: string | null }>(
+      `${this.BASE_URL}/users/profile/photo`,
+      formData
+    );
+  }
+
+  removeProfilePhoto() {
+    return this.http.delete<{ profileImageUrl: string | null }>(
+      `${this.BASE_URL}/users/profile/photo`
+    );
   }
 
   aceptarSolicitud(userId: number) {
-    return this.http.put<{ message: string }>(`${this.BASE_URL}/admin/approve-doctor/${userId}`, {});
+    return this.http.put<{ message: string }>(
+      `${this.BASE_URL}/admin/approve-doctor/${userId}`,
+      {}
+    );
   }
 
   rechazarSolicitud(userId: number) {
-    return this.http.put<{ message: string }>(`${this.BASE_URL}/admin/reject-doctor/${userId}`, {});
+    return this.http.put<{ message: string }>(
+      `${this.BASE_URL}/admin/reject-doctor/${userId}`,
+      {}
+    );
   }
+
   agregarEspecialidad(especialidad: SpecialityDTO) {
-    return this.http.post<{ message: string }>(`${this.BASE_URL}/specialities/crear`, especialidad);
+    return this.http.post<{ message: string }>(
+      `${this.BASE_URL}/specialities/crear`,
+      especialidad
+    );
   }
+
   eliminarEspecialidad(name: string) {
-    return this.http.delete<{ message: string }>(`${this.BASE_URL}/specialities/eliminar/${encodeURIComponent(name)}`);
+    return this.http.delete<{ message: string }>(
+      `${this.BASE_URL}/specialities/eliminar/${encodeURIComponent(name)}`
+    );
   }
-  modificarEspecialidad(id:number,name:string){
-    return this.http.put<{ message: string }>(`${this.BASE_URL}/specialities/modificar/${id}`, { name });
+
+  modificarEspecialidad(id: number, name: string) {
+    return this.http.put<{ message: string }>(
+      `${this.BASE_URL}/specialities/modificar/${id}`,
+      { name }
+    );
+  }
+
+  eliminarCuenta(password: string) {
+    return this.http.patch(
+      `${this.BASE_URL}/users`,
+      { password },
+      { responseType: 'text' }
+    );
   }
 }

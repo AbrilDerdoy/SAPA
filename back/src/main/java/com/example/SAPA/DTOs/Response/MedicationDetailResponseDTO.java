@@ -1,4 +1,6 @@
 package com.example.SAPA.DTOs.Response;
+import com.example.SAPA.enums.MedicationStatus;
+
 import java.time.LocalDate;
 
 public record MedicationDetailResponseDTO(
@@ -7,5 +9,6 @@ public record MedicationDetailResponseDTO(
         String notes,
         LocalDate startDate,
         LocalDate endDate,
-        LocalDate addedAt
+        LocalDate addedAt,
+        MedicationStatus status
 ) {}

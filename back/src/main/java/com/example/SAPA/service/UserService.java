@@ -33,6 +33,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import java.util.List;
 import java.util.Set;
 
@@ -70,8 +73,8 @@ public class UserService {
             if (request.licenseNumber() == null || request.licenseNumber().isBlank()) {
                 throw new IllegalArgumentException("La matrícula es obligatoria para los médicos.");
             }
-            if (request.specialities() == null || request.specialities().isEmpty()) {
-                throw new IllegalArgumentException("El médico debe tener al menos una especialidad.");
+            if (request.speciality() == null) {
+                throw new IllegalArgumentException("El médico debe tener una especialidad.");
             }
         }
 
@@ -99,9 +102,8 @@ public class UserService {
                     .birthDate(request.birthDate())
                     .phoneNumber(request.phoneNumber())
                     .licenseNumber(request.licenseNumber())
-                    .specialities(
-                            specialityRepository.findAllById(request.specialities())
-                    )
+                    .speciality(specialityRepository.findById(request.speciality())
+                            .orElseThrow(() -> new IllegalArgumentException("La especialidad no existe.")))
                     .build();
 
             doctor = doctorRepository.save(doctor);
@@ -273,12 +275,17 @@ public class UserService {
             throw new BadCredentialsException("Contraseña incorrecta");
         }
 
-        if(user.getStatus().equals(AccountStatus.INACTIVE)) {
+        if (user.getStatus().equals(AccountStatus.INACTIVE)) {
             throw new DisabledException("Su cuenta se encuentra dada de baja.");
         }
 
-        user.setStatus(AccountStatus.INACTIVE);
+        user.markForDeletion();
         userRepository.save(user);
+
+        credentialRepository.findByEmail(email).ifPresent(credential -> {
+            credential.setRefreshToken(UUID.randomUUID().toString());
+            credentialRepository.save(credential);
+        });
     }
 
     public ProfileResponseDTO getProfile(String email) {

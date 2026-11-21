@@ -39,38 +39,42 @@ public interface QuestionnaireAssignmentRepository
             Long doctorId
     );
 
+    // Asignaciones activas de los cuestionarios de un médico.
+    List<QuestionnaireAssignmentEntity>
+    findByQuestionnaire_Doctor_IdAndActiveTrue(Long doctorId);
+
     @Query(value = """
-        SELECT *
-        FROM questionnaire_assignment a
-        WHERE a.patient_id = :patientId
-          AND a.active = true
-          AND (a.due_at IS NULL OR a.due_at <= :now)
-        ORDER BY a.due_at ASC
-        """, nativeQuery = true)
+            SELECT *
+            FROM questionnaire_assignment a
+            WHERE a.patient_id = :patientId
+              AND a.active = true
+              AND (a.due_at IS NULL OR a.due_at <= :now)
+            ORDER BY a.due_at ASC
+            """, nativeQuery = true)
     List<QuestionnaireAssignmentEntity> findPendingAssignments(
             @Param("patientId") Long patientId,
             @Param("now") LocalDateTime now
     );
 
     @Query(value = """
-        SELECT *
-        FROM questionnaire_assignment a
-        WHERE a.id = :id
-        FOR UPDATE
-        """, nativeQuery = true)
+            SELECT *
+            FROM questionnaire_assignment a
+            WHERE a.questionnaire_assignment_id = :id
+            FOR UPDATE
+            """, nativeQuery = true)
     Optional<QuestionnaireAssignmentEntity> findByIdForUpdate(
             @Param("id") Long id
     );
 
     @Query(value = """
-        SELECT *
-        FROM questionnaire_assignment a
-        WHERE a.active = true
-          AND a.notification_sent = false
-          AND a.due_at IS NOT NULL
-          AND a.due_at <= :now
-        FOR UPDATE
-        """, nativeQuery = true)
+            SELECT *
+            FROM questionnaire_assignment a
+            WHERE a.active = true
+              AND a.notification_sent = false
+              AND a.due_at IS NOT NULL
+              AND a.due_at <= :now
+            FOR UPDATE
+            """, nativeQuery = true)
     List<QuestionnaireAssignmentEntity> findDueAssignmentsForNotification(
             @Param("now") LocalDateTime now
     );

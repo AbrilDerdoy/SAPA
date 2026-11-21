@@ -1,4 +1,3 @@
-
 @if (conversation) {
 
   <section class="chat-container">
@@ -6,7 +5,13 @@
     <header class="chat-header">
 
       <div class="participant-avatar">
-        {{ conversation.otherParticipantName.charAt(0).toUpperCase() }}
+        @if (conversation.otherParticipantProfileImageUrl) {
+          <img
+            [src]="getProfileImageUrl(conversation.otherParticipantProfileImageUrl)"
+            [alt]="'Foto de ' + conversation.otherParticipantName">
+        } @else {
+          {{ conversation.otherParticipantName.charAt(0).toUpperCase() }}
+        }
       </div>
 
       <div class="participant-info">
@@ -15,10 +20,10 @@
         <span class="connection-status">
           <span
             class="status-dot"
-            [class.connected]="isConnected">
+            [class.connected]="otherParticipantOnline">
           </span>
 
-          {{ isConnected ? 'Conectado' : 'Conectando...' }}
+          {{ otherParticipantOnline ? 'En línea' : 'Desconectado' }}
         </span>
       </div>
 
@@ -47,11 +52,14 @@
 
           <div
             class="message-row"
-            [class.own-message]="isOwnMessage(message)">
+            [class.own-message]="message.type !== 'SYSTEM' && isOwnMessage(message)"
+            [class.system-message]="message.type === 'SYSTEM'">
 
             <div class="message-bubble">
 
-              @if (!isOwnMessage(message)) {
+              @if (message.type === 'SYSTEM') {
+                <span class="system-label">Aviso del sistema</span>
+              } @else if (!isOwnMessage(message)) {
                 <span class="sender-name">
                   {{ message.senderName }}
                 </span>
@@ -127,6 +135,7 @@
       <textarea
         name="newMessage"
         [(ngModel)]="newMessage"
+        (keydown)="onMessageKeydown($event)"
         placeholder="Escribí tu mensaje..."
         rows="1"
         maxlength="2000"

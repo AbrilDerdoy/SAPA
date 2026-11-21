@@ -7,6 +7,7 @@ export interface registerRequest {
     birthDate:string,
     phoneNumber:string,
     licenseNumber:string|null,
-    specialities:number[]|null,
+    speciality:number|null,
+    specialities?:number[]|null,
     relationship?: string | null
 }

@@ -1,0 +1,130 @@
+:host {
+  display: block;
+  color: var(--text);
+}
+
+.panel {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.panel__title {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+  gap: 0 1.25rem;
+}
+
+.field {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  min-width: 0;
+  padding-bottom: 1.4rem;
+}
+
+.field--wide {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.field textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0.6rem;
+}
+
+.pair--single {
+  grid-template-columns: 1fr;
+}
+
+.field input[type='number']::-webkit-outer-spin-button,
+.field input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.field input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.field__errors {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.panel__actions button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.btn {
+  padding: 0.55rem 1.1rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.btn--outline {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+@media (max-width: 560px) {
+  .panel {
+    padding: 1.1rem;
+  }
+
+  .panel__actions {
+    flex-direction: column-reverse;
+  }
+
+  .panel__actions button {
+    width: 100%;
+  }
+}

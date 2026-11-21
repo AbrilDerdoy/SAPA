@@ -1,0 +1,282 @@
+
+:host {
+  display: block;
+  color: var(--text);
+}
+
+.pp {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+.pp__header {
+  margin-bottom: 1.75rem;
+}
+
+.pp__title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+  line-height: 1.1;
+}
+
+.pp__lead {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* Foto de perfil */
+
+.profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.profile-photo__avatar {
+  width: 112px;
+  height: 112px;
+  flex: 0 0 112px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.profile-photo__image,
+.profile-photo__initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.profile-photo__image {
+  display: block;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+
+.profile-photo__initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.profile-photo__content {
+  min-width: 0;
+}
+
+.profile-photo__content h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+.profile-photo__content > p {
+  margin: 0 0 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.profile-photo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.photo-button,
+.photo-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.photo-button {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.photo-button:hover:not(.photo-button--disabled) {
+  background: var(--primary-dark);
+}
+
+.photo-button--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.photo-remove {
+  background: var(--surface);
+  color: var(--danger);
+}
+
+.photo-remove:hover:not(:disabled) {
+  background: var(--danger-light);
+}
+
+.photo-remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.photo-hint {
+  margin-top: 0.65rem !important;
+  font-size: 0.78rem !important;
+}
+
+.photo-error {
+  margin-top: 0.5rem !important;
+  color: var(--danger) !important;
+  font-size: 0.85rem !important;
+}
+
+/* Formulario */
+
+.form {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.is-invalid {
+  border-color: var(--danger);
+}
+
+.field__errors {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.field app-form-error {
+  display: block;
+}
+
+.field input:disabled {
+  cursor: not-allowed;
+}
+
+.email-input {
+  cursor: help;
+}
+
+.email-hint {
+  font-size: 0.85rem;
+}
+
+/* Mensajes */
+
+.notice {
+  padding: 1rem 1.2rem;
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+}
+
+.notice p {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+}
+
+.pp > .notice {
+  margin-bottom: 1rem;
+}
+
+.notice button {
+  margin-top: 0.8rem;
+}
+
+.notice--error {
+  background: var(--danger-light);
+  border-left-color: var(--danger);
+}
+
+/* Acciones */
+
+.form__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.form__actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* Adaptación móvil */
+
+@media (max-width: 520px) {
+  .pp {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .form {
+    padding: 1.1rem;
+  }
+
+  .profile-photo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .form__actions button {
+    width: 100%;
+  }
+
+  .form__actions {
+    flex-direction: column-reverse;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-button,
+  .photo-remove {
+    transition: none;
+  }
+}

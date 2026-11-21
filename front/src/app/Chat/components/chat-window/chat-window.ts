@@ -1,7 +1,17 @@
-import {Component, Input, OnChanges, OnDestroy, SimpleChanges, inject} from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+  ChangeDetectorRef,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+
 import { Conversation } from '../../models/conversation.model';
 import { Message } from '../../models/message.model';
 import { ChatService } from '../../services/chat.service';
@@ -20,56 +30,108 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
   private readonly chatService = inject(ChatService);
   private readonly websocket = inject(ChatWebSocketService);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   private subscriptions = new Subscription();
+
   private historyRequestId = 0;
+  private presenceRequestId = 0;
 
   messages: Message[] = [];
+
   newMessage = '';
+
   currentUserId = 0;
+
+  // Conexión propia: se utiliza para habilitar el envío.
   isConnected = false;
+
+  // Presencia del otro participante.
+  otherParticipantOnline = false;
+
   loading = false;
   errorMessage = '';
 
   constructor() {
+
     this.loadCurrentUser();
 
     this.subscriptions.add(
       this.websocket.incomingMessages$.subscribe(message => {
+
         if (
           this.conversation?.conversationId === message.conversationId
         ) {
+
           this.addMessage(message);
           this.updateLastMessage(message.content);
+
+          this.cdr.markForCheck();
         }
       })
     );
 
     this.subscriptions.add(
       this.websocket.connectionStatus$.subscribe(status => {
+
         this.isConnected = status;
+
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.websocket.presenceUpdates$.subscribe(update => {
+
+        if (
+          this.conversation &&
+          this.presenceUserId === update.userId
+        ) {
+
+          this.otherParticipantOnline = update.online;
+
+          this.cdr.markForCheck();
+        }
       })
     );
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['conversation']) {
-      if (this.conversation) {
-        this.messages = [];
-        this.loadMessages();
+  private presenceUserId: number | null = null;
 
-        this.websocket.connectToConversation(
-          this.conversation.conversationId
-        );
-      } else {
-        this.historyRequestId++;
-        this.messages = [];
-        this.loading = false;
-        this.websocket.disconnect();
-      }
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (!changes['conversation']) {
+      return;
     }
+
+    if (this.conversation) {
+
+      this.messages = [];
+      this.otherParticipantOnline = false;
+      this.presenceUserId = null;
+
+      this.loadMessages();
+      this.loadOtherParticipantPresence();
+
+    } else {
+
+      this.historyRequestId++;
+      this.presenceRequestId++;
+
+      this.messages = [];
+      this.loading = false;
+
+      this.otherParticipantOnline = false;
+      this.presenceUserId = null;
+
+      this.websocket.disconnect();
+    }
+
+    this.cdr.markForCheck();
   }
 
   private loadCurrentUser(): void {
+
     const storedUser = localStorage.getItem('usuario');
 
     if (!storedUser) {
@@ -77,14 +139,74 @@ export class ChatWindow implements OnChanges, OnDestroy {
     }
 
     try {
+
       const user = JSON.parse(storedUser);
+
       this.currentUserId = Number(user.id);
+
     } catch {
       this.currentUserId = 0;
     }
   }
 
+  private loadOtherParticipantPresence(): void {
+
+    if (!this.conversation) {
+      return;
+    }
+
+    const conversationId = this.conversation.conversationId;
+    const requestId = ++this.presenceRequestId;
+
+    this.chatService.getPresence(conversationId).subscribe({
+
+      next: presence => {
+
+        if (
+          requestId !== this.presenceRequestId ||
+          this.conversation?.conversationId !== conversationId
+        ) {
+          return;
+        }
+
+        this.presenceUserId = presence.userId;
+        this.otherParticipantOnline = presence.online;
+
+        this.websocket.connectToConversation(
+          conversationId,
+          presence.userId
+        );
+
+        this.cdr.markForCheck();
+      },
+
+      error: error => {
+
+        if (requestId !== this.presenceRequestId) {
+          return;
+        }
+
+        console.error(
+          'Error al consultar la presencia:',
+          error
+        );
+
+        this.otherParticipantOnline = false;
+
+        // Se mantiene la conexión del chat aunque falle
+        // la consulta inicial de presencia.
+        this.websocket.connectToConversation(
+          conversationId,
+          0
+        );
+
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
   private loadMessages(): void {
+
     if (!this.conversation) {
       return;
     }
@@ -95,8 +217,12 @@ export class ChatWindow implements OnChanges, OnDestroy {
     this.loading = true;
     this.errorMessage = '';
 
+    this.cdr.markForCheck();
+
     this.chatService.getMessages(conversationId).subscribe({
+
       next: history => {
+
         if (
           requestId !== this.historyRequestId ||
           this.conversation?.conversationId !== conversationId
@@ -104,46 +230,70 @@ export class ChatWindow implements OnChanges, OnDestroy {
           return;
         }
 
-        const combinedMessages = [...history, ...this.messages];
+        const combinedMessages = [
+          ...history,
+          ...this.messages
+        ];
+
         const uniqueMessages = new Map<number, Message>();
 
         for (const message of combinedMessages) {
           uniqueMessages.set(message.messageId, message);
         }
 
-        this.messages = Array.from(uniqueMessages.values()).sort(
+        this.messages = Array.from(
+          uniqueMessages.values()
+        ).sort(
           (a, b) =>
-            new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+            new Date(a.sentAt).getTime() -
+            new Date(b.sentAt).getTime()
         );
 
         this.loading = false;
+
+        this.cdr.markForCheck();
       },
+
       error: error => {
+
         if (requestId !== this.historyRequestId) {
           return;
         }
 
-        console.error('Error al cargar mensajes:', error);
+        console.error(
+          'Error al cargar mensajes:',
+          error
+        );
+
         this.errorMessage = 'No se pudo cargar el historial.';
         this.loading = false;
+
+        this.cdr.markForCheck();
       }
     });
   }
 
   private addMessage(message: Message): void {
+
     const alreadyExists = this.messages.some(
       item => item.messageId === message.messageId
     );
 
     if (!alreadyExists) {
-      this.messages = [...this.messages, message].sort(
+
+      this.messages = [
+        ...this.messages,
+        message
+      ].sort(
         (a, b) =>
-          new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+          new Date(a.sentAt).getTime() -
+          new Date(b.sentAt).getTime()
       );
     }
   }
 
   sendMessage(): void {
+
     const content = this.newMessage.trim();
 
     if (!content || !this.conversation) {
@@ -151,7 +301,11 @@ export class ChatWindow implements OnChanges, OnDestroy {
     }
 
     if (!this.isConnected) {
+
       this.errorMessage = 'Esperando conexión con el chat...';
+
+      this.cdr.markForCheck();
+
       return;
     }
 
@@ -161,14 +315,35 @@ export class ChatWindow implements OnChanges, OnDestroy {
     );
 
     if (sent) {
+
       this.newMessage = '';
       this.errorMessage = '';
+
     } else {
+
       this.errorMessage = 'No se pudo enviar el mensaje.';
     }
+
+    this.cdr.markForCheck();
+  }
+
+  onMessageKeydown(event: KeyboardEvent): void {
+
+    if (
+      event.key !== 'Enter' ||
+      event.shiftKey ||
+      event.isComposing
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    this.sendMessage();
   }
 
   onFileSelected(event: Event): void {
+
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
@@ -183,32 +358,58 @@ export class ChatWindow implements OnChanges, OnDestroy {
       file.type === 'application/pdf';
 
     if (!validType) {
-      this.errorMessage = 'Solo se permiten imágenes y archivos PDF.';
+
+      this.errorMessage =
+        'Solo se permiten imágenes y archivos PDF.';
+
       input.value = '';
+
+      this.cdr.markForCheck();
+
       return;
     }
 
     this.errorMessage = '';
 
-    this.chatService.uploadAttachment(conversationId, file).subscribe({
+    this.chatService.uploadAttachment(
+      conversationId,
+      file
+    ).subscribe({
+
       next: message => {
-        if (this.conversation?.conversationId !== conversationId) {
+
+        if (
+          this.conversation?.conversationId !== conversationId
+        ) {
           return;
         }
 
         this.addMessage(message);
         this.updateLastMessage(file.name);
+
         input.value = '';
+
+        this.cdr.markForCheck();
       },
+
       error: error => {
-        console.error('Error al adjuntar archivo:', error);
+
+        console.error(
+          'Error al adjuntar archivo:',
+          error
+        );
+
         this.errorMessage = 'No se pudo adjuntar el archivo.';
+
         input.value = '';
+
+        this.cdr.markForCheck();
       }
     });
   }
 
   getAttachmentUrl(fileUrl: string): string {
+
     if (/^https?:\/\//i.test(fileUrl)) {
       return fileUrl;
     }
@@ -220,22 +421,42 @@ export class ChatWindow implements OnChanges, OnDestroy {
     return `http://localhost:8080${normalizedUrl}`;
   }
 
+  getProfileImageUrl(imageUrl: string): string {
+
+    if (/^https?:\/\//i.test(imageUrl)) {
+      return imageUrl;
+    }
+
+    const normalizedUrl = imageUrl.startsWith('/')
+      ? imageUrl
+      : `/${imageUrl}`;
+
+    return `http://localhost:8080${normalizedUrl}`;
+  }
+
   isOwnMessage(message: Message): boolean {
     return message.senderId === this.currentUserId;
   }
 
   private updateLastMessage(content: string): void {
+
     if (!this.conversation) {
       return;
     }
 
     this.conversation.lastMessage = content;
-    this.conversation.lastMessageAt = new Date().toISOString();
+
+    this.conversation.lastMessageAt =
+      new Date().toISOString();
   }
 
   ngOnDestroy(): void {
+
     this.historyRequestId++;
+    this.presenceRequestId++;
+
     this.subscriptions.unsubscribe();
+
     this.websocket.disconnect();
   }
 }

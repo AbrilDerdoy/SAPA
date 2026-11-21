@@ -1,39 +1,59 @@
-<div class="container">
-    <aside class="left">
-        <img src="/images/logo.png" alt="Logo SAPA">
-    </aside>
-    
-    <form class="right" novalidate (submit)="enviar($event)">
-        <h2>Informacion Personal</h2>
-        @if (aviso(); as mensaje) {
-            <p
-                [class.server-info]="mensaje.tipo === 'info'"
-                [class.server-error]="mensaje.tipo === 'error'"
-                [attr.role]="mensaje.tipo === 'error' ? 'alert' : 'status'">
-                {{ mensaje.texto }}
-            </p>
-        }
-        <label>
-            Email:
-            <input type="email" [formField]="formulario.email">
-            <app-form-error [field]="formulario.email()"/>
-        </label>
-        <label>
-            Contraseña:
-            <div class="password-input">
-                <input [type]="mostrarPassword() ? 'text' : 'password'" [formField]="formulario.password">
-                <button
-                    class="btn-toggle-password"
-                    type="button"
-                    [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                    [attr.aria-pressed]="mostrarPassword()"
-                    (click)="alternarVisibilidadPassword()">
-                    <img [src]="mostrarPassword() ? '/images/eye-off.svg' : '/images/eye.svg'" alt="">
-                </button>
-            </div>
-            <app-form-error [field]="formulario.password()"/>
-            <p><a [routerLink]="['/forgotPassword']">¿Olvidaste tu contraseña?</a></p>
-        </label>
-        <button class="btn-enviar" type="submit">Enviar</button>
+
+<div class="login">
+  <aside class="login-brand">
+    <img class="login-brand__logo" src="/images/logo.png" alt="Logo SAPA">
+  </aside>
+
+  <div class="login-side">
+    <form class="login-form" novalidate (submit)="enviar($event)">
+      <header class="login-form__head">
+        <h1 class="login-form__title">Ingresá a tu cuenta</h1>
+        <p class="login-form__lead">Usá tu email y tu contraseña para entrar a SAPA.</p>
+      </header>
+
+      @if (aviso(); as mensaje) {
+        <p
+          class="login-notice"
+          [class.login-notice--error]="mensaje.tipo === 'error'"
+          [attr.role]="mensaje.tipo === 'error' ? 'alert' : 'status'"
+        >
+          {{ mensaje.texto }}
+        </p>
+      }
+
+      <label class="login-field">
+        <span class="login-label">Email</span>
+        <input type="email" autocomplete="email" [formField]="formulario.email">
+        <app-form-error [field]="formulario.email()" />
+      </label>
+
+      <label class="login-field">
+        <span class="login-label">Contraseña</span>
+        <span class="login-password">
+          <input
+            [type]="mostrarPassword() ? 'text' : 'password'"
+            autocomplete="current-password"
+            [formField]="formulario.password"
+          >
+          <button
+            class="login-password__toggle"
+            type="button"
+            [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="mostrarPassword()"
+            (click)="alternarVisibilidadPassword()"
+          >
+            <img
+              [src]="mostrarPassword() ? '/images/eye.svg' : '/images/eye-off.svg'"
+              alt=""
+            >
+          </button>
+        </span>
+        <app-form-error [field]="formulario.password()" />
+      </label>
+
+      <a class="login-forgot" [routerLink]="['/forgotPassword']">¿Olvidaste tu contraseña?</a>
+
+      <button class="login-submit" type="submit">Ingresar</button>
     </form>
+  </div>
 </div>

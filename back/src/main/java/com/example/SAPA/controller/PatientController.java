@@ -2,12 +2,14 @@ package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.Request.UpdatePatientRequestDTO;
 import com.example.SAPA.DTOs.Response.PatientResponseDTO;
+import com.example.SAPA.DTOs.Response.PatientProfileResponseDTO;
 import com.example.SAPA.service.PatientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,26 +37,10 @@ public class PatientController {
     })
     @PutMapping("/profile")
     public ResponseEntity<Void> updateProfile(
-            @RequestBody UpdatePatientRequestDTO request,
+            @Valid @RequestBody UpdatePatientRequestDTO request,
             @RequestParam(required = false) Long patientId) {
         patientService.updatePatient(patientId, request);
         return ResponseEntity.noContent().build();
-    }
-
-    @Operation(
-            summary = "Obtener el perfil de un paciente",
-            description = "Devuelve los datos del paciente autenticado o, si quien consulta es su tutor, los del paciente tutelado indicado."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Perfil del paciente recuperado con éxito."),
-            @ApiResponse(responseCode = "401", description = "No autorizado - Token JWT inválido, expirado o ausente.", content = @Content),
-            @ApiResponse(responseCode = "403", description = "No autorizado para acceder a este paciente.", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Paciente no encontrado.", content = @Content)
-    })
-    @GetMapping("/profile")
-    public ResponseEntity<PatientResponseDTO> getProfile(
-            @RequestParam(required = false) Long patientId) {
-        return ResponseEntity.ok(patientService.getPatientProfile(patientId));
     }
 
     @GetMapping("/my-patients")
@@ -78,5 +64,10 @@ public class PatientController {
     })
     public ResponseEntity<List<PatientResponseDTO>> getMyPatients() {
         return ResponseEntity.ok(patientService.getAllPatientsOfDoctor());
+    }
+
+    @GetMapping("/my-profile")
+    public ResponseEntity<PatientProfileResponseDTO> getMyProfile() {
+        return ResponseEntity.ok(patientService.getMyProfile());
     }
 }

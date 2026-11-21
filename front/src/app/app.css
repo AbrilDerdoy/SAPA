@@ -1,3 +1,4 @@
+
 :host {
   display: flex;
   flex-direction: column;
@@ -169,7 +170,6 @@
   font-size: 12px;
 }
 
-
 .brand {
   display: flex;
   align-items: center;
@@ -211,8 +211,24 @@
   .links {
     order: 3;
     width: 100%;
-    overflow-x: auto;
-    justify-content: flex-start;
+    min-width: 0;
+    flex-wrap: wrap;
+    overflow: visible;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .links li {
+    flex: 0 0 auto;
+  }
+
+  .links li:empty {
+    display: none;
+  }
+
+  .links .nav-search {
+    flex: 1 1 100%;
+    max-width: 100%;
   }
 
   .actions {
@@ -237,11 +253,11 @@
   }
 
   .links {
-    gap: 2px;
+    gap: 4px;
   }
 
   .links li a {
-    padding: 9px;
+    padding: 9px 8px;
     font-size: 12px;
   }
 }

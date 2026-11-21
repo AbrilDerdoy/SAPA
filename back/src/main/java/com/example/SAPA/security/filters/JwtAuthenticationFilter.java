@@ -1,3 +1,4 @@
+
 package com.example.SAPA.security.filters;
 
 import com.example.SAPA.security.service.JWTService;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.util.stream.Collectors;
 
@@ -24,7 +26,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(JWTService jwtService, UserDetailsService userDetailsService, TokenBlacklistService tokenBlacklistService) {
+    public JwtAuthenticationFilter(
+            JWTService jwtService,
+            UserDetailsService userDetailsService,
+            TokenBlacklistService tokenBlacklistService
+    ) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.tokenBlacklistService = tokenBlacklistService;
@@ -32,13 +38,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().startsWith("/auth/");
+        String path = request.getServletPath();
+
+        return path.startsWith("/auth/")
+                || path.startsWith("/uploads/profiles/")
+                || path.startsWith("/uploads/chat/")
+                || path.startsWith("/uploads/forums/images/");
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    @NotNull HttpServletResponse response,
-                                    @NotNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            @NotNull HttpServletResponse response,
+            @NotNull FilterChain filterChain
+    ) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
 
@@ -48,25 +61,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        final String username;
+
         try {
-            username = jwtService.extractUsername(jwt);
+            String username = jwtService.extractUsername(jwt);
 
             if (tokenBlacklistService.isBlackListed(jwt)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token revocado. Por favor, inicie sesión nuevamente.");
+                response.getWriter().write(
+                        "Token revocado. Por favor, inicie sesión nuevamente."
+                );
                 return;
             }
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (username != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                var userDetails = userDetailsService.loadUserByUsername(username);
+                var userDetails =
+                        userDetailsService.loadUserByUsername(username);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
 
-                    var roles = jwtService.extractRoles(jwt);
-
-                    var authorities = roles.stream()
+                    var authorities = jwtService.extractRoles(jwt)
+                            .stream()
                             .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
 
@@ -76,14 +92,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     null,
                                     authorities
                             );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authToken);
                 }
             }
+
         } catch (JwtException e) {
             SecurityContextHolder.clearContext();
+
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token inválido o expirado. Por favor, inicie sesión nuevamente.");
+            response.getWriter().write(
+                    "Token inválido o expirado. Por favor, inicie sesión nuevamente."
+            );
             return;
         }
 

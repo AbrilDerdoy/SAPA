@@ -1,52 +1,52 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FollowRequestService } from '../../service/follow-request.service';
-import { FollowRequest } from '../../interfaces/follow-request';
 import { FollowRequestStatus } from '../../interfaces/follow-request-status';
-import { Auth } from '../../../Usuario/services/Auth/auth';
-import { TutorPatientSelector } from '../../../Tutor/components/tutor-patient-selector/tutor-patient-selector';
+import { FollowRequest } from '../../interfaces/follow-request';
 
-type ViewMode = 'doctor' | 'patient';
+type ViewMode = 'doctor' | 'patient' | 'followers';
 type LoadStatus = 'loading' | 'success' | 'error';
+
+const TEXTS: Record<ViewMode, { title: string; subtitle: string; empty: string }> = {
+  doctor: {
+    title: 'Solicitudes de seguimiento',
+    subtitle:
+      'Pacientes y médicos que quieren seguirte. Si aprobás a un paciente se abre un chat; los médicos pasan a seguir tus consejos.',
+    empty: 'Cuando un paciente o un médico te envíe una solicitud, va a aparecer acá.',
+  },
+  patient: {
+    title: 'Mis solicitudes',
+    subtitle: 'Seguí el estado de las solicitudes que enviaste a los médicos.',
+    empty: 'Todavía no enviaste ninguna solicitud.',
+  },
+  followers: {
+    title: 'Médicos que me siguen',
+    subtitle: 'Médicos que siguen tus consejos. Podés disolver el seguimiento cuando quieras.',
+    empty: 'Todavía no te sigue ningún médico.',
+  },
+};
 
 @Component({
   selector: 'app-follow-requests',
-  imports: [DatePipe, TutorPatientSelector],
+  imports: [DatePipe, RouterLink],
   templateUrl: './follow-requests.html',
   styleUrl: './follow-requests.css',
 })
-export class FollowRequests implements OnInit{
-
+export class FollowRequests implements OnInit {
   private readonly service = inject(FollowRequestService);
   private readonly route = inject(ActivatedRoute);
 
-  readonly auth = inject(Auth);
-
   readonly mode: ViewMode = (this.route.snapshot.data['mode'] as ViewMode) ?? 'doctor';
-
-  readonly selectedPatientId = signal<number | null>(null);
 
   readonly requests = signal<FollowRequest[]>([]);
   readonly loadStatus = signal<LoadStatus>('loading');
   readonly busyId = signal<number | null>(null);
   readonly actionError = signal('');
 
-  readonly title = computed(() =>
-    this.mode === 'doctor'
-      ? 'Solicitudes de seguimiento'
-      : this.auth.isTutor()
-        ? 'Seguimiento de mis pacientes'
-        : 'Mis solicitudes'
-  );
-
-  readonly subtitle = computed(() =>
-    this.mode === 'doctor'
-      ? 'Pacientes que quieren que los sigas. Al aprobar, se abre un chat con ellos.'
-      : this.auth.isTutor()
-        ? 'Seguí el estado de las solicitudes de seguimiento de los pacientes a tu cargo.'
-        : 'Seguí el estado de las solicitudes que enviaste a los médicos.'
-  );
+  readonly title = TEXTS[this.mode].title;
+  readonly subtitle = TEXTS[this.mode].subtitle;
+  readonly emptyMessage = TEXTS[this.mode].empty;
 
   readonly sorted = computed(() =>
     [...this.requests()].sort(
@@ -61,39 +61,45 @@ export class FollowRequests implements OnInit{
     DISOLVED: 'Disuelta',
   };
 
+  readonly statusFilter = signal<'ALL' | FollowRequestStatus>('ALL');
+  readonly doctorQuery = signal('');
+
+  readonly filtered = computed(() => {
+    const status = this.statusFilter();
+    const query = this.normalize(this.doctorQuery());
+    return this.sorted().filter((req) => {
+      if (status !== 'ALL' && req.status !== status) return false;
+      if (!query) return true;
+
+      const doctor = req.doctor;
+      const name = doctor ? this.normalize(`${doctor.firstName} ${doctor.lastName}`) : '';
+      return name.includes(query);
+    });
+  });
+
+  readonly hasFilters = computed(() => this.statusFilter() !== 'ALL' || this.doctorQuery().trim() !== '');
+
   ngOnInit(): void {
-    if (this.auth.isTutor()) {
-      const initialPatientId = Number(
-        this.route.snapshot.queryParamMap.get('patientId')
-      );
-
-      if (Number.isFinite(initialPatientId) && initialPatientId > 0) {
-        this.selectedPatientId.set(initialPatientId);
-        this.load();
-        return;
-      }
-
-      this.loadStatus.set('success');
-      return;
-    }
-
     this.load();
   }
 
-  onPatientSelected(patientId: number): void {
-    this.selectedPatientId.set(patientId);
-    this.load();
+  clearFilters(): void {
+    this.statusFilter.set('ALL');
+    this.doctorQuery.set('');
+  }
+
+  private normalize(text: string): string {
+    return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   }
 
   load(): void {
-    if (this.auth.isTutor() && this.selectedPatientId() === null) {
-      return;
-    }
-
     this.loadStatus.set('loading');
-    const request$ = this.mode === 'doctor'
-      ? this.service.getPending()
-      : this.service.getSent(this.selectedPatientId());
+    const request$ =
+      this.mode === 'doctor'
+        ? this.service.getPending()
+        : this.mode === 'followers'
+          ? this.service.getFollowers()
+          : this.service.getSent();
     request$.subscribe({
       next: (list) => {
         this.requests.set(list);
@@ -140,6 +146,7 @@ export class FollowRequests implements OnInit{
     this.service.dissolve(id).subscribe({
       next: (updated) => {
         this.requests.update((list) => list.map((r) => (r.id === id ? updated : r)));
+        this.service.loadSent();
         this.busyId.set(null);
       },
       error: () => {
@@ -147,6 +154,23 @@ export class FollowRequests implements OnInit{
         this.busyId.set(null);
       },
     });
+  }
+
+  followerName(req: FollowRequest): string {
+    if (req.patient) return `${req.patient.firstName} ${req.patient.lastName}`;
+    if (req.doctorFollower) {
+      return `Dr/a. ${req.doctorFollower.firstName} ${req.doctorFollower.lastName}`;
+    }
+    return `Solicitud #${req.id}`;
+  }
+
+  followerInitials(req: FollowRequest): string {
+    const person = req.patient ?? req.doctorFollower;
+    return person ? this.initials(person.firstName, person.lastName) : '';
+  }
+
+  followerPhone(req: FollowRequest): string | null {
+    return req.patient?.phoneNumber ?? null;
   }
 
   initials(firstName: string, lastName: string): string {

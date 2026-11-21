@@ -51,8 +51,8 @@ public class SecurityConfig {
     };
 
     private static final String[] ALL_ROLES = {
-            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR", "ROLE_ADMIN",
-            "PATIENT", "TUTOR", "DOCTOR", "ADMIN"
+            "ROLE_PATIENT", "ROLE_DOCTOR", "ROLE_ADMIN",
+            "PATIENT", "DOCTOR", "ADMIN"
     };
 
     @Bean
@@ -62,7 +62,8 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
+            AuthenticationConfiguration config
+    ) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -70,24 +71,31 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        configuration.setAllowedOrigins(
+                List.of("http://localhost:4200")
+        );
+
         configuration.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
+
         configuration.setAllowedHeaders(List.of(
                 "Authorization", "Content-Type", "X-Requested-With"
         ));
+
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http)
+            throws Exception {
 
         http
             .cors(Customizer.withDefaults())
@@ -137,29 +145,41 @@ public class SecurityConfig {
                         "/js/**"
                 ).permitAll()
 
-                // WebSocket y archivos del chat
+                // Imágenes públicas de perfiles
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/uploads/profiles/**"
+                ).permitAll()
+
+                // Archivos públicos del chat
+                .requestMatchers(
+                        "/uploads/chat/**"
+                ).permitAll()
+
+                // WebSocket
                 .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/uploads/chat/**").permitAll()
 
                 // Especialidades
                 .requestMatchers(HttpMethod.GET, "/specialities").permitAll()
-                .requestMatchers("/specialities/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/specialities/**")
+                    .hasAuthority("ROLE_ADMIN")
 
                 // Foros y publicaciones
                 .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                .requestMatchers("/forums/**").hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
-                .requestMatchers("/posts/**").hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+                .requestMatchers("/forums/**")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+                .requestMatchers("/posts/**")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Administración
-                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/admin/**")
+                    .hasAuthority("ROLE_ADMIN")
 
                 // Medicamentos
                 .requestMatchers("/medications/search/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/medications/**")
-                    .hasAuthority("ROLE_DOCTOR")
                 .requestMatchers("/medications/patient/**")
-                    .hasAuthority("ROLE_DOCTOR")
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
                 .requestMatchers(HttpMethod.PUT, "/medications/**")
                     .hasAuthority("ROLE_DOCTOR")
                 .requestMatchers(HttpMethod.DELETE, "/medications/**")
@@ -180,22 +200,21 @@ public class SecurityConfig {
 
                 // Cuestionarios y asignaciones
                 .requestMatchers("/questionnaires/**")
-                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+                    .hasAnyAuthority(
+                            "PATIENT", "TUTOR", "DOCTOR",
+                            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR"
+                    )
+
                 .requestMatchers("/assignments/**")
                     .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Historias clínicas y tratamientos
-                .requestMatchers(HttpMethod.GET, "/medical-records/**")
-                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
                 .requestMatchers("/medical-records/**")
-                    .hasAuthority("ROLE_DOCTOR")
-
-                .requestMatchers(HttpMethod.GET, "/treatments/**")
                     .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
-                .requestMatchers("/treatments/**")
-                    .hasAuthority("ROLE_DOCTOR")
 
-                // Tutela (tutor y paciente)
+                .requestMatchers("/treatments/**")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+
                 .requestMatchers("/tutors/**")
                     .hasAnyAuthority(PATIENT_AND_TUTOR)
 
@@ -205,7 +224,8 @@ public class SecurityConfig {
 
                 // Reportes
                 .requestMatchers(HttpMethod.POST, "/reports")
-                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+
                 .requestMatchers("/reports/**")
                     .hasAuthority("ROLE_ADMIN")
 
@@ -227,11 +247,19 @@ public class SecurityConfig {
                 ).permitAll()
 
                 // Médicos
-                .requestMatchers(HttpMethod.GET, "/doctors/**").permitAll()
-                .requestMatchers("/doctors/**").hasAuthority("ROLE_DOCTOR")
+                .requestMatchers(
+                        HttpMethod.GET,
+                        "/doctors/profile"
+                ).hasAuthority("ROLE_DOCTOR")
+
+                .requestMatchers(HttpMethod.GET, "/doctors/**")
+                    .permitAll()
+
+                .requestMatchers("/doctors/**")
+                    .hasAuthority("ROLE_DOCTOR")
 
                 // Pacientes vinculados al médico
-                .requestMatchers(HttpMethod.GET, "/patients/my-patients")
+                .requestMatchers("/patients/my-patients")
                     .hasAnyAuthority("ROLE_DOCTOR", "DOCTOR")
 
                 .requestMatchers("/patients/**")
@@ -245,7 +273,8 @@ public class SecurityConfig {
                         "/swagger-resources/**",
                         "/webjars/**"
                 ).permitAll()
-
+                    .requestMatchers(HttpMethod.GET, "/uploads/forums/images/**").permitAll()
+                // Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )
 
@@ -256,6 +285,7 @@ public class SecurityConfig {
 
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(restAuthenticationEntryPoint)
+
                 .accessDeniedHandler((request, response, exceptionDenied) -> {
                     response.setContentType("application/json");
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);

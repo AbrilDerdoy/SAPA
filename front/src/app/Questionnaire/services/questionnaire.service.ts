@@ -1,6 +1,6 @@
 
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import {
@@ -25,73 +25,113 @@ export class QuestionnaireService {
   private readonly assignmentUrl = 'http://localhost:8080/assignments';
   private readonly patientUrl = 'http://localhost:8080/patients';
 
-  createQuestionnaire(data: CreateQuestionnaireRequest): Observable<QuestionnaireResponse> {
-    return this.http.post<QuestionnaireResponse>(this.questionnaireUrl, data);
+  createQuestionnaire(
+    data: CreateQuestionnaireRequest
+  ): Observable<QuestionnaireResponse> {
+    return this.http.post<QuestionnaireResponse>(
+      this.questionnaireUrl,
+      data
+    );
   }
 
   getMyQuestionnaires(): Observable<QuestionnaireResponse[]> {
-    return this.http.get<QuestionnaireResponse[]>(`${this.questionnaireUrl}/my-questionnaires`);
-  }
-
-  addQuestion(questionnaireId: number, data: CreateQuestionRequest): Observable<QuestionnaireResponse> {
-    return this.http.post<QuestionnaireResponse>(
-      `${this.questionnaireUrl}/${questionnaireId}/questions`, data
+    return this.http.get<QuestionnaireResponse[]>(
+      `${this.questionnaireUrl}/my-questionnaires`
     );
   }
 
-  updateQuestionnaire(id: number, data: UpdateQuestionnaireRequest): Observable<QuestionnaireResponse> {
-    return this.http.put<QuestionnaireResponse>(`${this.questionnaireUrl}/${id}`, data);
+  addQuestion(
+    questionnaireId: number,
+    data: CreateQuestionRequest
+  ): Observable<QuestionnaireResponse> {
+    return this.http.post<QuestionnaireResponse>(
+      `${this.questionnaireUrl}/${questionnaireId}/questions`,
+      data
+    );
+  }
+
+  updateQuestionnaire(
+    id: number,
+    data: UpdateQuestionnaireRequest
+  ): Observable<QuestionnaireResponse> {
+    return this.http.put<QuestionnaireResponse>(
+      `${this.questionnaireUrl}/${id}`,
+      data
+    );
   }
 
   deleteQuestionnaire(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.questionnaireUrl}/${id}`);
-  }
-
-  assignQuestionnaire(questionnaireId: number, data: AssignQuestionnaireRequest): Observable<AssignmentResponse> {
-    return this.http.post<AssignmentResponse>(`${this.assignmentUrl}/${questionnaireId}`, data);
-  }
-
-  getMyAssignments(patientId?: number | null): Observable<AssignmentResponse[]> {
-    const params = patientId
-      ? new HttpParams().set('patientId', patientId)
-      : undefined;
-
-    return this.http.get<AssignmentResponse[]>(
-      `${this.assignmentUrl}/my-assignments`,
-      { params }
+    return this.http.delete<void>(
+      `${this.questionnaireUrl}/${id}`
     );
   }
 
-  submitResponse(assignmentId: number, data: SubmitResponseRequest): Observable<QuestionnaireResponseDTO> {
+  assignQuestionnaire(
+    questionnaireId: number,
+    data: AssignQuestionnaireRequest
+  ): Observable<AssignmentResponse> {
+    return this.http.post<AssignmentResponse>(
+      `${this.assignmentUrl}/${questionnaireId}`,
+      data
+    );
+  }
+
+  unassignQuestionnaire(assignmentId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.assignmentUrl}/${assignmentId}`
+    );
+  }
+
+  getMyAssignments(patientId?: number | null): Observable<AssignmentResponse[]> {
+    const params = patientId != null ? `?patientId=${patientId}` : '';
+    return this.http.get<AssignmentResponse[]>(
+      `${this.assignmentUrl}/my-assignments${params}`
+    );
+  }
+
+  // Obtiene los cuestionarios que el médico asignó a sus pacientes.
+  getMyAssignedQuestionnaires(): Observable<AssignmentResponse[]> {
+    return this.http.get<AssignmentResponse[]>(
+      `${this.assignmentUrl}/my-assigned`
+    );
+  }
+
+  submitResponse(
+    assignmentId: number,
+    data: SubmitResponseRequest
+  ): Observable<QuestionnaireResponseDTO> {
     return this.http.post<QuestionnaireResponseDTO>(
-      `${this.assignmentUrl}/${assignmentId}/submit`, data
+      `${this.assignmentUrl}/${assignmentId}/submit`,
+      data
     );
   }
 
   getMyResponses(patientId?: number | null): Observable<QuestionnaireResponseDTO[]> {
-    const params = patientId
-      ? new HttpParams().set('patientId', patientId)
-      : undefined;
-
+    const params = patientId != null ? `?patientId=${patientId}` : '';
     return this.http.get<QuestionnaireResponseDTO[]>(
-      `${this.assignmentUrl}/my-responses`,
-      { params }
+      `${this.assignmentUrl}/my-responses${params}`
     );
   }
 
-  getQuestionnaireResponses(questionnaireId: number): Observable<QuestionnaireResponseDTO[]> {
+  getQuestionnaireResponses(
+    questionnaireId: number
+  ): Observable<QuestionnaireResponseDTO[]> {
     return this.http.get<QuestionnaireResponseDTO[]>(
       `${this.assignmentUrl}/${questionnaireId}/responses`
     );
   }
 
-  getPatientResponses(patientId: number): Observable<QuestionnaireResponseDTO[]> {
+  getPatientResponses(
+    patientId: number
+  ): Observable<QuestionnaireResponseDTO[]> {
     return this.http.get<QuestionnaireResponseDTO[]>(
       `${this.assignmentUrl}/patient/${patientId}/responses`
     );
   }
 
   getMyPatients(): Observable<PatientQuestionnaire[]> {
-    return this.http.get<PatientQuestionnaire[]>(`${this.patientUrl}/my-patients`);
+    return this.http.get<PatientQuestionnaire[]>(
+      `${this.patientUrl}/my-patients`
+    );
   }
 }

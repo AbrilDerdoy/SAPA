@@ -39,6 +39,8 @@ public record RegisterRequest(
 
         String licenseNumber,
 
+        Long speciality,
+
         List<Long> specialities,
 
         String relationship

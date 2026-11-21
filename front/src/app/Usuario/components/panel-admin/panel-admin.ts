@@ -14,7 +14,7 @@ import { especialidad } from '../../services/Auth/auth';
 export class PanelAdmin {
   private readonly userService = inject(UsuarioService);
 
-  pendingDoctors = this.userService.pendingDoctors;
+  pendingDoctors = this.userService.getPendingDoctors();
   specialities = this.userService.specialities;
 
   cantidadPendientes = computed(()=> this.pendingDoctors.hasValue() ? this.pendingDoctors.value().length : 0);
@@ -109,16 +109,36 @@ export class PanelAdmin {
     });
   }
 
-  eliminarEspecialidad(especialidad: string): void {
+  readonly especialidadPorEliminar = signal<number | null>(null);
+  readonly eliminandoEspecialidad = signal(false);
+
+  pedirConfirmacionEliminar(id: number): void {
     this.accionError.set(null);
     this.accionMensaje.set(null);
+    this.especialidadPorEliminar.set(id);
+  }
+
+  cancelarEliminacion(): void {
+    this.especialidadPorEliminar.set(null);
+  }
+
+  eliminarEspecialidad(especialidad: string): void {
+    if (this.eliminandoEspecialidad()) return;
+
+    this.accionError.set(null);
+    this.accionMensaje.set(null);
+    this.eliminandoEspecialidad.set(true);
 
     this.userService.eliminarEspecialidad(especialidad).subscribe({
       next: () => {
+        this.eliminandoEspecialidad.set(false);
+        this.especialidadPorEliminar.set(null);
         this.accionMensaje.set('Especialidad eliminada correctamente');
         this.specialities.reload();
       },
       error: (error) => {
+        this.eliminandoEspecialidad.set(false);
+        this.especialidadPorEliminar.set(null);
         this.accionError.set(this.mensajeDeError(error, 'No se pudo eliminar la especialidad. Intenta nuevamente.'));
         console.error('Error al eliminar especialidad', error);
       }
@@ -145,6 +165,7 @@ export class PanelAdmin {
   editarEspecialidad(especialidad:especialidad){
     this.accionError.set(null);
     this.accionMensaje.set(null);
+    this.especialidadPorEliminar.set(null);
     this.especialidadEnEdicion.set(especialidad);
     this.modeloEdicion.set({name:especialidad.name});
   }

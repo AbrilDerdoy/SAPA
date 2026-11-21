@@ -1,0 +1,172 @@
+<section class="tr">
+  <header class="tr__header">
+    <div>
+      <h1 class="tr__title">{{ title }}</h1>
+      <p class="tr__lead">{{ lead }}</p>
+    </div>
+    <a class="back" [routerLink]="backLink">{{ backLabel }}</a>
+  </header>
+
+  @if (notice()) {
+    <div class="notice" role="status">
+      <strong>{{ notice() }}</strong>
+    </div>
+  }
+
+  @if (actionError()) {
+    <div class="notice notice--error" role="alert">
+      <strong>{{ actionError() }}</strong>
+    </div>
+  }
+
+  <div class="toolbar">
+    <label class="sr-only" for="treatmentFilter">Buscar tratamiento</label>
+    <input
+      id="treatmentFilter"
+      type="text"
+      placeholder="Buscar por nombre del tratamiento"
+      autocomplete="off"
+      [formField]="filterForm.filter"
+    />
+    <button
+      type="button"
+      class="toolbar__filters"
+      aria-label="Filtros y orden"
+      aria-controls="treatmentFilters"
+      [attr.aria-expanded]="filtersOpen()"
+      [class.toolbar__filters--active]="filtersOpen() || activeFilters() > 0"
+      (click)="toggleFilters()"
+    >
+      <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
+      @if (activeFilters() > 0) {
+        <span class="toolbar__count">{{ activeFilters() }}</span>
+      }
+    </button>
+    <!-- Solo el médico puede ver el botón de crear -->
+    @if (isDoctor && !formOpen()) {
+      <button type="button" class="toolbar__add" (click)="openCreate()">Nuevo tratamiento</button>
+    }
+  </div>
+
+  @if (filtersOpen()) {
+    <div class="filters" id="treatmentFilters">
+      <div class="filters__field">
+        <label for="sortBy">Ordenar por</label>
+        <select id="sortBy" [value]="sortBy()" (change)="sortBy.set($any($event.target).value)">
+          @for (o of sortOptions; track o.value) {
+            <option [value]="o.value">{{ o.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filters__field">
+        <label for="freqUnit">Frecuencia</label>
+        <select
+          id="freqUnit"
+          [value]="frequencyUnitFilter()"
+          (change)="frequencyUnitFilter.set($any($event.target).value)"
+        >
+          <option value="ALL">Todas</option>
+          @for (u of frequencyUnits; track u.value) {
+            <option [value]="u.value">Cada ... {{ u.singular }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filters__field">
+        <label for="durUnit">Duración</label>
+        <select
+          id="durUnit"
+          [value]="durationUnitFilter()"
+          (change)="durationUnitFilter.set($any($event.target).value)"
+        >
+          <option value="ALL">Todas</option>
+          @for (u of durationUnits; track u.value) {
+            <option [value]="u.value">{{ u.label }}</option>
+          }
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn--outline"
+        [disabled]="activeFilters() === 0"
+        (click)="clearFilters()"
+      >
+        Limpiar
+      </button>
+    </div>
+  }
+
+  @if (formOpen()) {
+    <app-treatment-form
+      [treatment]="editing()"
+      [saving]="saving()"
+      (saved)="onSave($event)"
+      (cancelled)="closeForm()"
+    />
+  }
+
+  @if (loadStatus() === 'loading') {
+    <div class="skeleton">
+      <span class="skeleton__row"></span>
+      <span class="skeleton__row"></span>
+      <span class="skeleton__row"></span>
+    </div>
+  } @else if (loadStatus() === 'error') {
+    <div class="notice notice--error" role="alert">
+      <strong>{{ loadError() }}</strong>
+      <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
+      <button type="button" class="btn btn--outline" (click)="retry()">Reintentar</button>
+    </div>
+  } @else {
+    @if (visibleTreatments().length === 0) {
+      <div class="notice">
+        @if (hasFilter() || activeFilters() > 0) {
+          <strong>Sin resultados</strong>
+          <p>No hay tratamientos que coincidan con la búsqueda o los filtros.</p>
+        } @else {
+          <strong>Todavía no hay tratamientos</strong>
+          <p>Cuando se agregue el primero, va a aparecer acá.</p>
+        }
+      </div>
+    } @else {
+      <ul class="list">
+        @for (t of visibleTreatments(); track t.treatmentId) {
+          <li class="card">
+            <div class="card__main">
+              <h2 class="card__name">{{ t.name }}</h2>
+              <p class="card__desc">{{ t.description }}</p>
+              <ul class="chips">
+                <li class="chip">{{ frequencyLabel(t.frequency) }}</li>
+                <li class="chip">{{ durationLabel(t.duration) }}</li>
+              </ul>
+            </div>
+
+            @if (isDoctor) {
+              <div class="card__actions">
+                @if (confirmId() === t.treatmentId) {
+                  <span class="card__confirm">¿Eliminar?</span>
+                  <button
+                    type="button"
+                    class="btn btn--danger"
+                    [disabled]="deletingId() === t.treatmentId"
+                    (click)="confirmDelete(t)"
+                  >
+                    {{ deletingId() === t.treatmentId ? 'Eliminando…' : 'Confirmar' }}
+                  </button>
+                  <button type="button" class="btn btn--outline" (click)="cancelDelete()">Cancelar</button>
+                } @else {
+                  <button type="button" class="btn btn--outline" (click)="openEdit(t)">Editar</button>
+                  <button type="button" class="btn btn--outline" (click)="askDelete(t.treatmentId)">
+                    Eliminar
+                  </button>
+                }
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

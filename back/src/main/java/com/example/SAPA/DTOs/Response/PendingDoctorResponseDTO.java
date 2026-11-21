@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -22,6 +21,6 @@ public class PendingDoctorResponseDTO {
     private String licenseNumber;
     private String phoneNumber;
     private LocalDate birthDate;
-    private List<String> specialities;
+    private String speciality;
     private String status;
 }

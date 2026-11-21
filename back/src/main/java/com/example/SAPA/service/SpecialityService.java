@@ -2,6 +2,7 @@ package com.example.SAPA.service;
 
 import com.example.SAPA.DTOs.Request.SpecialityDTO;
 import com.example.SAPA.Models.SpecialityEntity;
+import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.SpecialityRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +17,7 @@ import java.util.List;
 public class SpecialityService {
 
     private final SpecialityRepository specialityRepository;
+    private final DoctorRepository doctorRepository;
 
     public List<SpecialityEntity> getAll() {
         return specialityRepository.findAll();
@@ -49,9 +51,9 @@ public class SpecialityService {
         if (especialidad == null)
             throw new EntityNotFoundException("No existe esa especialidad");
 
-        // Una especialidad puede estar asignada a varios medicos: se elimina la
-        // relacion antes de borrarla para no violar la clave foranea.
-        specialityRepository.deleteDoctorRelations(especialidad.getId());
+        if (doctorRepository.existsBySpeciality_Id(especialidad.getId())) {
+            throw new EntityExistsException("No se puede eliminar una especialidad asignada a un médico.");
+        }
         specialityRepository.delete(especialidad);
     }
 

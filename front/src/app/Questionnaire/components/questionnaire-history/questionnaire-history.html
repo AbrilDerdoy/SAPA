@@ -5,13 +5,8 @@
     <span class="eyebrow">SAPA · Seguimiento</span>
 
     @if (mode() === 'patient') {
-      @if (auth.isTutor()) {
-        <h1>Historial de mis pacientes</h1>
-        <p>Consultá las respuestas de los pacientes a tu cargo.</p>
-      } @else {
-        <h1>Mi historial de cuestionarios</h1>
-        <p>Consultá tus respuestas y revisá tu seguimiento.</p>
-      }
+      <h1>Mi historial de cuestionarios</h1>
+      <p>Consultá tus respuestas y revisá tu seguimiento.</p>
     } @else {
       <h1>Historial de pacientes</h1>
       <p>Consultá las respuestas de tus pacientes vinculados.</p>
@@ -24,14 +19,6 @@
     </div>
   }
 
-  @if (auth.isTutor()) {
-    <app-tutor-patient-selector
-      label="Paciente"
-      [selectedPatientId]="selectedPatientId()"
-      (patientSelected)="selectPatient($event)" />
-  }
-
-  <!-- SOLO EL MÉDICO PUEDE SELECCIONAR PACIENTES -->
   @if (mode() === 'doctor') {
     <section class="panel patient-selector">
       <label for="patient">Seleccionar paciente</label>
@@ -40,8 +27,8 @@
         id="patient"
         #patientSelect
         [value]="selectedPatientId() ?? ''"
-        (change)="selectPatient(patientSelect.value ? +patientSelect.value : 0)"
-      >
+        (change)="selectPatient(patientSelect.value ? +patientSelect.value : 0)">
+
         <option value="">Elegir un paciente</option>
 
         @for (patient of patients(); track patient.patientId) {
@@ -65,8 +52,7 @@
     </section>
   } @else {
 
-    <!-- EL MÉDICO DEBE SELECCIONAR UN PACIENTE -->
-    @if ((mode() === 'doctor' || auth.isTutor()) && selectedPatientId() === null) {
+    @if (mode() === 'doctor' && selectedPatientId() === null) {
       <section class="panel empty-state">
         <p>Seleccioná un paciente para consultar su historial.</p>
       </section>
@@ -116,18 +102,45 @@
 
                 <div class="answers-list">
 
-                  @for (answer of response.answers; track answer.answerId) {
+                  @for (answer of getAnswers(response); track answer.answerId) {
                     <div class="answer-item">
 
                       <h4>{{ answer.questionText }}</h4>
 
                       @if (answer.type === 'SCALE') {
                         <div class="scale-answer">
-                          <strong>{{ answer.value }}/10</strong>
+                          <strong>
+                            {{ answer.value }} / {{ answer.scaleMax }}
+                          </strong>
 
-                          <span [class]="getScaleColor(+answer.value)">
-                            {{ getScaleLabel(+answer.value) }}
+                          <span
+                            [class]="getScaleColor(
+                              +answer.value,
+                              answer.scaleMin ?? 0,
+                              answer.scaleMax ?? 10
+                            )">
+                            {{ getScaleLabel(
+                              +answer.value,
+                              answer.scaleMin ?? 0,
+                              answer.scaleMax ?? 10
+                            ) }}
                           </span>
+                        </div>
+
+                        <div class="scale-history-labels">
+                          <span>
+                            {{ answer.scaleMin }} ·
+                            {{ answer.scaleMinLabel || 'Mínimo' }}
+                          </span>
+                          <span>
+                            {{ answer.scaleMax }} ·
+                            {{ answer.scaleMaxLabel || 'Máximo' }}
+                          </span>
+                        </div>
+
+                      } @else if (answer.type === 'MULTIPLE_CHOICE') {
+                        <div class="history-choice">
+                          {{ answer.value }}
                         </div>
                       } @else {
                         <p>{{ answer.value }}</p>
@@ -169,9 +182,13 @@
                         <div class="bar-container">
                           <div
                             class="trend-bar"
-                            [style.height.%]="point.value * 10"
-                            [class]="getScaleColor(point.value)"
-                          ></div>
+                            [style.height.%]="point.percentage"
+                            [class]="getScaleColor(
+                              point.value,
+                              point.min,
+                              point.max
+                            )">
+                          </div>
                         </div>
 
                         <span>
@@ -182,8 +199,14 @@
 
                   </div>
 
+                  <div class="trend-range-labels">
+                    <span>{{ group.min }} · {{ group.minLabel }}</span>
+                    <span>{{ group.max }} · {{ group.maxLabel }}</span>
+                  </div>
+
                   <p class="trend-caption">
-                    Escala de 1 a 10. Cada barra representa una respuesta.
+                    Escala de {{ group.min }} a {{ group.max }}.
+                    Cada barra representa una respuesta.
                   </p>
 
                 </article>

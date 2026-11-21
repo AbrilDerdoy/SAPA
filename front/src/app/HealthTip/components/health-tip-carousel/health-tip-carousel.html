@@ -1,4 +1,3 @@
-
 <section class="tips-section">
 
   <div class="section-heading">
@@ -39,6 +38,7 @@
     <div class="tip-carousel">
 
       <button
+        type="button"
         class="arrow-button"
         (click)="previousTip()"
         aria-label="Consejo anterior">
@@ -58,7 +58,6 @@
         </p>
 
         <div class="tip-author">
-
           @if (currentTip.institutional) {
             <span>Publicado por</span>
             <strong>Equipo SAPA</strong>
@@ -70,7 +69,6 @@
               {{ currentTip.doctor?.lastName }}
             </strong>
           }
-
         </div>
 
         <span class="tip-counter">
@@ -80,6 +78,7 @@
       </article>
 
       <button
+        type="button"
         class="arrow-button"
         (click)="nextTip()"
         aria-label="Siguiente consejo">
@@ -127,6 +126,7 @@
           </div>
 
           <button
+            type="button"
             class="follow-button"
             [disabled]="requestingDoctorId === doctor.id"
             (click)="requestFollow(doctor.id)">
@@ -169,7 +169,8 @@
           <button
             type="button"
             class="close-button"
-            (click)="closeForm()">
+            (click)="closeForm()"
+            aria-label="Cerrar formulario">
             ×
           </button>
         </div>

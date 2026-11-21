@@ -14,9 +14,12 @@ import com.example.SAPA.Repositories.QuestionnaireAssignmentRepository;
 import com.example.SAPA.Repositories.QuestionnaireResponseRepository;
 import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.enums.NotificationType;
+import com.example.SAPA.enums.QuestionType;
 import com.example.SAPA.mappers.QuestionnaireMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,7 @@ public class ResponseService {
     private final AnswerRepository answerRepository;
     private final FollowRequestRepository followRequestRepository;
     private final QuestionnaireMapper questionnaireMapper;
+    private final UserContextService userContextService;
     private final PatientAccessService patientAccess;
     private final NotificationService notificationService;
 
@@ -43,22 +47,18 @@ public class ResponseService {
             Long assignmentId,
             QuestionnaireDTO.SubmitResponseRequest request) {
 
-        // Bloquear la asignación para evitar respuestas simultáneas.
         QuestionnaireAssignmentEntity assignment =
                 assignmentRepository.findByIdForUpdate(assignmentId)
                         .orElseThrow(() -> new EntityNotFoundException(
                                 "Asignación no encontrada con id: " + assignmentId));
+        PatientEntity patient =
+                patientAccess.resolveClinical(assignment.getPatient().getId());
 
-        // Resolver el paciente accesible (propio o tutelado) y validar el vínculo.
-        PatientEntity patient = patientAccess.resolveClinical(assignment.getPatient().getId());
-
-        // Verificar que no exista una respuesta previa.
         if (responseRepository.existsByAssignment(assignment)) {
             throw new IllegalStateException(
                     "Esta asignación ya tiene una respuesta registrada.");
         }
 
-        // Verificar que la asignación siga activa.
         if (!assignment.isActive()) {
             throw new IllegalStateException(
                     "Este cuestionario ya fue respondido o no se encuentra activo.");
@@ -66,14 +66,12 @@ public class ResponseService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Verificar que haya llegado la fecha de entrega.
         if (assignment.getDueAt() != null
                 && assignment.getDueAt().isAfter(now)) {
             throw new IllegalStateException(
                     "Este cuestionario todavía no está disponible.");
         }
 
-        // Recuperar las preguntas correspondientes a esta asignación.
         List<QuestionEntity> assignedQuestions = assignment.getQuestions();
 
         if (assignedQuestions == null || assignedQuestions.isEmpty()) {
@@ -92,7 +90,6 @@ public class ResponseService {
                 .map(QuestionnaireDTO.SubmitAnswerRequest::questionId)
                 .collect(Collectors.toSet());
 
-        // Exigir una respuesta por pregunta, sin duplicados ni preguntas adicionales.
         if (submittedAnswers.size() != assignedQuestionIds.size()
                 || submittedQuestionIds.size() != submittedAnswers.size()
                 || !submittedQuestionIds.equals(assignedQuestionIds)) {
@@ -101,7 +98,6 @@ public class ResponseService {
                     "Debés responder una sola vez cada pregunta de esta asignación.");
         }
 
-        // Crear la respuesta del paciente.
         QuestionnaireResponseEntity response =
                 QuestionnaireResponseEntity.builder()
                         .assignment(assignment)
@@ -110,7 +106,6 @@ public class ResponseService {
         QuestionnaireResponseEntity savedResponse =
                 responseRepository.save(response);
 
-        // Crear las respuestas individuales.
         List<AnswerEntity> answers = submittedAnswers.stream()
                 .map(answerRequest -> {
 
@@ -128,6 +123,8 @@ public class ResponseService {
                                 "Las respuestas no pueden estar vacías.");
                     }
 
+                    validateAnswer(question, value);
+
                     return AnswerEntity.builder()
                             .response(savedResponse)
                             .question(question)
@@ -139,13 +136,20 @@ public class ResponseService {
         answerRepository.saveAll(answers);
         savedResponse.setAnswers(answers);
 
-        // Marcar la asignación actual como respondida.
         assignment.setActive(false);
         assignmentRepository.save(assignment);
 
         var questionnaire = assignment.getQuestionnaire();
 
-        // Comprobar que el vínculo médico-paciente siga aprobado.
+        notificationService.createNotification(
+        questionnaire.getDoctor().getUser(),
+        "Cuestionario completado",
+        patient.getFirstName() + " " + patient.getLastName()
+                + " completó el cuestionario \""
+                + questionnaire.getTitle() + "\".",
+        NotificationType.QUESTIONNAIRE
+);
+
         boolean approvedLink = followRequestRepository
                 .existsByPatientAndDoctorAndStatus(
                         patient,
@@ -153,7 +157,6 @@ public class ResponseService {
                         FollowRequestStatus.APPROVED
                 );
 
-        // Crear la siguiente asignación solamente si el vínculo sigue aprobado.
         if (approvedLink) {
 
             LocalDateTime answeredAt = savedResponse.getAnsweredAt() != null
@@ -166,7 +169,6 @@ public class ResponseService {
                 case MONTHLY -> answeredAt.plusMonths(1);
             };
 
-            // Copiar las preguntas actuales para conservar el historial.
             List<QuestionEntity> currentQuestions =
                     List.copyOf(questionnaire.getQuestions());
 
@@ -181,7 +183,6 @@ public class ResponseService {
 
             assignmentRepository.save(nextAssignment);
 
-            // Avisar si se agregaron preguntas desde la asignación anterior.
             if (currentQuestions.size() > assignedQuestions.size()) {
 
                 notificationService.createNotification(
@@ -196,5 +197,46 @@ public class ResponseService {
         }
 
         return questionnaireMapper.toResponseDTO(savedResponse);
+    }
+
+    private void validateAnswer(QuestionEntity question, String value) {
+
+        if (question.getType() == QuestionType.MULTIPLE_CHOICE) {
+
+            List<String> options = question.getOptions();
+
+            if (options == null || !options.contains(value)) {
+                throw new IllegalArgumentException(
+                        "La respuesta seleccionada no es una opción válida para la pregunta: "
+                                + question.getText());
+            }
+        }
+
+        if (question.getType() == QuestionType.SCALE) {
+
+            Integer min = question.getScaleMin();
+            Integer max = question.getScaleMax();
+
+            if (min == null || max == null || min >= max) {
+                throw new IllegalStateException(
+                        "La configuración de escala de la pregunta no es válida: "
+                                + question.getText());
+            }
+
+            int numericValue;
+
+            try {
+                numericValue = Integer.parseInt(value);
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException(
+                        "La respuesta de escala debe ser un número entero.");
+            }
+
+            if (numericValue < min || numericValue > max) {
+                throw new IllegalArgumentException(
+                        "La respuesta debe estar entre "
+                                + min + " y " + max + ".");
+            }
+        }
     }
 }
