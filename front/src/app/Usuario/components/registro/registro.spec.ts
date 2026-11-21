@@ -13,6 +13,13 @@ describe('Registro', () => {
   let fixture: ComponentFixture<Registro>;
   const authMock = {
     register: vi.fn(() => of({})),
+    guardarDatosUsuario: vi.fn(() => of({
+      id: 1,
+      username: 'Tutor',
+      email: 'tutor@example.com',
+      role: 'ROLE_TUTOR'
+    })),
+    notifySessionChanged: vi.fn(),
   };
   const usuarioServiceMock = {
     specialities: {
@@ -80,6 +87,32 @@ describe('Registro', () => {
 
     expect(licenseLabel?.textContent).toContain('La matricula es obligatoria');
     expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
+  });
+
+  it('permite seleccionar tutor y exige el parentesco', () => {
+    const tutorButton: HTMLButtonElement =
+      fixture.nativeElement.querySelectorAll('button[type="button"]')[2];
+
+    tutorButton.click();
+    fixture.detectChanges();
+
+    expect(component.modelo().role).toBe('ROLE_TUTOR');
+    expect(fixture.nativeElement.textContent).toContain('Parentesco');
+
+    component.modelo.update((datos) => ({
+      ...datos,
+      firstName: 'Ana',
+      lastName: 'Perez',
+      email: 'tutor@example.com',
+      password: 'password-seguro',
+      birthDate: '2000-01-01',
+      phoneNumber: '12345678',
+      relationship: ''
+    }));
+
+    component.enviar(new Event('submit'));
+
+    expect(component.formulario.relationship().invalid()).toBe(true);
   });
 
   it('shows a validation error and does not submit a future birth date', () => {

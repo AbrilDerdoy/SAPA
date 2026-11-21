@@ -9,5 +9,5 @@ export interface registerRequest {
     licenseNumber:string|null,
     speciality:number|null,
     specialities?:number[]|null,
-    relationship?: string | null
+    relationship: string
 }

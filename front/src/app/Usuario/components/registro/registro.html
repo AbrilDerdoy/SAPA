@@ -28,6 +28,14 @@
         >
           Médico
         </button>
+        <button
+          type="button"
+          [class.is-active]="modelo().role === 'ROLE_TUTOR'"
+          [attr.aria-pressed]="modelo().role === 'ROLE_TUTOR'"
+          (click)="cambiarTutor()"
+        >
+          Tutor
+        </button>
       </div>
 
       @if (errorRegistro()) {
@@ -121,6 +129,23 @@
         <p class="reg-notice" role="note">
           Los médicos pasan por una revisión de la administración antes de poder ingresar.
         </p>
+      }
+
+      @if (modelo().role === 'ROLE_TUTOR') {
+        <label class="reg-field">
+          <span class="reg-label">Parentesco</span>
+          <select [formField]="formulario.relationship">
+            <option value="">Seleccioná el parentesco</option>
+            <option value="Madre">Madre</option>
+            <option value="Padre">Padre</option>
+            <option value="Tutor legal">Tutor legal</option>
+            <option value="Abuelo/a">Abuelo/a</option>
+            <option value="Hermano/a">Hermano/a</option>
+            <option value="Tío/a">Tío/a</option>
+            <option value="Otro familiar">Otro familiar</option>
+          </select>
+          <app-form-error [field]="formulario.relationship()" />
+        </label>
       }
 
       <button class="reg-submit" type="submit">Crear cuenta</button>

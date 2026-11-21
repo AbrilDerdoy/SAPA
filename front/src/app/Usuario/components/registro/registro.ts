@@ -32,7 +32,8 @@ export class Registro {
     birthDate:'',
     phoneNumber:'',
     licenseNumber:'',
-    speciality:null
+    speciality:null,
+    relationship:''
   });
   readonly fechaMaxima = (() => {
     const hoy = new Date();
@@ -61,6 +62,11 @@ export class Registro {
     (ruta) => {
       required(ruta.licenseNumber, {message: 'La matricula es obligatoria'});
       required(ruta.speciality, {message: 'La especialidad es obligatoria'});
+    }),
+    applyWhen(ruta, ({valueOf}) =>
+      valueOf(ruta.role) === 'ROLE_TUTOR',
+    (ruta) => {
+      required(ruta.relationship, {message: 'El parentesco es obligatorio'});
     })
   })
 
@@ -82,6 +88,7 @@ export class Registro {
     this.formulario.phoneNumber().markAsTouched();
     this.formulario.licenseNumber().markAsTouched();
     this.formulario.speciality().markAsTouched();
+    this.formulario.relationship().markAsTouched();
 
     if (this.formulario().invalid()) return;
 
@@ -96,7 +103,8 @@ export class Registro {
         phoneNumber:datos.phoneNumber,
         birthDate:datos.birthDate,
         licenseNumber: datos.role === 'ROLE_DOCTOR' ? datos.licenseNumber : null,
-        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null
+        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null,
+        relationship: datos.role === 'ROLE_TUTOR' ? datos.relationship : ''
       }
 
     this.errorRegistro.set(null);
@@ -107,7 +115,20 @@ export class Registro {
           this.alerta.mostrarInfo('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión','Espere la aprobacion de un administrador')
         } else {
           localStorage.setItem('jwt',JSON.stringify(res));  
-          this.auth.guardarDatosUsuario()
+          this.auth.guardarDatosUsuario().subscribe({
+            next: (user) => {
+              localStorage.setItem('usuario', JSON.stringify({
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+              }));
+              this.auth.notifySessionChanged();
+            },
+            error: (err) => {
+              console.error('No se pudo obtener el usuario registrado:', err);
+            }
+          });
         }
           this.router.navigate(['/home'])
       },
@@ -164,6 +185,13 @@ export class Registro {
   }    
   cambiarMedico(): void {
     this.modelo.update((datos) => ({...datos, role: 'ROLE_DOCTOR'}));
+  }
+  cambiarTutor(): void {
+    this.modelo.update((datos) => ({
+      ...datos,
+      role: 'ROLE_TUTOR',
+      relationship: datos.relationship || ''
+    }));
   }
 
   seleccionarEspecialidad(evento: Event): void {
