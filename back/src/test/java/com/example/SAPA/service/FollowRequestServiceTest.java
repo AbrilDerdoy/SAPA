@@ -2,12 +2,15 @@ package com.example.SAPA.service;
 
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.FollowRequestEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.FollowRequestRepository;
+import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.FollowRequestStatus;
+import com.example.SAPA.enums.TutorLinkStatus;
 import com.example.SAPA.enums.UserCategory;
 import jakarta.persistence.EntityExistsException;
 import org.junit.jupiter.api.Test;
@@ -19,8 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +38,12 @@ class FollowRequestServiceTest {
 
     @Mock
     private DoctorRepository doctorRepository;
+
+    @Mock
+    private TutorPatientRepository tutorPatientRepository;
+
+    @Mock
+    private PatientAccessService patientAccessService;
 
     @Mock
     private ConversationService conversationService;
@@ -130,5 +141,120 @@ class FollowRequestServiceTest {
         verify(followRequestRepository, never()).save(any(FollowRequestEntity.class));
         verify(conversationService, never()).createDoctorConversation(follower, targetDoctor);
         verify(messageService, never()).sendSystemMessage(any(), any());
+    }
+
+    @Test
+    void createRejectsTutorRequestWithoutPatient() {
+        UserEntity tutorUser = UserEntity.builder()
+                .id(30L)
+                .role(UserCategory.TUTOR)
+                .build();
+        DoctorEntity doctor = DoctorEntity.builder()
+                .id(12L)
+                .user(UserEntity.builder().status(AccountStatus.ACTIVE).build())
+                .build();
+
+        when(userContextService.getAuthenticatedUser()).thenReturn(tutorUser);
+        when(doctorRepository.findById(doctor.getId())).thenReturn(Optional.of(doctor));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> followRequestService.create(doctor.getId()));
+
+        verify(followRequestRepository, never()).save(any(FollowRequestEntity.class));
+    }
+
+    @Test
+    void createStoresTutorAndSelectedPatientOnFollowRequest() {
+        UserEntity tutorUser = UserEntity.builder()
+                .id(30L)
+                .role(UserCategory.TUTOR)
+                .build();
+        TutorEntity tutor = TutorEntity.builder()
+                .id(31L)
+                .user(tutorUser)
+                .build();
+        PatientEntity patient = PatientEntity.builder().id(33L).build();
+        DoctorEntity doctor = DoctorEntity.builder()
+                .id(12L)
+                .user(UserEntity.builder().status(AccountStatus.ACTIVE).build())
+                .build();
+
+        when(userContextService.getAuthenticatedUser()).thenReturn(tutorUser);
+        when(userContextService.getAuthenticatedTutor()).thenReturn(tutor);
+        when(doctorRepository.findById(doctor.getId())).thenReturn(Optional.of(doctor));
+        when(patientAccessService.resolveClinical(patient.getId())).thenReturn(patient);
+        when(followRequestRepository.existsByPatientAndDoctorAndStatusIn(
+                patient,
+                doctor,
+                List.of(FollowRequestStatus.PENDING, FollowRequestStatus.APPROVED)
+        )).thenReturn(false);
+        when(followRequestRepository.save(any(FollowRequestEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        FollowRequestEntity created = followRequestService.create(doctor.getId(), patient.getId());
+
+        assertEquals(tutor, created.getTutorFollower());
+        assertEquals(patient, created.getPatient());
+    }
+
+    @Test
+    void approvingTutorRequestCreatesTutorDoctorConversationAndPatientSystemMessage() {
+        UserEntity tutorUser = UserEntity.builder().id(30L).build();
+        TutorEntity tutor = TutorEntity.builder()
+                .id(31L)
+                .user(tutorUser)
+                .firstName("Ana")
+                .lastName("Tutor")
+                .build();
+        UserEntity patientUser = UserEntity.builder().id(32L).build();
+        PatientEntity patient = PatientEntity.builder()
+                .id(33L)
+                .user(patientUser)
+                .firstName("Paz")
+                .lastName("Paciente")
+                .build();
+        UserEntity doctorUser = UserEntity.builder().id(34L).build();
+        DoctorEntity doctor = DoctorEntity.builder()
+                .id(35L)
+                .user(doctorUser)
+                .firstName("Luis")
+                .lastName("Medico")
+                .build();
+        FollowRequestEntity request = FollowRequestEntity.builder()
+                .id(36L)
+                .patient(patient)
+                .tutorFollower(tutor)
+                .doctor(doctor)
+                .status(FollowRequestStatus.PENDING)
+                .build();
+        com.example.SAPA.Models.Chat.ConversationEntity conversation =
+                com.example.SAPA.Models.Chat.ConversationEntity.builder()
+                        .id(37L)
+                        .tutor(tutor)
+                        .doctor(doctor)
+                        .build();
+
+        when(userContextService.getAuthenticatedDoctor()).thenReturn(doctor);
+        when(followRequestRepository.findById(request.getId())).thenReturn(Optional.of(request));
+        when(followRequestRepository.existsByPatientAndDoctorAndStatusAndIdNot(
+                patient,
+                doctor,
+                FollowRequestStatus.APPROVED,
+                request.getId()
+        )).thenReturn(false);
+        when(tutorPatientRepository.existsByTutorAndPatientAndStatus(
+                tutor,
+                patient,
+                TutorLinkStatus.ACTIVE
+        )).thenReturn(true);
+        when(conversationService.createTutorConversation(tutor, doctor)).thenReturn(conversation);
+
+        followRequestService.approve(request.getId());
+
+        verify(conversationService).createTutorConversation(tutor, doctor);
+        verify(messageService).sendSystemMessage(
+                eq(conversation),
+                eq("Se creó un seguimiento para Paz Paciente.")
+        );
     }
 }

@@ -21,6 +21,29 @@
     <button type="submit" class="bar__btn" [disabled]="loadStatus() === 'loading'">Buscar</button>
   </form>
 
+  @if (isTutor) {
+    <label class="patient-choice">
+      <span>Paciente para el seguimiento</span>
+      <select (change)="selectPatient($event)" [disabled]="patientLoadError()">
+        <option value="">Elegí un paciente</option>
+        @for (patient of tutorPatients(); track patient.patientId) {
+          <option [value]="patient.patientId">
+            {{ patient.firstName }} {{ patient.lastName }}
+          </option>
+        }
+      </select>
+    </label>
+    @if (patientLoadError()) {
+      <p class="notice notice--error" role="alert">
+        No se pudieron cargar los pacientes tutelados. Volvé al panel e intentá nuevamente.
+      </p>
+    } @else if (tutorPatients().length === 0) {
+      <p class="notice">
+        No tenés pacientes vinculados para solicitar un seguimiento.
+      </p>
+    }
+  }
+
   <div class="results" aria-live="polite">
     @if (loadStatus() === 'loading') {
       <div class="skeleton">
@@ -69,7 +92,8 @@
                   type="button"
                   class="btn btn--primary"
                   [class.btn--sent]="locked(doctor.id)"
-                  [disabled]="isBusy(doctor.id, 'follow') || locked(doctor.id)"
+                  [class.btn--loading]="isBusy(doctor.id, 'follow')"
+                  [disabled]="isBusy(doctor.id, 'follow') || locked(doctor.id) || (isTutor && selectedPatientId() === null)"
                   (click)="requestFollow(doctor.id)"
                 >
                   {{ isBusy(doctor.id, 'follow') ? 'Enviando…' : lockedLabel(doctor.id) || 'Solicitar seguimiento' }}

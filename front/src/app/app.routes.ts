@@ -103,6 +103,13 @@ export const routes: Routes = [
         .then(m => m.TutorInvitation)
   },
   {
+    path: 'mi-tutor',
+    canActivate: [roleGuard(['PATIENT'])],
+    loadComponent: () =>
+      import('./Tutor/components/patient-tutor/patient-tutor')
+        .then(m => m.PatientTutor)
+  },
+  {
     path: 'mis-seguidores',
     canActivate: [roleGuard(['DOCTOR'])],
     data: { mode: 'followers' },
@@ -162,7 +169,7 @@ export const routes: Routes = [
       import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)
   },
   {
-    path: 'medicos', canActivate: [roleGuard(['PATIENT', 'DOCTOR'])], loadComponent: () =>
+    path: 'medicos', canActivate: [roleGuard(['PATIENT', 'TUTOR', 'DOCTOR'])], loadComponent: () =>
       import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)
   },
 

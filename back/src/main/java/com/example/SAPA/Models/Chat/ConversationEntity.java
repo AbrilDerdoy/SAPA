@@ -2,6 +2,7 @@ package com.example.SAPA.Models.Chat;
 
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +25,10 @@ import java.util.List;
         @UniqueConstraint(
             name = "uk_doctor_follower",
             columnNames = {"doctor_id", "doctor_follower_id"}
+        ),
+        @UniqueConstraint(
+            name = "uk_tutor_doctor",
+            columnNames = {"tutor_id", "doctor_id"}
         )
     }
 )
@@ -37,6 +42,10 @@ public class ConversationEntity {
     @ManyToOne
     @JoinColumn(name = "patient_id")
     private PatientEntity patient;
+
+    @ManyToOne
+    @JoinColumn(name = "tutor_id")
+    private TutorEntity tutor;
 
     // Médico receptor de la solicitud.
     @ManyToOne

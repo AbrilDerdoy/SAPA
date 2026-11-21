@@ -22,7 +22,6 @@ import {
 } from '../../models/health-tip';
 
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
-import { TutorService } from '../../../Tutor/services/tutor.service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 
 @Component({
@@ -36,7 +35,6 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   private readonly healthTipService = inject(HealthTipService);
   private readonly followService = inject(FollowRequestService);
-  private readonly tutorService = inject(TutorService);
   private readonly http = inject(HttpClient);
   private readonly auth = inject(Auth);
   private readonly zone = inject(NgZone);
@@ -57,7 +55,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   showForm = false;
   isDoctor = false;
-  isTutor = false;
+  isPatient = false;
   isLoggedIn = false;
 
   title = '';
@@ -67,9 +65,6 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   private currentDoctorId: number | null = null;
   private sentDoctorIds: number[] = [];
-
-  private tutorPatientId: number | null = null;
-  private tutorPatientName = '';
 
   private carouselTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -115,12 +110,14 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
         )
         .subscribe(() => {
           const previousRole = this.isDoctor;
+          const previousPatientRole = this.isPatient;
           const previousLogin = this.isLoggedIn;
 
           this.checkRole();
 
           if (
             previousRole !== this.isDoctor ||
+            previousPatientRole !== this.isPatient ||
             previousLogin !== this.isLoggedIn
           ) {
             this.loadTips();
@@ -139,7 +136,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   private checkRole(): void {
     this.isLoggedIn = this.auth.isAuthenticated();
     this.isDoctor = false;
-    this.isTutor = false;
+    this.isPatient = false;
 
     if (!this.isLoggedIn) {
       this.showForm = false;
@@ -160,14 +157,14 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
         .replace('ROLE_', '');
 
       this.isDoctor = role === 'DOCTOR';
-      this.isTutor = role === 'TUTOR';
+      this.isPatient = role === 'PATIENT';
 
     } catch (error) {
       console.error('Error al obtener el rol:', error);
 
       this.isLoggedIn = false;
       this.isDoctor = false;
-      this.isTutor = false;
+      this.isPatient = false;
     }
 
     if (!this.isDoctor) {
@@ -185,8 +182,6 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
     this.followedDoctorIds = [];
     this.sentDoctorIds = [];
     this.currentDoctorId = null;
-    this.tutorPatientId = null;
-    this.tutorPatientName = '';
     this.currentIndex = 0;
 
     this.stopCarouselTimer();
@@ -212,8 +207,10 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
           if (this.isDoctor) {
             this.loadCurrentDoctor();
-          } else {
+          } else if (this.isPatient) {
             this.loadRecommendations();
+            this.loadFollowedDoctorsTips();
+          } else {
             this.loadFollowedDoctorsTips();
           }
         },
@@ -285,6 +282,11 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   }
 
   private loadRecommendations(): void {
+    if (!this.isPatient && !this.isDoctor) {
+      this.recommendations = [];
+      return;
+    }
+
     this.subscriptions.add(
       this.http.get<Doctor[]>(`${this.DOCTORS_URL}/search`).subscribe({
         next: doctors => {
@@ -391,6 +393,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   requestFollow(doctorId: number): void {
     if (
       !this.isLoggedIn ||
+      (!this.isPatient && !this.isDoctor) ||
       this.requestingDoctorId !== null ||
       this.sentDoctorIds.includes(doctorId)
     ) {
@@ -400,44 +403,15 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
     this.requestingDoctorId = doctorId;
     this.errorMessage = '';
     this.successMessage = '';
-
-    if (this.isTutor && this.tutorPatientId === null) {
-      this.subscriptions.add(
-        this.tutorService.getMyPatients().subscribe({
-          next: (patients) => {
-            const patient = patients?.[0];
-
-            if (!patient) {
-              this.errorMessage =
-                'Primero necesitás tener un paciente vinculado para solicitar seguimiento.';
-              this.requestingDoctorId = null;
-              return;
-            }
-
-            this.tutorPatientId = patient.patientId;
-            this.tutorPatientName = `${patient.firstName} ${patient.lastName}`;
-            this.sendFollowRequest(doctorId);
-          },
-          error: () => {
-            this.errorMessage = 'No se pudieron cargar tus pacientes.';
-            this.requestingDoctorId = null;
-          }
-        })
-      );
-
-      return;
-    }
-
     this.sendFollowRequest(doctorId);
   }
 
   private sendFollowRequest(doctorId: number): void {
     this.subscriptions.add(
-      this.followService.send(doctorId, this.tutorPatientId).subscribe({
+      this.followService.send(doctorId).subscribe({
         next: () => {
-          this.successMessage = this.isTutor
-            ? `La solicitud de seguimiento de ${this.tutorPatientName} fue enviada. El profesional debe aprobarla.`
-            : 'La solicitud de seguimiento fue enviada. El profesional debe aprobarla.';
+          this.successMessage =
+            'La solicitud de seguimiento fue enviada. El profesional debe aprobarla.';
 
           this.sentDoctorIds = [
             ...this.sentDoctorIds,

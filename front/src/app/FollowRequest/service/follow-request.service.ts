@@ -24,17 +24,26 @@ export class FollowRequestService {
     return map;
   });
 
-  statusFor(doctorId: number): FollowRequestStatus | null {
+  statusFor(doctorId: number, patientId?: number | null): FollowRequestStatus | null {
+    if (patientId != null) {
+      const request = this.sentRequests()
+        .filter((item) => item.doctor?.id === doctorId && item.patient?.id === patientId)
+        .sort((left, right) =>
+          new Date(right.requestedAt).getTime() - new Date(left.requestedAt).getTime()
+        )[0];
+      return request?.status ?? null;
+    }
+
     return this.latestByDoctor().get(doctorId)?.status ?? null;
   }
 
-  isLocked(doctorId: number): boolean {
-    const status = this.statusFor(doctorId);
+  isLocked(doctorId: number, patientId?: number | null): boolean {
+    const status = this.statusFor(doctorId, patientId);
     return status === 'PENDING' || status === 'APPROVED';
   }
 
-  lockedLabel(doctorId: number): string {
-    switch (this.statusFor(doctorId)) {
+  lockedLabel(doctorId: number, patientId?: number | null): string {
+    switch (this.statusFor(doctorId, patientId)) {
       case 'PENDING':
         return 'Solicitud enviada';
       case 'APPROVED':
@@ -44,8 +53,8 @@ export class FollowRequestService {
     }
   }
 
-  loadSent(): void {
-    this.getSent().subscribe({
+  loadSent(patientId?: number): void {
+    this.getSent(patientId).subscribe({
       next: (list) => this.sentRequests.set(list),
       error: () => this.sentRequests.set([]),
     });
