@@ -43,6 +43,12 @@ public class PatientController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<PatientResponseDTO> getProfile(
+            @RequestParam(required = false) Long patientId) {
+        return ResponseEntity.ok(patientService.getPatientProfile(patientId));
+    }
+
     @GetMapping("/my-patients")
     @Operation(
             summary = "Obtener los pacientes del médico autenticado",

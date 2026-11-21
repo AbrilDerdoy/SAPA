@@ -1,6 +1,6 @@
 
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Patient } from '../interfaces/patient';
 import { UpdatePatientRequest } from '../interfaces/update-patient-request';
@@ -23,8 +23,12 @@ export class PatientService {
   private readonly baseUrl = 'http://localhost:8080/patients';
   private readonly usersUrl = 'http://localhost:8080/users';
 
-  getProfile(): Observable<Patient> {
-    return this.http.get<Patient>(`${this.baseUrl}/my-profile`);
+  getProfile(patientId?: number | null): Observable<Patient> {
+    const params = patientId != null
+      ? new HttpParams().set('patientId', patientId)
+      : undefined;
+
+    return this.http.get<Patient>(`${this.baseUrl}/profile`, { params });
   }
 
   updateProfile(request: UpdatePatientRequest): Observable<void> {

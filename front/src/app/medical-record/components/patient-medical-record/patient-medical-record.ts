@@ -93,16 +93,9 @@ export class PatientMedicalRecord implements OnInit {
     this.cargandoPerfil.set(true)
     this.errorPerfil.set(null)
 
-    this.patientService.getMyPatients().subscribe({
-      next: (datos) => {
-        const paciente = datos.find(p => p.patientId === this.patientId)
-
-        if (!paciente) {
-          this.errorPerfil.set('No se encontró la información del paciente.')
-        } else {
-          this.perfilPaciente.set(paciente)
-        }
-
+    this.patientService.getProfile(this.patientId).subscribe({
+      next: (paciente) => {
+        this.perfilPaciente.set(paciente)
         this.cargandoPerfil.set(false)
       },
       error: () => {
