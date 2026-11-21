@@ -119,7 +119,9 @@ export class Registro {
             next: (user) => {
               localStorage.setItem('usuario', JSON.stringify({
                 id: user.id,
-                username: user.username,
+                username: user.username
+                  || [user.firstName, user.lastName].filter(Boolean).join(' ')
+                  || user.email,
                 email: user.email,
                 role: user.role
               }));

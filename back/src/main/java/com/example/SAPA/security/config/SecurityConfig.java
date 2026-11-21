@@ -51,8 +51,8 @@ public class SecurityConfig {
     };
 
     private static final String[] ALL_ROLES = {
-            "ROLE_PATIENT", "ROLE_DOCTOR", "ROLE_ADMIN",
-            "PATIENT", "DOCTOR", "ADMIN"
+            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR", "ROLE_ADMIN",
+            "PATIENT", "TUTOR", "DOCTOR", "ADMIN"
     };
 
     @Bean

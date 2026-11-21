@@ -41,7 +41,7 @@
         <hr>
       }
 
-      @if (auth.isTutor() || role() === 'TUTOR') {
+      @if (role() === 'TUTOR' || role()==='ROLE_TUTOR') {
         <hr>
         <a [routerLink]="['/tutor']" (click)="toggleMenu()">
           <i class="bi bi-people"></i>
