@@ -8,7 +8,7 @@ export interface PatientProfile {
   firstName: string;
   lastName: string;
   birthDate: string;
-  phoneNumber: string;
+  phoneNumber: string | null;
   medicalRecordId: number | null;
 }
 
@@ -16,7 +16,7 @@ export interface UpdatePatientProfileRequest {
   firstName: string;
   lastName: string;
   birthDate: string;
-  phoneNumber: string;
+  phoneNumber: string | null;
 }
 
 @Injectable({

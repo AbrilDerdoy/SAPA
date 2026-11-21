@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 import java.util.List;
@@ -83,6 +84,7 @@ public class UserService {
         }
 
         String encryptedPassword = passwordEncoder.encode(request.password());
+        String phoneNumber = normalizeOptionalPhoneNumber(request.phoneNumber());
 
         AccountStatus initialStatus = (request.role() == Role.ROLE_DOCTOR)
                 ? AccountStatus.PENDING
@@ -104,7 +106,7 @@ public class UserService {
                     .firstName(request.firstName())
                     .lastName(request.lastName())
                     .birthDate(request.birthDate())
-                    .phoneNumber(request.phoneNumber())
+                    .phoneNumber(phoneNumber)
                     .licenseNumber(request.licenseNumber())
                     .speciality(specialityRepository.findById(request.speciality())
                             .orElseThrow(() -> new IllegalArgumentException("La especialidad no existe.")))
@@ -120,7 +122,7 @@ public class UserService {
                     .firstName(request.firstName())
                     .lastName(request.lastName())
                     .birthDate(request.birthDate())
-                    .phoneNumber(request.phoneNumber())
+                    .phoneNumber(phoneNumber)
                     .build();
             patientRepository.save(patient);
         } else if (request.role() == Role.ROLE_TUTOR) {
@@ -138,7 +140,7 @@ public class UserService {
                     .firstName(request.firstName())
                     .lastName(request.lastName())
                     .birthDate(request.birthDate())
-                    .phoneNumber(request.phoneNumber())
+                    .phoneNumber(phoneNumber)
                     .relationship(relationship)
                     .build();
             tutorRepository.save(tutor);
@@ -260,42 +262,47 @@ public class UserService {
             throw new ResourceAlreadyExistsException("El email ya está registrado.");
         }
 
+        String phoneNumber = normalizeOptionalPhoneNumber(request.phoneNumber());
+
         switch (user.getRole()) {
             case PATIENT -> {
                 PatientEntity patient = patientRepository.findByUser(user)
                         .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
-                if (!patient.getPhoneNumber().equals(request.phoneNumber())
-                        && patientRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), patient.getId())) {
+                if (!Objects.equals(patient.getPhoneNumber(), phoneNumber)
+                        && phoneNumber != null
+                        && patientRepository.existsByPhoneNumberAndIdNot(phoneNumber, patient.getId())) {
                     throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
                 }
                 patient.setFirstName(request.firstName());
                 patient.setLastName(request.lastName());
                 patient.setBirthDate(request.birthDate());
-                patient.setPhoneNumber(request.phoneNumber());
+                patient.setPhoneNumber(phoneNumber);
             }
             case DOCTOR -> {
                 DoctorEntity doctor = doctorRepository.findByUser(user)
                         .orElseThrow(() -> new EntityNotFoundException("Médico no encontrado"));
-                if (!doctor.getPhoneNumber().equals(request.phoneNumber())
-                        && doctorRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), doctor.getId())) {
+                if (!Objects.equals(doctor.getPhoneNumber(), phoneNumber)
+                        && phoneNumber != null
+                        && doctorRepository.existsByPhoneNumberAndIdNot(phoneNumber, doctor.getId())) {
                     throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
                 }
                 doctor.setFirstName(request.firstName());
                 doctor.setLastName(request.lastName());
                 doctor.setBirthDate(request.birthDate());
-                doctor.setPhoneNumber(request.phoneNumber());
+                doctor.setPhoneNumber(phoneNumber);
             }
             case TUTOR -> {
                 TutorEntity tutor = tutorRepository.findByUser(user)
                         .orElseThrow(() -> new EntityNotFoundException("Tutor no encontrado"));
-                if (!tutor.getPhoneNumber().equals(request.phoneNumber())
-                        && tutorRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), tutor.getId())) {
+                if (!Objects.equals(tutor.getPhoneNumber(), phoneNumber)
+                        && phoneNumber != null
+                        && tutorRepository.existsByPhoneNumberAndIdNot(phoneNumber, tutor.getId())) {
                     throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
                 }
                 tutor.setFirstName(request.firstName());
                 tutor.setLastName(request.lastName());
                 tutor.setBirthDate(request.birthDate());
-                tutor.setPhoneNumber(request.phoneNumber());
+                tutor.setPhoneNumber(phoneNumber);
             }
             case ADMIN -> throw new IllegalStateException("El perfil de administrador no se puede modificar desde este endpoint.");
         }
@@ -310,6 +317,12 @@ public class UserService {
         credentialRepository.save(credential);
 
         return new AuthResponse(accessToken, refreshToken);
+    }
+
+    private String normalizeOptionalPhoneNumber(String phoneNumber) {
+        return phoneNumber == null || phoneNumber.isBlank()
+                ? null
+                : phoneNumber.trim();
     }
 
     @Transactional(readOnly = true)

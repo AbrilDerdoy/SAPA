@@ -34,7 +34,7 @@ public class PatientEntity {
     @Column(nullable = false)
     private LocalDate birthDate;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String phoneNumber;
 
     @OneToOne

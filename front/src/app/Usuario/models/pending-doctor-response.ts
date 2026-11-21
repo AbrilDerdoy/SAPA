@@ -6,7 +6,7 @@ export interface PendingDoctorResponse {
     email: string,
     role: string,
     birthDate: Date,
-    phoneNumber: number,
+    phoneNumber: string | null,
     licenseNumber: number,
     speciality: string,
     status: string

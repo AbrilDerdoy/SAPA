@@ -31,7 +31,7 @@ public class TutorEntity {
     @Column(nullable = false)
     private LocalDate birthDate;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String phoneNumber;
 
     @Column(nullable = false)

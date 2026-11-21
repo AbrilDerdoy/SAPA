@@ -85,8 +85,8 @@
           </label>
 
           <label>
-            Teléfono:
-            <input type="number" [formField]="formulario.phoneNumber">
+            Teléfono (opcional):
+            <input type="tel" inputmode="tel" autocomplete="tel" [formField]="formulario.phoneNumber">
             <app-form-error [field]="formulario.phoneNumber()" />
           </label>
 

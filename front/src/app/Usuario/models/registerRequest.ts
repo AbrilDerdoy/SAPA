@@ -5,7 +5,7 @@ export interface registerRequest {
     firstName:string,
     lastName:string,
     birthDate:string,
-    phoneNumber:string,
+    phoneNumber:string|null,
     licenseNumber:string|null,
     speciality:number|null,
     specialities?:number[]|null,

@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
+import { Router } from '@angular/router';
 
 import { Registro } from './registro';
 import { Auth } from '../../services/Auth/auth';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
-import { provideRouter } from '@angular/router';
 
 describe('Registro', () => {
   let component: Registro;
@@ -35,13 +35,16 @@ describe('Registro', () => {
   };
 
   beforeEach(async () => {
+    authMock.register.mockClear();
+    authMock.guardarDatosUsuario.mockClear();
+
     await TestBed.configureTestingModule({
       imports: [Registro],
       providers: [
         { provide: Auth, useValue: authMock },
         { provide: UsuarioService, useValue: usuarioServiceMock },
         { provide: AlertaService, useValue: alertaMock },
-        provideRouter([]),
+        { provide: Router, useValue: { navigate: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -114,6 +117,28 @@ describe('Registro', () => {
     component.enviar(new Event('submit'));
 
     expect(component.formulario.relationship().invalid()).toBe(true);
+  });
+
+  it('allows registration without a phone number', () => {
+    authMock.register.mockClear();
+    authMock.guardarDatosUsuario.mockClear();
+    component.modelo.update((datos) => ({
+      ...datos,
+      role: 'ROLE_TUTOR',
+      firstName: 'Ana',
+      lastName: 'Perez',
+      email: 'tutor@example.com',
+      password: 'password-seguro',
+      birthDate: '2000-01-01',
+      phoneNumber: '',
+      relationship: 'Madre',
+    }));
+
+    component.enviar(new Event('submit'));
+
+    expect(authMock.register).toHaveBeenCalledWith(
+      expect.objectContaining({ phoneNumber: null }),
+    );
   });
 
   it('shows a validation error and does not submit a future birth date', () => {

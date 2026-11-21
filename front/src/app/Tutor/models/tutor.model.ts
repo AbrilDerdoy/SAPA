@@ -14,7 +14,7 @@ export interface Tutor {
   lastName: string;
   email: string;
   birthDate: string;
-  phoneNumber: string;
+  phoneNumber: string | null;
   relationship: string;
 }
 
@@ -23,7 +23,7 @@ export interface TutorPatient {
   firstName: string;
   lastName: string;
   birthDate: string;
-  phoneNumber: string;
+  phoneNumber: string | null;
   medicalRecordId: number | null;
   linkedAt: string;
 }

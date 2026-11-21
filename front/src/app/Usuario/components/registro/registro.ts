@@ -2,14 +2,15 @@ import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Auth } from '../../services/Auth/auth';
 import { registerRequest } from '../../models/registerRequest';
-import { form, minLength, required, FormField, min, applyWhen, validate } from '@angular/forms/signals';
+import { form, minLength, required, FormField, applyWhen, validate } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
 import { Router } from '@angular/router';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
-type RegistroFormModel = Omit<registerRequest, 'licenseNumber'> & {
+type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'phoneNumber'> & {
   licenseNumber: string;
+  phoneNumber: string;
 };
 
 function fechaHaceMeses(meses: number): string {
@@ -102,8 +103,29 @@ export class Registro {
 
       return undefined;
     });
-    required(ruta.phoneNumber, {message: 'El telefono es obligatorio'});
-    min(ruta.phoneNumber, 1, {message: 'El telefono debe ser positivo'});
+    validate(ruta.phoneNumber, ({value}) => {
+      const phoneNumber = value().trim();
+
+      if (!phoneNumber) {
+        return undefined;
+      }
+
+      if (phoneNumber.length < 7 || phoneNumber.length > 20) {
+        return {
+          kind: 'phoneLength',
+          message: 'El teléfono debe tener entre 7 y 20 caracteres.',
+        };
+      }
+
+      if (!/^\+?[0-9\s\-()]+$/.test(phoneNumber)) {
+        return {
+          kind: 'phonePattern',
+          message: 'Solo se permiten números, espacios, guiones, paréntesis o el signo +.',
+        };
+      }
+
+      return undefined;
+    });
     applyWhen(ruta, ({valueOf}) =>
       valueOf(ruta.role) === 'ROLE_DOCTOR',
     (ruta) => {
@@ -147,7 +169,7 @@ export class Registro {
         lastName:datos.lastName,
         email:datos.email,
         password:datos.password,
-        phoneNumber:datos.phoneNumber,
+        phoneNumber: datos.phoneNumber.trim() || null,
         birthDate:datos.birthDate,
         licenseNumber: datos.role === 'ROLE_DOCTOR' ? datos.licenseNumber : null,
         speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null,

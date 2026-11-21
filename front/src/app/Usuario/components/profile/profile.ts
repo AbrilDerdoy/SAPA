@@ -1,5 +1,5 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { form, required, validate, FormField, disabled } from '@angular/forms/signals';
+import { form, required, validate, FormField, disabled, maxLength } from '@angular/forms/signals';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { Auth } from '../../services/Auth/auth';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
@@ -11,7 +11,7 @@ export interface datosUsuario {
   lastName: string;
   email: string;
   birthDate: Date;
-  phoneNumber: number;
+  phoneNumber: string;
   profileImageUrl: string | null;
 }
 
@@ -81,13 +81,17 @@ export class Profile {
     const datos = this.profile.value();
 
     return datos
-      ? { ...datos, birthDate: datos.birthDate }
+      ? {
+          ...datos,
+          birthDate: datos.birthDate,
+          phoneNumber: datos.phoneNumber ?? ''
+        }
       : {
           firstName: '',
           lastName: '',
           email: '',
           birthDate: new Date(),
-          phoneNumber: 0,
+          phoneNumber: '',
           profileImageUrl: null
         };
   });
@@ -97,7 +101,7 @@ export class Profile {
     required(ruta.lastName, { message: 'El apellido es obligatorio' });
     required(ruta.birthDate, { message: 'La fecha de nacimiento es obligatoria' });
     required(ruta.email, { message: 'El email es obligatorio' });
-    required(ruta.phoneNumber, { message: 'El telefono es obligatorio' });
+    maxLength(ruta.phoneNumber, 20, { message: 'El teléfono no puede superar los 20 caracteres.' });
 
     disabled(ruta, () => !this.modificarDatos());
 
@@ -106,6 +110,30 @@ export class Profile {
         ? { kind: 'past', message: 'La fecha de nacimiento debe ser anterior a hoy' }
         : undefined
     );
+
+    validate(ruta.phoneNumber, ({value}) => {
+      const phoneNumber = value().trim();
+
+      if (!phoneNumber) {
+        return undefined;
+      }
+
+      if (phoneNumber.length < 7) {
+        return {
+          kind: 'minLength',
+          message: 'El teléfono debe tener al menos 7 caracteres.',
+        };
+      }
+
+      if (!/^\+?[0-9\s\-()]+$/.test(phoneNumber)) {
+        return {
+          kind: 'pattern',
+          message: 'Solo se permiten números, espacios, guiones, paréntesis o el signo +.',
+        };
+      }
+
+      return undefined;
+    });
   });
 
   toggleFormulario(): void {
@@ -121,7 +149,10 @@ export class Profile {
     const datos = this.datosOriginales();
 
     if (datos) {
-      this.modelo.set({ ...datos });
+      this.modelo.set({
+        ...datos,
+        phoneNumber: datos.phoneNumber ?? ''
+      });
     }
 
     this.modificarDatos.set(false);
@@ -140,7 +171,7 @@ export class Profile {
       || actual.lastName !== original.lastName
       || actual.email !== original.email
       || dateValue(actual.birthDate) !== dateValue(original.birthDate)
-      || String(actual.phoneNumber) !== String(original.phoneNumber);
+      || actual.phoneNumber.trim() !== (original.phoneNumber ?? '').trim();
   }
 
   private marcarCamposComoTocados(): void {
@@ -168,7 +199,7 @@ export class Profile {
       lastName: this.modelo().lastName,
       email: this.modelo().email,
       birthDate: this.modelo().birthDate,
-      phoneNumber: this.modelo().phoneNumber
+      phoneNumber: this.modelo().phoneNumber.trim() || null
     }).subscribe({
       next: (tokens) => {
         localStorage.setItem('jwt', JSON.stringify(tokens));

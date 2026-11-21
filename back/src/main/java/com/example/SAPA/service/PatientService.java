@@ -48,7 +48,11 @@ public class PatientService {
         patient.setFirstName(request.firstName());
         patient.setLastName(request.lastName());
         patient.setBirthDate(request.birthDate());
-        patient.setPhoneNumber(request.phoneNumber());
+        patient.setPhoneNumber(
+                request.phoneNumber() == null || request.phoneNumber().isBlank()
+                        ? null
+                        : request.phoneNumber().trim()
+        );
     }
 
     private void validatePatientBirthDate(LocalDate birthDate) {

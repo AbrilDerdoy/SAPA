@@ -3,7 +3,7 @@ export interface DoctorProfile {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber: string | null;
   licenseNumber: string;
   bio: string | null;
   hospitalUrl: string | null;

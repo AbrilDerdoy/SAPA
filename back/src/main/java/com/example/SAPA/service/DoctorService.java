@@ -35,7 +35,11 @@ public class DoctorService {
 
         doctor.setFirstName(request.firstName());
         doctor.setLastName(request.lastName());
-        doctor.setPhoneNumber(request.phoneNumber());
+        doctor.setPhoneNumber(
+                request.phoneNumber() == null || request.phoneNumber().isBlank()
+                        ? null
+                        : request.phoneNumber().trim()
+        );
         doctor.setLicenseNumber(request.licenseNumber());
 
         doctor.setBio(request.bio());

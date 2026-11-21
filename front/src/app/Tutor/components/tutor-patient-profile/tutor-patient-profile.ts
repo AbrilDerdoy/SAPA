@@ -93,8 +93,8 @@ export class TutorPatientProfile implements OnInit {
       return;
     }
 
-    if (!this.firstName().trim() || !this.lastName().trim() || !this.phoneNumber().trim()) {
-      this.error.set('Completá nombre, apellido y teléfono.');
+    if (!this.firstName().trim() || !this.lastName().trim()) {
+      this.error.set('Completá nombre y apellido.');
       return;
     }
 
@@ -105,7 +105,7 @@ export class TutorPatientProfile implements OnInit {
       firstName: this.firstName().trim(),
       lastName: this.lastName().trim(),
       birthDate: this.birthDate(),
-      phoneNumber: this.phoneNumber().trim(),
+      phoneNumber: this.phoneNumber().trim() || null,
     }).subscribe({
       next: () => {
         this.saving.set(false);

@@ -12,8 +12,6 @@ import {
   disabled,
   form,
   maxLength,
-  minLength,
-  pattern,
   required,
   validate,
 } from '@angular/forms/signals';
@@ -150,20 +148,32 @@ export class PatientProfile {
         : undefined
     );
 
-    required(path.phoneNumber, {
-      message: 'El número de teléfono es obligatorio.',
-    });
-
-    minLength(path.phoneNumber, 7, {
-      message: 'El teléfono debe tener al menos 7 caracteres.',
-    });
-
     maxLength(path.phoneNumber, 20, {
       message: 'El teléfono no puede superar los 20 caracteres.',
     });
 
-    pattern(path.phoneNumber, /^\+?[0-9\s\-\(]+$/, {
-      message: 'Solo se permiten números, espacios, guiones o el signo +.',
+    validate(path.phoneNumber, ({ value }) => {
+      const phoneNumber = value().trim();
+
+      if (!phoneNumber) {
+        return undefined;
+      }
+
+      if (phoneNumber.length < 7) {
+        return {
+          kind: 'minLength',
+          message: 'El teléfono debe tener al menos 7 caracteres.',
+        };
+      }
+
+      if (!/^\+?[0-9\s\-()]+$/.test(phoneNumber)) {
+        return {
+          kind: 'pattern',
+          message: 'Solo se permiten números, espacios, guiones, paréntesis o el signo +.',
+        };
+      }
+
+      return undefined;
     });
 
     disabled(path, () => !this.editing());
@@ -440,7 +450,7 @@ export class PatientProfile {
       firstName: value.firstName.trim(),
       lastName: value.lastName.trim(),
       birthDate: value.birthDate,
-      phoneNumber: value.phoneNumber.trim(),
+      phoneNumber: value.phoneNumber.trim() || null,
     };
 
     this.status.set('saving');
@@ -452,7 +462,7 @@ export class PatientProfile {
           lastName: request.lastName,
           email: this.model().email,
           birthDate: request.birthDate,
-          phoneNumber: request.phoneNumber,
+          phoneNumber: request.phoneNumber ?? '',
         };
 
         this.model.set(savedValues);

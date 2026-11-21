@@ -47,7 +47,7 @@ public class DoctorEntity {
 
     private Double hospitalLongitude;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String phoneNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
