@@ -1,5 +1,7 @@
 <section class="medical-record-container">
-  <a routerLink="/mis-pacientes" class="back-link">Volver a mis pacientes</a>
+  <a [routerLink]="soloLectura ? '/tutor' : '/mis-pacientes'" class="back-link">
+    {{ soloLectura ? 'Volver al panel de tutor' : 'Volver a mis pacientes' }}
+  </a>
 
   <header class="page-header">
     <h1>Ficha médica del paciente</h1>
@@ -15,6 +17,12 @@
       Reintentar
     </button>
   </div>
+
+  } @else if (fichaNoRegistrada()) {
+  <section class="record-card">
+  <h2>Información de la ficha médica</h2>
+  <p>Este paciente todavía no tiene una ficha médica registrada.</p>
+  </section>
 
   } @else if (fichaMedica(); as ficha) {
   <section class="record-card">
@@ -63,14 +71,16 @@
       <h2>Medicación</h2>
     </div>
 
-    <div class="management-actions">
-      <button type="button" class="add-button" (click)="abrirGestion()">Gestionar medicaciones</button>
-    </div>
+    @if (!soloLectura) {
+      <div class="management-actions">
+        <button type="button" class="add-button" (click)="abrirGestion()">Gestionar medicaciones</button>
+      </div>
 
-    @if (gestionVisible()) {
-    <app-medication-management [patientId]="patientId" [medicacion]="medicacionEditar()" (saved)="actualizarLista()"
-      (closed)="cerrarGestion()">
-    </app-medication-management>
+      @if (gestionVisible()) {
+        <app-medication-management [patientId]="patientId" [medicacion]="medicacionEditar()" (saved)="actualizarLista()"
+          (closed)="cerrarGestion()">
+        </app-medication-management>
+      }
     }
 
     @if (cargandoMedicaciones()) {
@@ -98,16 +108,15 @@
           <p><strong>Fecha de inicio:</strong> {{ medicacion.startDate }}</p>
           <p><strong>Fecha de finalización:</strong> {{ medicacion.endDate || 'Sin fecha de finalización' }}</p>
 
-          <div class="medication-actions">
-            <button type="button" class="status-button suspend-button" [disabled]="cambiandoEstadoId() !== null"
-              (click)="cambiarEstado(medicacion)">
-              {{ cambiandoEstadoId() === medicacion.medicationId ? 'Actualizando...' : 'Suspender' }}
-            </button>
-
-            <button type="button" class="edit-button" (click)="abrirGestion(medicacion)">
-              Editar
-            </button>
-          </div>
+          @if (!soloLectura) {
+            <div class="medication-actions">
+              <button type="button" class="status-button suspend-button" [disabled]="cambiandoEstadoId() !== null"
+                (click)="cambiarEstado(medicacion)">
+                {{ cambiandoEstadoId() === medicacion.medicationId ? 'Actualizando...' : 'Suspender' }}
+              </button>
+              <button type="button" class="edit-button" (click)="abrirGestion(medicacion)">Editar</button>
+            </div>
+          }
         </article>
         }
       </div>
@@ -135,16 +144,15 @@
           <p><strong>Fecha de inicio:</strong> {{ medicacion.startDate }}</p>
           <p><strong>Fecha de finalización:</strong> {{ medicacion.endDate || 'Sin fecha de finalización' }}</p>
 
-          <div class="medication-actions">
-            <button type="button" class="status-button prescribe-button" [disabled]="cambiandoEstadoId() !== null"
-              (click)="cambiarEstado(medicacion)">
-              {{ cambiandoEstadoId() === medicacion.medicationId ? 'Actualizando...' : 'Volver a recetar' }}
-            </button>
-
-            <button type="button" class="edit-button" (click)="abrirGestion(medicacion)">
-              Editar
-            </button>
-          </div>
+          @if (!soloLectura) {
+            <div class="medication-actions">
+              <button type="button" class="status-button prescribe-button" [disabled]="cambiandoEstadoId() !== null"
+                (click)="cambiarEstado(medicacion)">
+                {{ cambiandoEstadoId() === medicacion.medicationId ? 'Actualizando...' : 'Volver a recetar' }}
+              </button>
+              <button type="button" class="edit-button" (click)="abrirGestion(medicacion)">Editar</button>
+            </div>
+          }
         </article>
         }
       </div>

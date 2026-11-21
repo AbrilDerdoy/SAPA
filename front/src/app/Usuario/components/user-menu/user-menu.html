@@ -42,6 +42,10 @@
       }
 
       @if (role() === 'TUTOR' || role()==='ROLE_TUTOR') {
+        <a [routerLink]="['/profile']" (click)="toggleMenu()">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          Mi perfil
+        </a>
         <hr>
         <a [routerLink]="['/tutor']" (click)="toggleMenu()">
           <i class="bi bi-people"></i>

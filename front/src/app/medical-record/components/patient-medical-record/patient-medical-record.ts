@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MedicalRecordService } from '../../services/medical-record-service';
 import { MedicalRecord } from '../../interfaces/medical-record';
@@ -6,6 +7,7 @@ import { Medication, MedicationStatus } from '../../interfaces/medication/medica
 import { Patient } from '../../../Patient/interfaces/patient';
 import { PatientService } from '../../../Patient/service/patient.service';
 import { MedicationManagement } from '../medication-management/medication-management';
+import { Auth } from '../../../Usuario/services/Auth/auth';
 
 @Component({
   selector: 'app-patient-medical-record',
@@ -17,8 +19,10 @@ export class PatientMedicalRecord implements OnInit {
   private readonly route = inject(ActivatedRoute)
   private readonly medicalRecordService = inject(MedicalRecordService)
   private readonly patientService = inject(PatientService)
+  private readonly auth = inject(Auth)
 
   patientId = 0
+  readonly soloLectura = this.auth.isTutor()
 
   fichaMedica = signal<MedicalRecord | null>(null)
   medicaciones = signal<Medication[]>([])
@@ -30,6 +34,7 @@ export class PatientMedicalRecord implements OnInit {
   cargandoPerfil = signal(true)
 
   errorFicha = signal<string | null>(null)
+  fichaNoRegistrada = signal(false)
   errorMedicaciones = signal<string | null>(null)
   errorPerfil = signal<string | null>(null)
 
@@ -60,14 +65,20 @@ export class PatientMedicalRecord implements OnInit {
   cargarFichaMedica(): void {
     this.cargandoFicha.set(true)
     this.errorFicha.set(null)
+    this.fichaNoRegistrada.set(false)
 
     this.medicalRecordService.getPatientMedicalRecord(this.patientId).subscribe({
       next: (datos) => {
         this.fichaMedica.set(datos)
         this.cargandoFicha.set(false)
       },
-      error: () => {
-        this.errorFicha.set('No se pudo cargar la ficha médica.')
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          this.fichaMedica.set(null)
+          this.fichaNoRegistrada.set(true)
+        } else {
+          this.errorFicha.set('No se pudo cargar la ficha médica.')
+        }
         this.cargandoFicha.set(false)
       }
     })
@@ -106,9 +117,10 @@ export class PatientMedicalRecord implements OnInit {
   }
 
   abrirGestion(medicacion?: Medication): void {
+    if (this.soloLectura) return
+
     this.gestionVisible.set(true)
     this.medicacionEditar.set(medicacion ?? null)
-    this.gestionVisible.set(true)
   }
 
   cerrarGestion(): void {
@@ -120,7 +132,7 @@ export class PatientMedicalRecord implements OnInit {
   }
 
   cambiarEstado(medicacion: Medication): void {
-    if (this.cambiandoEstadoId() !== null) return
+    if (this.soloLectura || this.cambiandoEstadoId() !== null) return
 
     const nuevoEstado: MedicationStatus = medicacion.status === 'PRESCRIBED' ? 'SUSPENDED' : 'PRESCRIBED'
 
