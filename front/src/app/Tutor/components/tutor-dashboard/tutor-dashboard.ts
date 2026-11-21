@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 import {
-  Tutor,
   TutorInvitation,
   TutorPatient,
 } from '../../models/tutor.model';
@@ -20,7 +19,6 @@ export class TutorDashboard implements OnInit {
   private readonly tutorService = inject(TutorService);
   private readonly alerta = inject(AlertaService);
 
-  readonly profile = signal<Tutor | null>(null);
   readonly patients = signal<TutorPatient[]>([]);
   readonly receivedInvitations = signal<TutorInvitation[]>([]);
   readonly sentInvitations = signal<TutorInvitation[]>([]);
@@ -42,13 +40,11 @@ export class TutorDashboard implements OnInit {
     this.loadError.set(null);
 
     forkJoin({
-      profile: this.tutorService.getMyProfile(),
       patients: this.tutorService.getMyPatients(),
       received: this.tutorService.getReceivedInvitations(),
       sent: this.tutorService.getSentInvitations(),
     }).subscribe({
-      next: ({ profile, patients, received, sent }) => {
-        this.profile.set(profile);
+      next: ({ patients, received, sent }) => {
         this.patients.set(patients ?? []);
         this.receivedInvitations.set(received ?? []);
         this.sentInvitations.set(sent ?? []);

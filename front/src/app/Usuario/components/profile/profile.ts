@@ -4,6 +4,7 @@ import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { Auth } from '../../services/Auth/auth';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 import { FormError } from '../../../Common/form-error/form-error';
+import { DeleteAccount } from '../delete-account/delete-account';
 
 export interface datosUsuario {
   firstName: string;
@@ -26,7 +27,7 @@ function dateValue(value: Date | string): string {
 
 @Component({
   selector: 'app-profile',
-  imports: [FormField, FormError],
+  imports: [FormField, FormError,DeleteAccount],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -40,6 +41,7 @@ export class Profile {
   modificarDatos = signal<boolean>(false);
   subiendoFoto = signal<boolean>(false);
   eliminandoFoto = signal<boolean>(false);
+  private readonly fotoPerfilActualizada = signal<string | null | undefined>(undefined);
 
   readonly datosOriginales = computed(() => {
     const datos = this.profile.value();
@@ -62,15 +64,17 @@ export class Profile {
   });
 
   readonly fotoPerfilUrl = computed(() => {
-    const url = this.profile.value()?.profileImageUrl;
+    const url = this.fotoPerfilActualizada() !== undefined
+      ? this.fotoPerfilActualizada()
+      : this.profile.value()?.profileImageUrl;
 
     if (!url) {
       return null;
     }
 
-    return url.startsWith('http')
+    return /^https?:\/\//i.test(url)
       ? url
-      : `http://localhost:8080${url}`;
+      : `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
   });
 
   readonly modelo = linkedSignal<datosUsuario>(() => {
@@ -171,6 +175,9 @@ export class Profile {
         this.modificarDatos.set(false);
         this.profile.reload();
 
+        // La edad puede cambiar la restricción por tutor.
+        this.auth.refreshSessionUser().subscribe({ error: () => undefined });
+
         this.alerta.mostrarInfo(
           'Se modificaron tus datos exitosamente',
           'Cambios Registrados'
@@ -188,7 +195,12 @@ export class Profile {
   }
 
   seleccionarFoto(evento: Event): void {
-    if (this.esAdmin() || this.subiendoFoto() || this.eliminandoFoto()) {
+    if (
+      this.esAdmin()
+      || !this.modificarDatos()
+      || this.subiendoFoto()
+      || this.eliminandoFoto()
+    ) {
       return;
     }
 
@@ -199,9 +211,9 @@ export class Profile {
       return;
     }
 
-    if (!['image/jpeg', 'image/png'].includes(archivo.type)) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)) {
       this.alerta.mostrarError(
-        'Seleccioná una imagen JPG o PNG.',
+        'Seleccioná una imagen JPG, PNG o WEBP.',
         'Formato no válido'
       );
       input.value = '';
@@ -220,7 +232,8 @@ export class Profile {
     this.subiendoFoto.set(true);
 
     this.userService.uploadProfilePhoto(archivo).subscribe({
-      next: () => {
+      next: (response) => {
+        this.fotoPerfilActualizada.set(response.profileImageUrl);
         this.profile.reload();
 
         this.alerta.mostrarInfo(
@@ -246,7 +259,8 @@ export class Profile {
   quitarFoto(): void {
     if (
       this.esAdmin()
-      || !this.profile.value()?.profileImageUrl
+      || !this.modificarDatos()
+      || !this.fotoPerfilUrl()
       || this.eliminandoFoto()
     ) {
       return;
@@ -256,6 +270,7 @@ export class Profile {
 
     this.userService.removeProfilePhoto().subscribe({
       next: () => {
+        this.fotoPerfilActualizada.set(null);
         this.profile.reload();
 
         this.alerta.mostrarInfo(

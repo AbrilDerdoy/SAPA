@@ -11,5 +11,7 @@ public record ProfileResponseDTO(
         LocalDate birthDate,
         String phoneNumber,
         Long medicalRecordId,
-        String licenseNumber
+        String licenseNumber,
+        boolean requiresTutor,
+        String profileImageUrl
 ) {}

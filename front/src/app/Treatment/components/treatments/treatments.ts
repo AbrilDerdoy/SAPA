@@ -52,18 +52,33 @@ export class Treatments {
   private readonly patientService = inject(PatientService);
 
   readonly isDoctor = readRole() === 'DOCTOR';
+  readonly isTutor = readRole() === 'TUTOR';
 
   readonly patientId = signal<number | null>(
-    this.isDoctor ? Number(this.route.snapshot.paramMap.get('patientId')) || null : null
+    this.isDoctor || this.isTutor
+      ? Number(this.route.snapshot.paramMap.get('patientId')) || null
+      : null
   );
-  private readonly resolvingId = signal(!this.isDoctor);
+  private readonly resolvingId = signal(!this.isDoctor && !this.isTutor);
 
-  readonly title = this.isDoctor ? 'Tratamientos del paciente' : 'Mis tratamientos';
+  readonly title = this.isDoctor || this.isTutor
+    ? 'Tratamientos del paciente'
+    : 'Mis tratamientos';
   readonly lead = this.isDoctor
     ? 'Consultá, agregá y ajustá los tratamientos indicados a este paciente.'
+    : this.isTutor
+      ? 'Consultá los tratamientos indicados al paciente bajo tu tutela.'
     : 'Acá ves los tratamientos indicados para vos.';
-  readonly backLink = this.isDoctor ? '/mis-pacientes' : '/home';
-  readonly backLabel = this.isDoctor ? 'Volver a mis pacientes' : 'Volver al inicio';
+  readonly backLink = this.isDoctor
+    ? '/mis-pacientes'
+    : this.isTutor
+      ? `/tutor/patients/${this.patientId()}/profile`
+      : '/home';
+  readonly backLabel = this.isDoctor
+    ? 'Volver a mis pacientes'
+    : this.isTutor
+      ? 'Volver al perfil del paciente'
+      : 'Volver al inicio';
 
   readonly filterModel = signal({ filter: '' });
   readonly filterForm = form(this.filterModel);
@@ -139,7 +154,7 @@ list = [...list];
   private current?: Subscription;
 
   constructor() {
-    if (!this.isDoctor) {
+    if (!this.isDoctor && !this.isTutor) {
       this.resolvePatient();
     }
 

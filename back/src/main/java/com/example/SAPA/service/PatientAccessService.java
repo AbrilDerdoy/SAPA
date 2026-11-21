@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.util.List;
 
 /**
@@ -117,8 +116,8 @@ public class PatientAccessService {
     }
 
     /**
-     * Regla: un menor de 18 años necesita un tutor activo para operar
-     * sobre datos clínicos.
+     * Regla: un paciente menor de 18 años necesita un tutor activo para
+     * operar sobre el sistema. Sin tutor, solo puede gestionar la tutela.
      */
     @Transactional(readOnly = true)
     public boolean requiresTutor(PatientEntity patient) {
@@ -126,7 +125,7 @@ public class PatientAccessService {
             return false;
         }
 
-        boolean isMinor = Period.between(patient.getBirthDate(), LocalDate.now()).getYears() < 18;
+        boolean isMinor = AgePolicy.isMinor(patient.getBirthDate(), LocalDate.now());
 
         return isMinor && tutorPatientRepository
                 .findByPatientAndStatus(patient, TutorLinkStatus.ACTIVE)

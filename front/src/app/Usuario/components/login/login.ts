@@ -71,7 +71,8 @@ export class Login {
                 || [user.firstName, user.lastName].filter(Boolean).join(' ')
                 || user.email,
               email: user.email,
-              role: user.role
+              role: user.role,
+              requiresTutor: user.requiresTutor === true
             };
 
             console.log('Usuario:', usuario);
@@ -83,6 +84,12 @@ export class Login {
 
             // Notifica a los componentes que la sesión fue iniciada.
             this.auth.notifySessionChanged();
+
+            // Un paciente menor de edad sin tutor solo puede gestionar la tutela.
+            if (usuario.requiresTutor) {
+              this.router.navigate(['/mi-tutor']);
+              return;
+            }
 
             const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 

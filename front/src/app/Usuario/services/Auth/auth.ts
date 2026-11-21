@@ -23,6 +23,7 @@ interface UsuarioSesion {
   username: string;
   email: string;
   role: string;
+  requiresTutor?: boolean;
 }
 
 interface JwtPayload {
@@ -137,6 +138,71 @@ export class Auth {
 
   isAdmin(): boolean {
     return this.getRole() === 'ADMIN';
+  }
+
+  /**
+   * Indica si el paciente autenticado es menor de edad y todavía no tiene un
+   * tutor vinculado. En ese caso solo puede gestionar la tutela.
+   */
+  requiresTutor(): boolean {
+    try {
+      const usuario = JSON.parse(
+        localStorage.getItem(USER_STORAGE_KEY) ?? '{}'
+      );
+
+      return usuario?.requiresTutor === true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Marca la sesión como restringida cuando el backend responde
+   * TUTOR_REQUIRED, aunque el dato local estuviera desactualizado.
+   */
+  markTutorRequired(): void {
+    try {
+      const usuario = JSON.parse(
+        localStorage.getItem(USER_STORAGE_KEY) ?? '{}'
+      );
+
+      if (!usuario || typeof usuario !== 'object') {
+        return;
+      }
+
+      usuario.requiresTutor = true;
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(usuario));
+      this.notifySessionChanged();
+    } catch {
+      // Si no se puede leer la sesión, el guard del backend seguirá actuando.
+    }
+  }
+
+  /**
+   * Vuelve a leer el perfil del usuario y actualiza los datos de sesión.
+   * Se usa después de aceptar o revocar una tutela.
+   */
+  refreshSessionUser(): Observable<Usuario> {
+    return this.guardarDatosUsuario().pipe(
+      tap((user) => {
+        const usuario: UsuarioSesion = {
+          id: user.id,
+          username: user.username
+            || [user.firstName, user.lastName].filter(Boolean).join(' ')
+            || user.email,
+          email: user.email,
+          role: user.role,
+          requiresTutor: user.requiresTutor === true
+        };
+
+        localStorage.setItem(
+          USER_STORAGE_KEY,
+          JSON.stringify(usuario)
+        );
+
+        this.notifySessionChanged();
+      })
+    );
   }
 
   isAuthenticated(): boolean {

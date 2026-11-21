@@ -48,7 +48,10 @@
   overflow-x: auto;
 }
 
-.tutor-tabs button {
+.tutor-tabs button,
+.tutor-tabs a {
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
   padding: 8px 16px;
   border: none;
@@ -62,7 +65,8 @@
   cursor: pointer;
 }
 
-.tutor-tabs button:hover {
+.tutor-tabs button:hover,
+.tutor-tabs a:hover {
   background: var(--primary-light);
   color: var(--primary-dark);
 }
@@ -128,35 +132,6 @@
   font-size: 0.8rem;
 }
 
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 1rem;
-  margin: 0;
-}
-
-.profile-grid div {
-  padding: 0.8rem 0.9rem;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
-.profile-grid dt {
-  margin-bottom: 0.2rem;
-  color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.profile-grid dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-weight: 700;
-}
-
 .patient-list,
 .invitation-list {
   display: grid;
@@ -201,9 +176,10 @@
 }
 
 .patient-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  flex: 0 1 360px;
+  min-width: 280px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.45rem;
 }
 
@@ -219,6 +195,8 @@
   line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .btn:disabled {
@@ -372,7 +350,8 @@
 
   .patient-card__actions {
     width: 100%;
-    justify-content: flex-start;
+    flex-basis: 100%;
+    min-width: 0;
   }
 
   .invite-form__row {

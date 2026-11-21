@@ -12,6 +12,21 @@ type RegistroFormModel = Omit<registerRequest, 'licenseNumber'> & {
   licenseNumber: string;
 };
 
+function fechaHaceMeses(meses: number): string {
+  const fecha = new Date();
+  const dia = fecha.getDate();
+  fecha.setMinutes(fecha.getMinutes() - fecha.getTimezoneOffset());
+  fecha.setDate(1);
+  fecha.setMonth(fecha.getMonth() - meses);
+  const ultimoDiaDelMes = new Date(
+    fecha.getFullYear(),
+    fecha.getMonth() + 1,
+    0
+  ).getDate();
+  fecha.setDate(Math.min(dia, ultimoDiaDelMes));
+  return fecha.toISOString().slice(0, 10);
+}
+
 @Component({
   selector: 'app-registro',
   imports: [FormField,FormError],
@@ -40,6 +55,8 @@ export class Registro {
     hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
     return hoy.toISOString().slice(0, 10);
   })();
+  readonly fechaNacimientoMaximaPaciente = fechaHaceMeses(6);
+  readonly fechaNacimientoMaximaAdulto = fechaHaceMeses(18 * 12);
   readonly errorRegistro = signal<string | null>(null);
   readonly mostrarPassword = signal(false);
   readonly formulario = form(this.modelo, (ruta) => {
@@ -50,11 +67,41 @@ export class Registro {
     required(ruta.firstName, {message: 'El nombre es obligatorio'});
     required(ruta.lastName, {message: 'El apellido es obligatorio'});
     required(ruta.birthDate, {message: 'La fecha de nacimiento es obligatoria'});
-    validate(ruta.birthDate, ({value}) =>
-      value() >= this.fechaMaxima
-        ? {kind: 'past', message: 'La fecha de nacimiento debe ser anterior a hoy'}
-        : undefined
-    );
+    validate(ruta.birthDate, ({value, valueOf}) => {
+      const fecha = value();
+
+      if (!fecha) {
+        return undefined;
+      }
+
+      if (fecha >= this.fechaMaxima) {
+        return {
+          kind: 'past',
+          message: 'La fecha de nacimiento debe ser anterior a hoy'
+        };
+      }
+
+      const rol = valueOf(ruta.role);
+
+      if (rol === 'ROLE_PATIENT' && fecha > this.fechaNacimientoMaximaPaciente) {
+        return {
+          kind: 'minAgePatient',
+          message: 'El paciente debe tener al menos 6 meses de edad para registrarse'
+        };
+      }
+
+      if (
+        (rol === 'ROLE_DOCTOR' || rol === 'ROLE_TUTOR')
+        && fecha > this.fechaNacimientoMaximaAdulto
+      ) {
+        return {
+          kind: 'minAgeAdult',
+          message: 'El médico y el tutor deben ser mayores de 18 años'
+        };
+      }
+
+      return undefined;
+    });
     required(ruta.phoneNumber, {message: 'El telefono es obligatorio'});
     min(ruta.phoneNumber, 1, {message: 'El telefono debe ser positivo'});
     applyWhen(ruta, ({valueOf}) =>
@@ -111,28 +158,41 @@ export class Registro {
     this.auth.register(registro).subscribe({
       next: (res) => {
         console.log('Registro exitoso', res);
-        if(this.modelo().role === 'ROLE_DOCTOR'){
-          this.alerta.mostrarInfo('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión','Espere la aprobacion de un administrador')
-        } else {
-          localStorage.setItem('jwt',JSON.stringify(res));  
-          this.auth.guardarDatosUsuario().subscribe({
-            next: (user) => {
-              localStorage.setItem('usuario', JSON.stringify({
-                id: user.id,
-                username: user.username
-                  || [user.firstName, user.lastName].filter(Boolean).join(' ')
-                  || user.email,
-                email: user.email,
-                role: user.role
-              }));
-              this.auth.notifySessionChanged();
-            },
-            error: (err) => {
-              console.error('No se pudo obtener el usuario registrado:', err);
-            }
-          });
+
+        if (this.modelo().role === 'ROLE_DOCTOR') {
+          this.alerta.mostrarInfo(
+            'Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión',
+            'Espere la aprobacion de un administrador'
+          );
+          this.router.navigate(['/home']);
+          return;
         }
-          this.router.navigate(['/home'])
+
+        localStorage.setItem('jwt', JSON.stringify(res));
+
+        this.auth.guardarDatosUsuario().subscribe({
+          next: (user) => {
+            const usuario = {
+              id: user.id,
+              username: user.username
+                || [user.firstName, user.lastName].filter(Boolean).join(' ')
+                || user.email,
+              email: user.email,
+              role: user.role,
+              requiresTutor: user.requiresTutor === true
+            };
+
+            localStorage.setItem('usuario', JSON.stringify(usuario));
+            this.auth.notifySessionChanged();
+
+            // Si es menor de edad, arranca directamente en la gestión de tutela.
+            this.router.navigate([usuario.requiresTutor ? '/mi-tutor' : '/home']);
+          },
+          error: (err) => {
+            console.error('No se pudo obtener el usuario registrado:', err);
+            this.router.navigate(['/home']);
+          }
+        });
       },
       error: (err: HttpErrorResponse) => {
         const detalle = this.mensajeError(err);

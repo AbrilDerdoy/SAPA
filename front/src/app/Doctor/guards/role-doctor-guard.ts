@@ -11,7 +11,7 @@ function getRole(): string {
   }
 }
 
-const roleGuard = (allowedRoles: string[]): CanActivateFn => () => {
+const roleGuard = (allowedRoles: string[]): CanActivateFn => (_route, state) => {
   const auth = inject(Auth);
   const router = inject(Router);
 
@@ -20,6 +20,10 @@ const roleGuard = (allowedRoles: string[]): CanActivateFn => () => {
   }
 
   if (allowedRoles.includes(getRole())) {
+    if (auth.requiresTutor() && !state.url.startsWith('/mi-tutor')) {
+      return router.createUrlTree(['/mi-tutor']);
+    }
+
     return true;
   }
 

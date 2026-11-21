@@ -4,6 +4,7 @@ import { Routes } from '@angular/router';
 import { roleGuard } from './FollowRequest/guards/role-guard';
 import { adminGuard } from './Usuario/guards/admin-guard';
 import { doctorGuard, patientGuard } from './Doctor/guards/role-doctor-guard';
+import { tutorRequirementGuard } from './Tutor/guards/tutor-requirement-guard';
 
 import { Home } from './home/home';
 import { Forum } from './forum/forum-component/forum/forum';
@@ -39,21 +40,21 @@ export const routes: Routes = [
   { path: 'home', component: Home },
 
   // Foros
-  { path: 'forums', component: Forum },
-  { path: 'forums/create', component: CreateForum },
-  { path: 'forums/update/:titleForum', component: UpdateForum },
-  { path: 'posts/:postId', component: Post},
-  { path: 'forums/:titleForum', component: Post },
+  { path: 'forums', canActivate: [tutorRequirementGuard], component: Forum },
+  { path: 'forums/create', canActivate: [tutorRequirementGuard], component: CreateForum },
+  { path: 'forums/update/:titleForum', canActivate: [tutorRequirementGuard], component: UpdateForum },
+  { path: 'posts/:postId', canActivate: [tutorRequirementGuard], component: Post},
+  { path: 'forums/:titleForum', canActivate: [tutorRequirementGuard], component: Post },
 
   // Publicaciones guardadas
-  { path: 'saved', component: SavedPost },
+  { path: 'saved', canActivate: [tutorRequirementGuard], component: SavedPost },
 
   // Recuperación de contraseña
   { path: 'forgotPassword', component: ForgotPassword },
   { path: 'resetPassword', component: ResetPassword },
 
   // Perfil
-  { path: 'profile', component: Profile },
+  { path: 'profile', canActivate: [tutorRequirementGuard], component: Profile },
 
   // Chat
   {
@@ -95,6 +96,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./Tutor/components/tutor-patient-profile/tutor-patient-profile')
         .then(m => m.TutorPatientProfile)
+  },
+  {
+    path: 'tutor/patients/:patientId/treatments',
+    canActivate: [roleGuard(['TUTOR'])],
+    loadComponent: () =>
+      import('./Treatment/components/treatments/treatments')
+        .then(m => m.Treatments)
   },
   {
     path: 'tutor-invitation',
@@ -163,7 +171,7 @@ export const routes: Routes = [
   },
 
   // Doctor
-  { path: 'perfil-medico-publico/:doctorId', component: DoctorProfilePublic },
+  { path: 'perfil-medico-publico/:doctorId', canActivate: [tutorRequirementGuard], component: DoctorProfilePublic },
   {
     path: 'perfil-medico', canActivate: [doctorGuard], loadComponent: () =>
       import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)

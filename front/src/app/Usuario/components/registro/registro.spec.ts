@@ -25,6 +25,7 @@ describe('Registro', () => {
     specialities: {
       isLoading: () => false,
       error: () => null,
+      hasValue: () => true,
       value: () => [],
     },
   };
@@ -55,7 +56,7 @@ describe('Registro', () => {
 
   it('toggles password visibility without submitting the form', () => {
     const input: HTMLInputElement = fixture.nativeElement.querySelector('input[type="password"]');
-    const toggle: HTMLButtonElement = fixture.nativeElement.querySelector('.btn-toggle-password');
+    const toggle: HTMLButtonElement = fixture.nativeElement.querySelector('.reg-password__toggle');
     const submit = vi.spyOn(component, 'enviar');
 
     expect(input.type).toBe('password');
@@ -64,7 +65,7 @@ describe('Registro', () => {
 
     expect(input.type).toBe('text');
     expect(toggle.getAttribute('aria-pressed')).toBe('true');
-    expect(toggle.querySelector('img')?.getAttribute('src')).toBe('/images/eye-off.svg');
+    expect(toggle.querySelector('img')?.getAttribute('src')).toBe('/images/eye.svg');
     expect(submit).not.toHaveBeenCalled();
   });
 
@@ -83,7 +84,7 @@ describe('Registro', () => {
 
     const licenseLabel = Array.from(
       fixture.nativeElement.querySelectorAll('label') as NodeListOf<HTMLLabelElement>,
-    ).find((label) => label.textContent?.includes('Matricula'));
+    ).find((label) => label.textContent?.includes('Matrícula'));
 
     expect(licenseLabel?.textContent).toContain('La matricula es obligatoria');
     expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
@@ -132,6 +133,27 @@ describe('Registro', () => {
 
     expect(component.formulario.birthDate().invalid()).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('La fecha de nacimiento debe ser anterior a hoy');
+  });
+
+  it('rejects a patient birth date less than six months ago', () => {
+    const [year, month, day] = component.fechaNacimientoMaximaPaciente
+      .split('-')
+      .map(Number);
+    const tooYoungDate = new Date(Date.UTC(year, month - 1, day + 1));
+    const birthDate = tooYoungDate.toISOString().slice(0, 10);
+
+    component.modelo.update((datos) => ({
+      ...datos,
+      role: 'ROLE_PATIENT',
+      birthDate
+    }));
+
+    component.enviar(new Event('submit'));
+
+    expect(component.formulario.birthDate().invalid()).toBe(true);
+    expect(component.formulario.birthDate().errors()[0]?.message)
+      .toContain('al menos 6 meses');
+    expect(authMock.register).not.toHaveBeenCalled();
   });
 
   it('shows only the message from a JSON-string server error', () => {

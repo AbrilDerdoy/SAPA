@@ -10,6 +10,15 @@
     </div>
   </header>
 
+  @if (restricted()) {
+    <div class="notice notice--restricted" role="status">
+      <span>
+        Tu cuenta está restringida porque sos menor de 18 años. Para habilitar
+        el resto de las funciones de SAPA, vinculá un tutor desde esta sección.
+      </span>
+    </div>
+  }
+
   @if (loading()) {
     <p class="muted">Cargando información de tutela...</p>
   } @else if (loadError()) {

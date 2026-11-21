@@ -2,9 +2,11 @@
 <main class="home">
   <div class="home-layout">
 
-    <aside class="home-sidebar">
-      <app-health-tip-carousel />
-    </aside>
+    @if (!restricted()) {
+      <aside class="home-sidebar">
+        <app-health-tip-carousel />
+      </aside>
+    }
 
     <section class="home-main">
 
@@ -16,6 +18,26 @@
           a herramientas que acompañan tu bienestar.
         </p>
       </section>
+
+      @if (restricted()) {
+        <section class="restriction-notice">
+          <div class="restriction-notice__icon" aria-hidden="true">🔒</div>
+
+          <div>
+            <span class="section-label">CUENTA RESTRINGIDA</span>
+            <h2>Necesitás un tutor para continuar</h2>
+            <p>
+              Como sos menor de 18 años, por ahora solo podés solicitar o
+              aceptar una tutela. Cuando tu tutor quede vinculado, se habilitarán
+              el resto de las funciones de SAPA.
+            </p>
+          </div>
+
+          <a routerLink="/mi-tutor" class="card-button">
+            Solicitar tutela
+          </a>
+        </section>
+      } @else {
 
       @if (isPatient) {
         <section class="questionnaires-home">
@@ -96,6 +118,8 @@
           </a>
         </article>
       </section>
+
+      }
 
     </section>
 

@@ -2,6 +2,7 @@ package com.example.SAPA.DTOs.Request;
 
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ public record UpdatePatientRequestDTO(
         @Size(max = 50, message = "El apellido no puede superar los 50 caracteres.")
         String lastName,
 
+        @NotNull(message = "La fecha de nacimiento es obligatoria.")
         @Past(message = "La fecha de nacimiento debe ser una fecha pasada.")
         LocalDate birthDate,
 

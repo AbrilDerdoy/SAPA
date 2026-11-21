@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { forkJoin, Observable } from 'rxjs';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
+import { Auth } from '../../../Usuario/services/Auth/auth';
 import { PatientService } from '../../../Usuario/services/Patient/patient.service';
 import {
   Tutor,
@@ -18,8 +19,10 @@ import { TutorService } from '../../services/tutor.service';
 export class PatientTutor implements OnInit {
   private readonly tutorService = inject(TutorService);
   private readonly patientService = inject(PatientService);
+  private readonly auth = inject(Auth);
   private readonly alerta = inject(AlertaService);
 
+  readonly restricted = signal(this.auth.requiresTutor());
   readonly tutor = signal<Tutor | null>(null);
   readonly receivedInvitations = signal<TutorInvitation[]>([]);
   readonly sentInvitations = signal<TutorInvitation[]>([]);
@@ -53,6 +56,7 @@ export class PatientTutor implements OnInit {
         this.tutor.set(tutor);
         this.receivedInvitations.set(received ?? []);
         this.sentInvitations.set(sent ?? []);
+        this.restricted.set(this.auth.requiresTutor());
         this.loading.set(false);
       },
       error: () => {
@@ -166,12 +170,24 @@ export class PatientTutor implements OnInit {
         this.alerta.mostrarInfo(successMessage, 'Tutela');
 
         if (reload) {
+          this.refreshSession();
           this.loadSection();
         }
       },
       error: (error) => {
         this.busy.set(null);
         this.actionError.set(this.extractError(error));
+      },
+    });
+  }
+
+  private refreshSession(): void {
+    this.auth.refreshSessionUser().subscribe({
+      next: () => {
+        this.restricted.set(this.auth.requiresTutor());
+      },
+      error: () => {
+        // El backend sigue aplicando la restricción aunque falle el refresco.
       },
     });
   }

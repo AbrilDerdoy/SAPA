@@ -89,7 +89,10 @@
       <div class="reg-row">
         <label class="reg-field">
           <span class="reg-label">Fecha de nacimiento</span>
-          <input type="date" autocomplete="bday" [formField]="formulario.birthDate">
+          <input
+            type="date"
+            autocomplete="bday"
+            [formField]="formulario.birthDate">
           <app-form-error [field]="formulario.birthDate()" />
         </label>
         <label class="reg-field">
@@ -98,6 +101,14 @@
           <app-form-error [field]="formulario.phoneNumber()" />
         </label>
       </div>
+
+      @if (modelo().role === 'ROLE_PATIENT') {
+        <p class="reg-help" role="note">
+          Los pacientes pueden registrarse desde los 6 meses de edad. Si el
+          paciente es menor de 18 años, necesitará vincular un tutor para usar
+          las demás funciones del sistema.
+        </p>
+      }
 
       @if (modelo().role === 'ROLE_DOCTOR') {
         <div class="reg-row">

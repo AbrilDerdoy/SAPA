@@ -33,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -64,10 +65,13 @@ public class UserService {
     private final UserMapper userMapper;
     private final SpecialityRepository specialityRepository;
     private final NotificationService notificationService;
+    private final PatientAccessService patientAccessService;
 
 
     @Transactional
     public AuthResponse registerUser(RegisterRequest request) {
+
+        validateRegistrationAge(request);
 
         if (request.role() == Role.ROLE_DOCTOR) {
             if (request.licenseNumber() == null || request.licenseNumber().isBlank()) {
@@ -166,6 +170,72 @@ public class UserService {
         return new AuthResponse(accessToken, refreshToken);
     }
 
+    /**
+     * Los pacientes pueden registrarse desde los 6 meses de edad. Los médicos
+     * y tutores, en cambio, deben ser mayores de edad porque ejercen funciones
+     * profesionales o de representación legal.
+     */
+    private void validateRegistrationAge(RegisterRequest request) {
+        LocalDate birthDate = request.birthDate();
+        LocalDate today = LocalDate.now();
+
+        validatePastBirthDate(birthDate, today);
+
+        if (request.role() == Role.ROLE_PATIENT) {
+            if (!AgePolicy.isAtLeastMonthsOld(
+                    birthDate,
+                    AgePolicy.MIN_PATIENT_AGE_MONTHS,
+                    today
+            )) {
+                throw new IllegalArgumentException(
+                        "El paciente debe tener al menos 6 meses de edad para registrarse.");
+            }
+            return;
+        }
+
+        if (request.role() == Role.ROLE_DOCTOR || request.role() == Role.ROLE_TUTOR) {
+            if (!AgePolicy.isAdult(birthDate, today)) {
+                throw new IllegalArgumentException(
+                        "El médico y el tutor deben ser mayores de 18 años.");
+            }
+        }
+    }
+
+    private void validateProfileAge(LocalDate birthDate, UserCategory role) {
+        LocalDate today = LocalDate.now();
+
+        validatePastBirthDate(birthDate, today);
+
+        if (role == UserCategory.PATIENT) {
+            if (!AgePolicy.isAtLeastMonthsOld(
+                    birthDate,
+                    AgePolicy.MIN_PATIENT_AGE_MONTHS,
+                    today
+            )) {
+                throw new IllegalArgumentException(
+                        "El paciente debe tener al menos 6 meses de edad.");
+            }
+            return;
+        }
+
+        if ((role == UserCategory.DOCTOR || role == UserCategory.TUTOR)
+                && !AgePolicy.isAdult(birthDate, today)) {
+            throw new IllegalArgumentException(
+                    "El médico y el tutor deben ser mayores de 18 años.");
+        }
+    }
+
+    private void validatePastBirthDate(LocalDate birthDate, LocalDate today) {
+        if (birthDate == null) {
+            throw new IllegalArgumentException("La fecha de nacimiento es obligatoria.");
+        }
+
+        if (!birthDate.isBefore(today)) {
+            throw new IllegalArgumentException(
+                    "La fecha de nacimiento debe ser anterior a hoy.");
+        }
+    }
+
 
     @Transactional(readOnly = true)
     public UserResponseDTO getMyProfile(String email) {
@@ -181,6 +251,8 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
         CredentialEntity credential = credentialRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Credenciales del usuario no encontradas"));
+
+        validateProfileAge(request.birthDate(), user.getRole());
 
         if (!user.getEmail().equals(request.email())
                 && (userRepository.existsByEmail(request.email())
@@ -288,6 +360,7 @@ public class UserService {
         });
     }
 
+    @Transactional(readOnly = true)
     public ProfileResponseDTO getProfile(String email) {
 
         UserEntity user = userRepository.findByEmail(email)
@@ -303,7 +376,9 @@ public class UserService {
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    false,
+                    user.getProfileImageUrl()
             );
         }
 
@@ -323,7 +398,9 @@ public class UserService {
                     patient.getMedicalRecord() != null
                             ? patient.getMedicalRecord().getId()
                             : null,
-                    null
+                    null,
+                    patientAccessService.requiresTutor(patient),
+                    user.getProfileImageUrl()
             );
         }
 
@@ -341,7 +418,9 @@ public class UserService {
                     tutor.getBirthDate(),
                     tutor.getPhoneNumber(),
                     null,
-                    null
+                    null,
+                    false,
+                    user.getProfileImageUrl()
             );
         }
 
@@ -357,7 +436,9 @@ public class UserService {
                 doctor.getBirthDate(),
                 doctor.getPhoneNumber(),
                 null,
-                doctor.getLicenseNumber()
+                doctor.getLicenseNumber(),
+                false,
+                user.getProfileImageUrl()
         );
     }
     private void notifyAdminsOfNewDoctorRegistration(DoctorEntity doctor) {

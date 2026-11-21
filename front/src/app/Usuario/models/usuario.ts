@@ -4,5 +4,7 @@ export interface Usuario {
     firstName?:string,
     lastName?:string,
     role:string,
-    email:string
+    email:string,
+    birthDate?: string | null,
+    requiresTutor?: boolean
 }

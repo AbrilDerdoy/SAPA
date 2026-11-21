@@ -236,6 +236,14 @@
   color: var(--danger-strong);
 }
 
+.notice--restricted {
+  margin-bottom: 1rem;
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  color: var(--primary-dark);
+  line-height: 1.5;
+}
+
 .notice button {
   flex-shrink: 0;
   background: var(--surface);

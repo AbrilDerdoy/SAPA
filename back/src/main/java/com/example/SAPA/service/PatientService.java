@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,10 +43,30 @@ public class PatientService {
 
         PatientEntity patient = patientAccessService.resolve(patientId);
 
+        validatePatientBirthDate(request.birthDate());
+
         patient.setFirstName(request.firstName());
         patient.setLastName(request.lastName());
         patient.setBirthDate(request.birthDate());
         patient.setPhoneNumber(request.phoneNumber());
+    }
+
+    private void validatePatientBirthDate(LocalDate birthDate) {
+        LocalDate today = LocalDate.now();
+
+        if (!birthDate.isBefore(today)) {
+            throw new IllegalArgumentException(
+                    "La fecha de nacimiento debe ser anterior a hoy.");
+        }
+
+        if (!AgePolicy.isAtLeastMonthsOld(
+                birthDate,
+                AgePolicy.MIN_PATIENT_AGE_MONTHS,
+                today
+        )) {
+            throw new IllegalArgumentException(
+                    "El paciente debe tener al menos 6 meses de edad.");
+        }
     }
 
     @Transactional(readOnly = true)

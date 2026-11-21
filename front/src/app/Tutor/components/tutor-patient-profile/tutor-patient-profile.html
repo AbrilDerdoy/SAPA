@@ -72,6 +72,11 @@
 
         <div class="form-actions">
           <a class="btn btn--outline" routerLink="/tutor">Cancelar</a>
+          <a
+            class="btn btn--outline"
+            [routerLink]="['/tutor/patients', currentPatient.patientId, 'treatments']">
+            Ver tratamientos
+          </a>
           <button type="submit" class="btn btn--primary" [disabled]="saving()">
             @if (saving()) {
               Guardando...

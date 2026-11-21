@@ -3,8 +3,10 @@ package com.example.SAPA.security.config;
 
 import com.example.SAPA.security.filters.JwtAuthenticationFilter;
 import com.example.SAPA.security.filters.RestAuthenticationEntryPoint;
+import com.example.SAPA.security.filters.TutorRequirementFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -35,6 +37,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TutorRequirementFilter tutorRequirementFilter;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     private static final String[] PATIENT_AND_DOCTOR = {
@@ -58,6 +61,16 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public FilterRegistrationBean<TutorRequirementFilter> tutorRequirementFilterRegistration(
+            TutorRequirementFilter filter
+    ) {
+        FilterRegistrationBean<TutorRequirementFilter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
@@ -281,6 +294,11 @@ public class SecurityConfig {
             .addFilterBefore(
                     jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class
+            )
+
+            .addFilterAfter(
+                    tutorRequirementFilter,
+                    JwtAuthenticationFilter.class
             )
 
             .exceptionHandling(exception -> exception

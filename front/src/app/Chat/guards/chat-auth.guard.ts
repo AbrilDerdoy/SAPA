@@ -8,6 +8,10 @@ export const chatAuthGuard: CanActivateFn = (_route, state) => {
   const router = inject(Router);
 
   if (auth.isAuthenticated()) {
+    if (auth.requiresTutor()) {
+      return router.createUrlTree(['/mi-tutor']);
+    }
+
     return true;
   }
 

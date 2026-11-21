@@ -23,43 +23,10 @@
     }
 
     <nav class="tutor-tabs" aria-label="Secciones del panel">
-      <button type="button" (click)="scrollTo('perfil')">Perfil</button>
+      <a routerLink="/profile">Mi perfil</a>
       <button type="button" (click)="scrollTo('pacientes')">Pacientes</button>
       <button type="button" (click)="scrollTo('invitaciones')">Invitaciones</button>
     </nav>
-
-    @if (profile(); as tutor) {
-      <section class="panel" id="perfil">
-        <div class="panel-heading">
-          <div>
-            <span class="panel-label">Tu perfil</span>
-            <h2>{{ tutor.firstName }} {{ tutor.lastName }}</h2>
-          </div>
-          <div class="avatar" aria-hidden="true">
-            {{ getInitials(tutor.firstName, tutor.lastName) }}
-          </div>
-        </div>
-
-        <dl class="profile-grid">
-          <div>
-            <dt>Correo electrónico</dt>
-            <dd>{{ tutor.email }}</dd>
-          </div>
-          <div>
-            <dt>Teléfono</dt>
-            <dd>{{ tutor.phoneNumber }}</dd>
-          </div>
-          <div>
-            <dt>Vínculo</dt>
-            <dd>{{ tutor.relationship }}</dd>
-          </div>
-          <div>
-            <dt>Fecha de nacimiento</dt>
-            <dd>{{ tutor.birthDate | date: 'dd/MM/yyyy' }}</dd>
-          </div>
-        </dl>
-      </section>
-    }
 
     <section class="panel" id="pacientes">
       <div class="panel-heading">

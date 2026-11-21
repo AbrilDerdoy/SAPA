@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FollowRequest } from './follow-requests';
+import { FollowRequests } from './follow-requests';
 
-describe('FollowRequest', () => {
-  let component: FollowRequest;
-  let fixture: ComponentFixture<FollowRequest>;
+describe('FollowRequests', () => {
+  let component: FollowRequests;
+  let fixture: ComponentFixture<FollowRequests>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FollowRequest],
+      imports: [FollowRequests],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(FollowRequest);
+    fixture = TestBed.createComponent(FollowRequests);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

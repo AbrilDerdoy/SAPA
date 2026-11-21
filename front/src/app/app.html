@@ -29,60 +29,68 @@
           </a>
         </li>
 
-        <li></li>
-
-        <li>
-          <a
-            routerLink="/forums"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact: true}"
-            #foros="routerLinkActive">
-
-            <img
-              [src]="foros.isActive
-                ? '/images/signpost-t.png'
-                : '/images/signpost.png'">
-
-            Foros
-          </a>
-        </li>
-
-        <li>
-          <a
-            routerLink="/saved"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{exact: true}"
-            #guardados="routerLinkActive">
-
-            <img
-              [src]="guardados.isActive
-                ? '/images/bookmark-fill-t.png'
-                : '/images/bookmark.png'">
-
-            Guardados
-          </a>
-        </li>
-
-        <li>
-          <a routerLink="/medicamentos">
-            Medicamentos
-          </a>
-        </li>
-
-        @if (role() === 'PATIENT' || role() === 'DOCTOR') {
-          <li class="nav-search">
-            <app-doctor-quick-search />
-          </li>
-        }
-        @if(role()==='TUTOR'){
+        @if (requiresTutor()) {
           <li>
-            <a routerLink="medicos">
-              Buscar Medicos
+            <a routerLink="/mi-tutor">
+              Solicitar tutela
             </a>
           </li>
-        }
+        } @else {
 
-        <li>
+          <li></li>
+
+          <li>
+            <a
+              routerLink="/forums"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{exact: true}"
+              #foros="routerLinkActive">
+
+              <img
+                [src]="foros.isActive
+                  ? '/images/signpost-t.png'
+                  : '/images/signpost.png'">
+
+              Foros
+            </a>
+          </li>
+
+          <li>
+            <a
+              routerLink="/saved"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{exact: true}"
+              #guardados="routerLinkActive">
+
+              <img
+                [src]="guardados.isActive
+                  ? '/images/bookmark-fill-t.png'
+                  : '/images/bookmark.png'">
+
+              Guardados
+            </a>
+          </li>
+
+          <li>
+            <a routerLink="/medicamentos">
+              Medicamentos
+            </a>
+          </li>
+
+          @if (role() === 'PATIENT' || role() === 'DOCTOR') {
+            <li class="nav-search">
+              <app-doctor-quick-search />
+            </li>
+          }
+          @if(role()==='TUTOR'){
+            <li>
+              <a routerLink="medicos">
+                Buscar Medicos
+              </a>
+            </li>
+          }
+
+        }
 
       }
 
@@ -92,7 +100,9 @@
 
       @if (auth.isAuthenticated()) {
 
-        <app-notification-menu/>
+        @if (!requiresTutor()) {
+          <app-notification-menu/>
+        }
         <app-user-menu/>
 
       } @else {
@@ -120,7 +130,7 @@
   <router-outlet/>
 </main>
 
-@if (auth.isAuthenticated()) {
+@if (auth.isAuthenticated() && !requiresTutor()) {
   <app-chat-bubble/>
 }
 
