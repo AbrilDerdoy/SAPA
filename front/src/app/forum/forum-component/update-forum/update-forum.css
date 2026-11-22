@@ -1,89 +1,140 @@
 .update-forum {
-    width: min(650px, 92%);
-    margin: 45px auto;
-    padding: 32px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
+  width: min(700px, 94%);
+  margin: 40px auto;
+  padding: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
 }
 
 .update-forum h1 {
-    color: var(--primary-dark);
-    font-size: 1.8rem;
-    margin: 0 0 28px;
-    text-align: center;
+  color: var(--primary-dark);
+  font-size: 1.9rem;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+  margin: 0 0 32px;
+  text-align: left;
 }
 
 .update-forum form {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
 }
 
 .update-forum .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .update-forum label {
-    color: var(--text);
-    font-weight: 600;
+  color: var(--text);
+  font-weight: 650;
+  font-size: 0.95rem;
 }
 
 .update-forum input,
 .update-forum textarea {
-    width: 100%;
+  width: 100%;
 }
 
 .update-forum textarea {
-    min-height: 150px;
+  min-height: 160px;
+  resize: vertical;
+  line-height: 1.6;
 }
 
 .update-forum .error {
-    color: var(--danger);
-    font-size: 0.875rem;
-    margin: 0;
+  color: var(--danger);
+  font-size: 0.875rem;
+  margin: 0;
 }
 
-.update-forum > p {
-    text-align: center;
-    color: var(--text-muted);
+.update-forum>p {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
 }
 
 .update-forum .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.update-forum .form-actions button {
+  min-width: 130px;
 }
 
 .update-forum .form-actions button:last-child {
-    background: var(--neutral-bg);
-    color: var(--neutral-text);
+  background: var(--neutral-bg);
+  color: var(--neutral-text);
 }
 
 .update-forum .form-actions button:last-child:hover {
-    background: var(--neutral-hover);
+  background: var(--neutral-hover);
+}
+
+.update-forum input[type="file"] {
+  padding: 12px;
+  background: var(--primary-light);
+  border: 1px dashed #8bcac4;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.image-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.image-preview-container p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.image-preview {
+  width: 100%;
+  max-width: 350px;
+  height: 200px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--primary-light);
+}
+
+.image-placeholder {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 @media (max-width: 600px) {
-    .update-forum {
-        width: 94%;
-        margin: 24px auto;
-        padding: 22px 18px;
-    }
+  .update-forum {
+    width: 94%;
+    margin: 24px auto;
+    padding: 24px 20px;
+    border-radius: 16px;
+  }
 
-    .update-forum h1 {
-        font-size: 1.5rem;
-    }
+  .update-forum h1 {
+    font-size: 1.6rem;
+  }
 
-    .update-forum .form-actions {
-        flex-direction: column;
-    }
+  .update-forum .form-actions {
+    flex-direction: column-reverse;
+  }
 
-    .update-forum .form-actions button {
-        width: 100%;
-    }
+  .update-forum .form-actions button {
+    width: 100%;
+  }
 }
