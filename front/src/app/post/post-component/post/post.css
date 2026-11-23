@@ -117,7 +117,7 @@
 }
 
 .edit-button:hover {
-    background-color: #d5efeb;
+  background-color: #d5efeb;
 }
 
 .delete-button {
@@ -157,38 +157,38 @@
 
 .share-button,
 .save-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 7px;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 7px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .share-button:hover,
 .save-button:hover {
-    background-color: var(--primary-light);
-    transform: scale(1.08);
+  background-color: var(--primary-light);
+  transform: scale(1.08);
 }
 
 .share-button img,
 .save-button img {
-    width: 21px;
-    height: 21px;
-    object-fit: contain;
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
 }
 
 .share-button img {
-    opacity: 0.75;
+  opacity: 0.75;
 }
 
 .share-button:hover img {
-    opacity: 1;
+  opacity: 1;
 }
 
 .forum-cover {
@@ -223,6 +223,36 @@
   color: white;
 }
 
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+app-post-comment {
+  flex: 1;
+  min-width: 0;
+}
+
+.share-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 5px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.share-button img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
 @media (max-width: 600px) {
   .posts-header {
     align-items: stretch;
@@ -241,7 +271,7 @@
     flex-direction: column;
   }
 
-    .forum-cover {
+  .forum-cover {
     min-height: 200px;
     padding: 18px;
     align-items: stretch;

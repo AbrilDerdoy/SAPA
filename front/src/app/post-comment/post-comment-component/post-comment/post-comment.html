@@ -1,0 +1,96 @@
+<section class="comments-section">
+    <button type="button" class="comments-toggle" (click)="toggleComments()" [attr.aria-expanded]="commentsVisible()"
+        aria-label="Mostrar u ocultar comentarios">
+
+        <img [src]="commentsVisible()
+        ? '/images/speech-bubble-t.png'
+        : '/images/speech-bubble.png'" alt="">
+
+        <span>Comentarios ({{ comments().length }})</span>
+    </button>
+
+    @if (commentsVisible()) {
+
+    @if (loading()) {
+    <p>Cargando comentarios...</p>
+    } @else {
+
+    @for (comment of comments(); track comment.commentId) {
+    <article class="comment-card">
+
+        <div class="comment-header">
+            <strong>{{ comment.authorName }}</strong>
+            <span>{{ comment.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+
+        <p>{{ comment.content }}</p>
+
+        @if (sesionIniciada && esPropietario(comment)) {
+        <div class="comment-menu">
+
+            <button type="button" class="menu-toggle" (click)="toggleMenu(comment.commentId); $event.stopPropagation()"
+                aria-label="Opciones del comentario" [attr.aria-expanded]="openMenuId() === comment.commentId">
+
+                <img src="/images/menu.svg" alt="">
+            </button>
+
+            @if (openMenuId() === comment.commentId) {
+            <div class="comment-menu-dropdown" (click)="$event.stopPropagation()">
+
+                <button type="button" class="edit-option" (click)="editComment(comment)">
+                    Editar
+                </button>
+
+                <button type="button" class="delete-option" (click)="deleteComment(comment.commentId)">
+                    Eliminar
+                </button>
+
+            </div>
+            }
+        </div>
+        }
+
+    </article>
+    } @empty {
+    <p class="empty-comments">Todavía no hay comentarios.</p>
+    }
+    }
+
+    @if (sesionIniciada) {
+
+    @if (!commentFormVisible()) {
+    <button type="button" class="open-comment-button" (click)="openCommentForm()">
+        Comentar
+    </button>
+    }
+
+    @if (commentFormVisible()) {
+    <form class="new-comment" (submit)="saveComment(); $event.preventDefault()">
+
+        <textarea [formField]="commentForm.content" placeholder="Escribí un comentario...">
+          </textarea>
+
+        @if (commentForm.content().touched() && commentForm.content().invalid()) {
+        @for (error of commentForm.content().errors(); track $index) {
+        <p class="error-message">{{ error.message }}</p>
+        }
+        }
+
+        <div class="comment-actions">
+            <button type="submit" [disabled]="!commentForm().valid()">
+                {{ editingCommentId() !== null ? 'Guardar cambios' : 'Publicar' }}
+            </button>
+
+            <button type="button" class="cancel-button" (click)="cancelComment()">
+                Cancelar
+            </button>
+        </div>
+    </form>
+    }
+    }
+
+    @if (error()) {
+    <p class="error-message">{{ error() }}</p>
+    }
+    }
+</section>
