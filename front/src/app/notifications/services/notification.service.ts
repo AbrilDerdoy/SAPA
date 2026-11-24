@@ -20,4 +20,11 @@ export class NotificationService {
       {},
     );
   }
+
+  markAllAsRead(): Observable<NotificationResponse[]> {
+    return this.http.patch<NotificationResponse[]>(
+      `${this.baseUrl}/read-all`,
+      {},
+    );
+  }
 }
