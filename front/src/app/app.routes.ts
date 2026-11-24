@@ -29,6 +29,9 @@ import { SharedPost } from './post/post-component/shared-post/shared-post';
 import { NotFound } from './Common/not-found/not-found';
 import { TerminosYCondiciones } from './Common/terminos-y-condiciones/terminos-y-condiciones';
 
+// Historial de notificaciones
+import { NotificationHistory } from './notifications/components/notification-history/notification-history';
+
 export const routes: Routes = [
 
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -130,7 +133,9 @@ export const routes: Routes = [
 
   // Medicamentos
   {
-    path: 'medicamentos', canActivate: [roleGuard(['PATIENT', 'DOCTOR'])], loadComponent: () =>
+    path: 'medicamentos',
+    canActivate: [roleGuard(['PATIENT', 'DOCTOR'])],
+    loadComponent: () =>
       import('./Medication/components/medication-search/medication-search')
         .then(m => m.MedicationSearch)
   },
@@ -165,6 +170,13 @@ export const routes: Routes = [
     component: QuestionnaireHistory
   },
 
+  // Historial de notificaciones
+  {
+    path: 'historial-notificaciones',
+    canActivate: [tutorRequirementGuard],
+    component: NotificationHistory
+  },
+
   // Administración
   {
     path: 'admin',
@@ -175,35 +187,61 @@ export const routes: Routes = [
   // Doctor
   { path: 'perfil-medico-publico/:doctorId', canActivate: [tutorRequirementGuard], component: DoctorProfilePublic },
   {
-    path: 'perfil-medico', canActivate: [doctorGuard], loadComponent: () =>
-      import('./Doctor/components/doctor-profile/doctor-profile').then((m) => m.DoctorProfile)
+    path: 'perfil-medico',
+    canActivate: [doctorGuard],
+    loadComponent: () =>
+      import('./Doctor/components/doctor-profile/doctor-profile')
+        .then(m => m.DoctorProfile)
   },
   {
-    path: 'medicos', canActivate: [roleGuard(['PATIENT', 'TUTOR', 'DOCTOR'])], loadComponent: () =>
-      import('./Doctor/components/doctor-search/doctor-search').then((m) => m.DoctorSearch)
+    path: 'medicos',
+    canActivate: [roleGuard(['PATIENT', 'TUTOR', 'DOCTOR'])],
+    loadComponent: () =>
+      import('./Doctor/components/doctor-search/doctor-search')
+        .then(m => m.DoctorSearch)
   },
 
-  { path: 'medical-record', canActivate: [roleGuard(['PATIENT', 'TUTOR'])], component: MyMedicalRecord },
-  { path: 'patient-medical-record/:patientId', canActivate: [roleGuard(['DOCTOR', 'TUTOR'])], component: PatientMedicalRecord },
+  {
+    path: 'medical-record',
+    canActivate: [roleGuard(['PATIENT', 'TUTOR'])],
+    component: MyMedicalRecord
+  },
+  {
+    path: 'patient-medical-record/:patientId',
+    canActivate: [roleGuard(['DOCTOR', 'TUTOR'])],
+    component: PatientMedicalRecord
+  },
 
   // Paciente
   {
-    path: 'perfil-paciente', canActivate: [patientGuard], loadComponent: () =>
-      import('./Patient/components/patient-profile/patient-profile').then((m) => m.PatientProfile)
+    path: 'perfil-paciente',
+    canActivate: [patientGuard],
+    loadComponent: () =>
+      import('./Patient/components/patient-profile/patient-profile')
+        .then(m => m.PatientProfile)
   },
   {
-    path: 'mis-pacientes', canActivate: [doctorGuard], loadComponent: () =>
-      import('./Patient/components/my-patients/my-patients').then((m) => m.MyPatients)
+    path: 'mis-pacientes',
+    canActivate: [doctorGuard],
+    loadComponent: () =>
+      import('./Patient/components/my-patients/my-patients')
+        .then(m => m.MyPatients)
   },
 
   // Tratamientos
   {
-    path: 'mis-tratamientos', canActivate: [patientGuard], loadComponent: () =>
-      import('./Treatment/components/treatments/treatments').then((m) => m.Treatments)
+    path: 'mis-tratamientos',
+    canActivate: [patientGuard],
+    loadComponent: () =>
+      import('./Treatment/components/treatments/treatments')
+        .then(m => m.Treatments)
   },
   {
-    path: 'pacientes/:patientId/tratamientos', canActivate: [doctorGuard], loadComponent: () =>
-      import('./Treatment/components/treatments/treatments').then((m) => m.Treatments)
+    path: 'pacientes/:patientId/tratamientos',
+    canActivate: [doctorGuard],
+    loadComponent: () =>
+      import('./Treatment/components/treatments/treatments')
+        .then(m => m.Treatments)
   },
 
   // Ruta inexistente

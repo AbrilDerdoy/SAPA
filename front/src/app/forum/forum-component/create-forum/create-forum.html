@@ -29,7 +29,12 @@
       <label for="image">Imagen del foro</label>
       <input id="image" type="file" accept="image/*" (change)="onImageSelected($event)" />
       @if (imagenSeleccionada(); as imagen) {
-      <p>Imagen seleccionada: {{ imagen.name }}</p>
+      <div class="image-preview-container">
+        <p>Imagen seleccionada: {{ imagenSeleccionada()?.name }}</p>
+        <img class="image-preview" [src]="imagenPreview()" [alt]="imagen.name" />
+      </div>
+      } @else{
+        <p>No seleccionaste ningún archivo.</p>
       }
     </div>
 

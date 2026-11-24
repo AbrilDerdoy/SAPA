@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { Usuario } from '../../../Usuario/models/usuario';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-forum',
@@ -16,24 +16,25 @@ import { RouterLink } from '@angular/router';
 export class Forum implements OnInit {
   private forumService = inject(ForumService)
   private authService = inject(Auth)
+  private router = inject(Router)
   error = signal<string>('')
 
-    // Foro seleccionado para editar.
+  // Foro seleccionado para editar.
   selectedForum = signal<ForumResponse | null>(null)
 
   // Verificar la sesión para poder acceder a ABM de foros.
-  get sesionIniciada(): boolean{
+  get sesionIniciada(): boolean {
     return this.authService.isAuthenticated()
   }
-  
+
   // Obtener el usuario para la verificación de id y poder acceder a BM de foros. 
-  get usuarioId(): number | null{
+  get usuarioId(): number | null {
     const usuario = localStorage.getItem('usuario')
     return usuario ? (JSON.parse(usuario) as Usuario).id : null
   }
-  
+
   // Verificación de si el usuario autenticado es propietario del foro.
-  esPropietario(forum: ForumResponse): boolean{
+  esPropietario(forum: ForumResponse): boolean {
     return this.usuarioId === forum.createdById
   }
 
@@ -58,14 +59,14 @@ export class Forum implements OnInit {
     })
   }
 
-  ngOnInit(): void {this.loadActiveForums()}
+  ngOnInit(): void { this.loadActiveForums() }
 
   // Obtener foros activos.
   loadActiveForums(): void {
     this.forumService.getAllActiveForums().subscribe({
       next: (datos) => {
         this.forums.set(datos),
-        this.filteredForums.set(datos)
+          this.filteredForums.set(datos)
       },
       error: () => this.error.set('Error al cargar los foros activos.')
     })
@@ -82,17 +83,27 @@ export class Forum implements OnInit {
     })
   }
 
-  // Filtrar foros por título.
-  filterForums(): void {
-    if (!this.titleFilter.trim()) {
-      this.loadForums()
-      return;
-    }
+  // Filtrar foros por título o contenido.
+  normalizarTexto(texto: string): string {
+    return texto
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+  }
 
-    this.forumService.filterForums(this.titleFilter.trim()).subscribe({
-      next: (datos) => this.filteredForums.set(datos),
-      error: () => this.error.set('Error al filtrar los foros.')
-    })
+  filterForums(): void {
+    const busqueda = this.normalizarTexto(this.titleFilter.trim())
+
+    this.filteredForums.set(
+      this.forums().filter(forum =>
+        this.normalizarTexto(forum.title).includes(busqueda) ||
+        this.normalizarTexto(forum.content).includes(busqueda)
+      )
+    )
+  }
+
+  irAlForo(title: string): void {
+    this.router.navigate(['/forums', title])
   }
 
   // Cerrar formulario.
@@ -101,19 +112,19 @@ export class Forum implements OnInit {
     this.selectedForum.set(null)
   }
 
-    // Crear foro.
+  // Crear foro.
   newForum(): void {
     this.selectedForum.set(null)
     this.formVisible.set(true);
   }
 
-    // Editar un foro.
+  // Editar un foro.
   editForum(forum: ForumResponse): void {
     this.selectedForum.set(forum)
     this.formVisible.set(true);
   }
 
-    // Guardar un foro.
+  // Guardar un foro.
   saveForum(): void {
     this.formVisible.set(false)
     this.selectedForum.set(null)

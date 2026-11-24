@@ -146,10 +146,14 @@
       </div>
       }
 
-      <button type="button" class="share-button" (click)="sharePost(post.postId)" title="Compartir publicación">
+      <div class="post-footer">
+        <app-post-comment [postId]="post.postId" />
 
-        <img src="/images/share-fat.png" alt="Compartir">
-      </button>
+        <button type="button" class="share-button" (click)="sharePost(post.postId)" title="Compartir publicación">
+
+          <img src="/images/share-fat.png" alt="Compartir">
+        </button>
+      </div>
 
     </article>
 

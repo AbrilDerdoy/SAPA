@@ -1,7 +1,7 @@
 .forum {
-  width: min(1100px, 92%);
+  width: min(1200px, 94%);
   margin: 36px auto;
-  padding: 30px;
+  padding: 32px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -12,19 +12,20 @@
   margin: 0 0 28px;
   color: var(--primary-dark);
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 750;
+  letter-spacing: -0.5px;
 }
 
 .filter {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 22px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .filter input {
   flex: 1;
-  min-width: 200px;
+  min-width: 220px;
 }
 
 .filter button,
@@ -36,74 +37,92 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 28px;
-  padding-bottom: 22px;
+  margin-bottom: 30px;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--border);
 }
 
 .actions button {
   background: var(--primary-light);
   color: var(--primary-dark);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .actions button:hover {
-  background: var(--tone-teal-bg);
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
 }
 
 .forum-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .forum-card {
   display: flex;
-  gap: 18px;
+  gap: 14px;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   padding: 22px;
-  background: var(--surface);
+  background: #fff;
   border: 1px solid var(--border);
   border-top: 4px solid var(--primary);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow-wrap: anywhere;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
 }
 
 .forum-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
+  border-color: #a8dcd7;
+}
+
+.forum-card:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
 }
 
 .forum-card h2 {
-  margin: 0 0 12px;
+  margin: 0;
   color: var(--primary-dark);
-  font-size: 1.3rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .forum-card p {
-  margin: 0 0 20px;
+  margin: 0;
   color: var(--text-muted);
   white-space: pre-wrap;
+  line-height: 1.65;
 }
 
 .forum-card button {
   width: 100%;
-  padding: 10px 16px;
-  border-radius: 8px;
+  padding: 11px 16px;
+  border-radius: 9px;
   font-weight: 600;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s ease, transform 0.2s ease;
+}
+
+.forum-card button:hover {
+  transform: translateY(-1px);
 }
 
 .forum-card .view {
-  background: var(--tone-teal-bg);
-  color: var(--tone-teal-text);
+  background: var(--primary);
+  color: white;
 }
 
 .forum-card .view:hover {
-  background: var(--tone-teal-hover);
+  background: var(--primary-dark);
 }
 
 .forum-card .edit {
@@ -125,43 +144,60 @@
 }
 
 .error {
-  padding: 10px 14px;
-  color: var(--danger);
-  background: var(--danger-light);
-  border: 1px solid var(--danger-border);
-  border-radius: 8px;
+  padding: 12px 16px;
+  color: var(--tone-red-text);
+  background: var(--tone-red-bg);
+  border: 1px solid var(--tone-red-hover);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
-.forum-list>p {
+.forum-list > p.error {
+  color: var(--tone-red-text);
+  background: var(--tone-red-bg);
+  text-align: center;
+}
+
+.forum-list > p {
   color: var(--text-muted);
   text-align: center;
   grid-column: 1 / -1;
-  padding: 30px;
+  padding: 40px 20px;
+  background: var(--primary-dark);
+  border-radius: 12px;
 }
 
 .forum-image {
   width: 100%;
-  max-height: 220px;
+  max-height: 200px;
   object-fit: cover;
-  border-radius: 8px;
-  margin: 10px 0;
+  border-radius: 12px;
+  margin: 2px 0;
+  background: var(--primary-light);
 }
 
 @media (max-width: 600px) {
   .forum {
     width: 96%;
-    margin: 16px auto;
-    padding: 18px;
+    margin: 18px auto;
+    padding: 20px;
+    border-radius: 14px;
   }
 
   .foros {
     font-size: 1.7rem;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 
   .filter {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .filter input {
+    min-width: 0;
+    width: 100%;
   }
 
   .actions {
@@ -171,10 +207,16 @@
 
   .filter button,
   .actions button {
+    min-width: 0;
     width: 100%;
   }
 
   .forum-list {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .forum-card {
+    padding: 18px;
   }
 }

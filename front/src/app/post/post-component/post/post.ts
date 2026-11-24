@@ -10,10 +10,11 @@ import { PostForm } from '../post-form/post-form';
 import { PostAttachments } from '../post-attachments/post-attachments';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { PostComment } from '../../../post-comment/post-comment-component/post-comment/post-comment';
 
 @Component({
   selector: 'app-post',
-  imports: [DatePipe, PostForm, PostAttachments],
+  imports: [DatePipe, PostForm, PostAttachments, PostComment],
   templateUrl: './post.html',
   styleUrl: './post.css',
 })

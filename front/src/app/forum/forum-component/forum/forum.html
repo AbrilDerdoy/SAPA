@@ -4,7 +4,7 @@
     @if (error()) {<p class="error">{{ error() }}</p>}
 
     <div class="filter">
-        <input type="text" placeholder="Buscar por título" [(ngModel)]="titleFilter" (keyup.enter)="filterForums()">
+        <input type="text" placeholder="Buscar foros" [(ngModel)]="titleFilter" (ngModelChange)="filterForums()">
 
         <button type="button" (click)="filterForums()">Buscar</button>
         <button type="button" (click)="loadForums()">Ver todos</button>
@@ -19,7 +19,8 @@
 
     <div class="forum-list">
         @for (forum of filteredForums(); track forum.forumId) {
-        <article class="forum-card">
+        <article class="forum-card" (click)="irAlForo(forum.title)" (keydown.enter)="irAlForo(forum.title)"
+            tabindex="0">
             <h2>{{ forum.title }}</h2>
 
             @if (forum.imageUrl) {
@@ -30,13 +31,18 @@
             <button type="button" class="view" [routerLink]="['/forums', forum.title]">Ver publicaciones</button>
 
             @if(esPropietario(forum)){
-            <button type="button" class="edit" [routerLink]="['/forums/update', forum.title]">Editar</button>
-            <button type="button" class="delete" (click)="deleteForum(forum.forumId)">Eliminar</button>
+            <button type="button" class="edit" (click)="$event.stopPropagation()"
+                [routerLink]="['/forums/update', forum.title]">
+                Editar
+            </button>
+
+            <button type="button" class="delete" (click)="$event.stopPropagation(); deleteForum(forum.forumId)">
+                Eliminar
+            </button>
             }
         </article>
         } @empty {
-        <p>No hay foros para mostrar.</p>
+        <p class="error">No hay foros para mostrar</p>
         }
     </div>
-
 </section>

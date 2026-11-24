@@ -16,6 +16,7 @@ export class CreateForum {
 
   error = signal('');
   imagenSeleccionada = signal<File | null>(null)
+  imagenPreview = signal<string | null>(null);
 
   modelo = signal<ForumRequest>({
     title: '',
@@ -63,6 +64,11 @@ export class CreateForum {
     if (!file) {
       this.imagenSeleccionada.set(null)
       return
+    }
+
+    if (file) {
+      this.imagenSeleccionada.set(file);
+      this.imagenPreview.set(URL.createObjectURL(file));
     }
 
     const tiposPermitidos = [

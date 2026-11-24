@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { ForumResponse } from '../forum-DTOs/forum-response';
 import { Observable } from 'rxjs';
 import { ForumRequest } from '../forum-DTOs/forum-request';
+import { form } from '@angular/forms/signals';
 
 @Injectable({
   providedIn: 'root',
@@ -38,8 +39,8 @@ export class ForumService {
   }
 
     // Actualizar foro existente.
-  updateForum(idForum: number, datosForo: ForumRequest){
-    return this.http.put<ForumResponse>(`${this.BASE_URL}/${idForum}`, datosForo)
+  updateForum(idForum: number, formData: FormData){
+    return this.http.put<ForumResponse>(`${this.BASE_URL}/${idForum}`, formData)
   }
 
     // Eliminar un foro.

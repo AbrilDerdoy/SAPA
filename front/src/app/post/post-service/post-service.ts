@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { ForumRequest } from '../../forum/forum-DTOs/forum-request';
 import { PostResponse } from '../post-DTOs/post-response';
 import { Auth } from '../../Usuario/services/Auth/auth';
+import { PostCommentResponse } from '../../post-comment/post-comment-DTOs/post-comment-response';
+import { PostCommentRequest } from '../../post-comment/post-comment-DTOs/post-comment-request';
 
 @Injectable({
   providedIn: 'root',
@@ -78,4 +80,23 @@ export class PostService {
     return this.http.delete<boolean>(`${this.BASE_URL}/${postId}`)
   }
 
+  // Obtener comentarios de una publicación.
+  getComments(postId: number): Observable<PostCommentResponse[]> {
+    return this.http.get<PostCommentResponse[]>(`${this.BASE_URL}/${postId}/comments`)
+  }
+
+  // Crear un comentario.
+  createComment(postId: number, request: PostCommentRequest): Observable<PostCommentResponse> {
+    return this.http.post<PostCommentResponse>(`${this.BASE_URL}/${postId}/comments`, request)
+  }
+
+  // Actualizar un comentario.
+  updateComment(postId: number, commentId: number, request: PostCommentRequest): Observable<PostCommentResponse> {
+    return this.http.put<PostCommentResponse>(`${this.BASE_URL}/${postId}/comments/${commentId}`, request)
+  }
+
+  // Eliminar un comentario.
+  deleteComment(postId: number, commentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.BASE_URL}/${postId}/comments/${commentId}`)
+  }
 }

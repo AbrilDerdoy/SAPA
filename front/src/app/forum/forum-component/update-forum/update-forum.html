@@ -1,41 +1,48 @@
 <section class="update-forum">
   @if (cargando()) {
-    <p>Cargando foro...</p>
+  <p>Cargando foro...</p>
   } @else if (forum()) {
-    <h1>Editar foro</h1>
+  <h1>Editar foro</h1>
 
-    @if (error()) { <p class="error">{{ error() }}</p> }
+  @if (error()) { <p class="error">{{ error() }}</p> }
 
-    <form (submit)="guardar(); $event.preventDefault()">
-      <div class="form-group">
-        <label for="title">Título</label>
-        <input id="title" type="text" [formField]="formulario.title" placeholder="Ingresá el título del foro" />
+  <form (submit)="guardar(); $event.preventDefault()">
+    <div class="form-group">
+      <label for="title">Título</label>
+      <input id="title" type="text" [formField]="formulario.title" placeholder="Ingresá el título del foro" />
 
-        @if (formulario.title().touched() && formulario.title().invalid()) {
-          @for (error of formulario.title().errors(); track error) {
-            <p class="error">{{ error.message }}</p>
-          }
-        }
+      @if (formulario.title().touched() && formulario.title().invalid()) {
+      @for (error of formulario.title().errors(); track error) {
+      <p class="error">{{ error.message }}</p>
+      }
+      }
+    </div>
+
+    <div class="form-group">
+      <label for="image">Imagen del foro</label>
+      <input id="image" type="file" accept="image/*" (change)="onImageSelected($event)" />
+
+      @if (imagenPreview()) {
+      <div class="image-preview-container">
+        <p>Nueva imagen seleccionada</p>
+        <img class="image-preview" [src]="imagenPreview()" alt="Vista previa de la nueva imagen" />
       </div>
-
-      <div class="form-group">
-        <label for="content">Contenido</label>
-        <textarea id="content" [formField]="formulario.content" placeholder="Ingresá el contenido del foro" rows="5"></textarea>
-
-        @if (formulario.content().touched() && formulario.content().invalid()) {
-          @for (error of formulario.content().errors(); track error) {
-            <p class="error">{{ error.message }}</p>
-          }
-        }
+      } @else if (forum()?.imageUrl) {
+      <div class="image-preview-container">
+        <p>Imagen actual</p>
+        <img class="image-preview" [src]="'http://localhost:8080' + forum()?.imageUrl" alt="Imagen actual del foro" />
       </div>
+      } @else {
+      <p class="image-placeholder">Este foro no tiene una imagen.</p>
+      }
+    </div>
 
-      <div class="form-actions">
-        <button type="submit">Guardar cambios</button>
-        <button type="button" (click)="cancelar()">Cancelar</button>
-      </div>
-
-    </form>
+    <div class="form-actions">
+      <button type="submit">Guardar cambios</button>
+      <button type="button" (click)="cancelar()">Cancelar</button>
+    </div>
+  </form>
   } @else {
-    <p class="error">{{ error() }}</p>
+  <p class="error">{{ error() }}</p>
   }
 </section>
