@@ -1,0 +1,135 @@
+:host {
+  display: block;
+  color: var(--text);
+}
+
+.terms {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+}
+
+.terms__header {
+  margin-bottom: 1.5rem;
+}
+
+.terms__eyebrow {
+  margin: 0 0 0.4rem;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.terms h1 {
+  margin: 0 0 0.5rem;
+  color: var(--primary-dark);
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  line-height: 1.2;
+}
+
+.terms__updated {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.terms__highlight {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.15rem;
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  line-height: 1.55;
+}
+
+.terms__card {
+  padding: 1.5rem 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.terms__card section + section {
+  margin-top: 1.6rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.terms__card h2 {
+  margin: 0 0 0.6rem;
+  color: var(--primary-dark);
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+
+.terms__card p {
+  margin: 0 0 0.7rem;
+  line-height: 1.65;
+}
+
+.terms__card p:last-child {
+  margin-bottom: 0;
+}
+
+.terms__card ul {
+  margin: 0 0 0.7rem;
+  padding-left: 1.3rem;
+  line-height: 1.65;
+}
+
+.terms__card li + li {
+  margin-top: 0.35rem;
+}
+
+.terms__card a {
+  color: var(--primary-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.terms__card a:hover {
+  color: var(--primary);
+}
+
+.terms__card strong {
+  color: var(--text);
+}
+
+.terms__back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 9px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.terms__back:hover {
+  background: var(--primary-dark);
+}
+
+.terms__back:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+@media (min-width: 700px) {
+  .terms {
+    padding: 3.5rem 2rem 5rem;
+  }
+
+  .terms__card {
+    padding: 2.25rem 2.5rem;
+  }
+}

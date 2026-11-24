@@ -4,13 +4,14 @@ import { Auth } from '../../services/Auth/auth';
 import { registerRequest } from '../../models/registerRequest';
 import { form, minLength, required, FormField, applyWhen, validate } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'phoneNumber'> & {
   licenseNumber: string;
   phoneNumber: string;
+  acceptTerms: boolean;
 };
 
 function fechaHaceMeses(meses: number): string {
@@ -30,7 +31,7 @@ function fechaHaceMeses(meses: number): string {
 
 @Component({
   selector: 'app-registro',
-  imports: [FormField,FormError],
+  imports: [FormField,FormError,RouterLink],
   templateUrl: './registro.html',
   styleUrls: ['./registro.css','../../shared/form.css']
 })
@@ -49,7 +50,8 @@ export class Registro {
     phoneNumber:'',
     licenseNumber:'',
     speciality:null,
-    relationship:''
+    relationship:'',
+    acceptTerms:false
   });
   readonly fechaMaxima = (() => {
     const hoy = new Date();
@@ -136,7 +138,15 @@ export class Registro {
       valueOf(ruta.role) === 'ROLE_TUTOR',
     (ruta) => {
       required(ruta.relationship, {message: 'El parentesco es obligatorio'});
-    })
+    }),
+    validate(ruta.acceptTerms, ({value}) =>
+      value()
+        ? undefined
+        : {
+            kind: 'termsNotAccepted',
+            message: 'Tenés que aceptar los términos y condiciones para continuar'
+          }
+    )
   })
 
   especialidades = this.userService.specialities;
@@ -158,6 +168,7 @@ export class Registro {
     this.formulario.licenseNumber().markAsTouched();
     this.formulario.speciality().markAsTouched();
     this.formulario.relationship().markAsTouched();
+    this.formulario.acceptTerms().markAsTouched();
 
     if (this.formulario().invalid()) return;
 

@@ -27,6 +27,7 @@ import { PatientMedicalRecord } from './medical-record/components/patient-medica
 import { DoctorProfilePublic } from './Doctor/components/doctor-profile-public/doctor-profile-public';
 import { SharedPost } from './post/post-component/shared-post/shared-post';
 import { NotFound } from './Common/not-found/not-found';
+import { TerminosYCondiciones } from './Common/terminos-y-condiciones/terminos-y-condiciones';
 
 export const routes: Routes = [
 
@@ -35,6 +36,7 @@ export const routes: Routes = [
   // Autenticación
   { path: 'register', component: Registro },
   { path: 'login', component: Login },
+  { path: 'terminos-y-condiciones', component: TerminosYCondiciones },
 
   // Inicio
   { path: 'home', component: Home },

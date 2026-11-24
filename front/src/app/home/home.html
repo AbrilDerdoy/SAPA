@@ -1,6 +1,6 @@
 
-<main class="home">
-  <div class="home-layout">
+<main class="home" [class.home--restricted]="restricted()">
+  <div class="home-layout" [class.home-layout--restricted]="restricted()">
 
     @if (!restricted()) {
       <aside class="home-sidebar">
@@ -9,15 +9,6 @@
     }
 
     <section class="home-main">
-
-      <section class="welcome">
-        <h1>¡Bienvenido a SAPA!</h1>
-
-        <p>
-          Tu espacio para conectar con profesionales de la salud y acceder
-          a herramientas que acompañan tu bienestar.
-        </p>
-      </section>
 
       @if (restricted()) {
         <section class="restriction-notice">
@@ -38,6 +29,15 @@
           </a>
         </section>
       } @else {
+
+      <section class="welcome">
+        <h1>¡Bienvenido a SAPA!</h1>
+
+        <p>
+          Tu espacio para conectar con profesionales de la salud y acceder
+          a herramientas que acompañan tu bienestar.
+        </p>
+      </section>
 
       @if (isPatient) {
         <section class="questionnaires-home">

@@ -1,12 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
-import { Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 
 import { Registro } from './registro';
 import { Auth } from '../../services/Auth/auth';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
+import { NotFound } from '../../../Common/not-found/not-found';
 
 describe('Registro', () => {
   let component: Registro;
@@ -44,7 +45,10 @@ describe('Registro', () => {
         { provide: Auth, useValue: authMock },
         { provide: UsuarioService, useValue: usuarioServiceMock },
         { provide: AlertaService, useValue: alertaMock },
-        { provide: Router, useValue: { navigate: vi.fn() } },
+        provideRouter([
+          { path: 'home', component: NotFound },
+          { path: 'mi-tutor', component: NotFound },
+        ]),
       ],
     }).compileComponents();
 
@@ -132,6 +136,7 @@ describe('Registro', () => {
       birthDate: '2000-01-01',
       phoneNumber: '',
       relationship: 'Madre',
+      acceptTerms: true,
     }));
 
     component.enviar(new Event('submit'));
@@ -139,6 +144,50 @@ describe('Registro', () => {
     expect(authMock.register).toHaveBeenCalledWith(
       expect.objectContaining({ phoneNumber: null }),
     );
+  });
+
+  it('does not submit until the terms are accepted', () => {
+    authMock.register.mockClear();
+    component.modelo.update((datos) => ({
+      ...datos,
+      role: 'ROLE_TUTOR',
+      firstName: 'Ana',
+      lastName: 'Perez',
+      email: 'tutor@example.com',
+      password: 'password-seguro',
+      birthDate: '2000-01-01',
+      phoneNumber: '12345678',
+      relationship: 'Madre',
+      acceptTerms: false,
+    }));
+
+    component.enviar(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(component.formulario.acceptTerms().invalid()).toBe(true);
+    expect(fixture.nativeElement.textContent)
+      .toContain('Tenés que aceptar los términos y condiciones');
+    expect(authMock.register).not.toHaveBeenCalled();
+  });
+
+  it('links to the terms and conditions page', () => {
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.reg-terms__link');
+
+    expect(link.getAttribute('href')).toBe('/terminos-y-condiciones');
+    expect(link.getAttribute('target')).toBe('_blank');
+  });
+
+  it('updates the model when the terms checkbox is checked', () => {
+    const checkbox: HTMLInputElement = fixture.nativeElement.querySelector(
+      '.reg-terms__check input[type="checkbox"]',
+    );
+
+    expect(checkbox.checked).toBe(false);
+    checkbox.click();
+    fixture.detectChanges();
+
+    expect(component.modelo().acceptTerms).toBe(true);
+    expect(component.formulario.acceptTerms().invalid()).toBe(false);
   });
 
   it('shows a validation error and does not submit a future birth date', () => {
@@ -160,7 +209,7 @@ describe('Registro', () => {
     expect(fixture.nativeElement.textContent).toContain('La fecha de nacimiento debe ser anterior a hoy');
   });
 
-  it('rejects a patient birth date less than six months ago', () => {
+  it('rejects an underage patient birth date less than six months ago', () => {
     const [year, month, day] = component.fechaNacimientoMaximaPaciente
       .split('-')
       .map(Number);
@@ -181,6 +230,30 @@ describe('Registro', () => {
     expect(authMock.register).not.toHaveBeenCalled();
   });
 
+  it.each(['ROLE_TUTOR', 'ROLE_DOCTOR'] as const)(
+    'rejects an underage %s account',
+    (role) => {
+      const [year, month, day] = component.fechaNacimientoMaximaAdulto
+        .split('-')
+        .map(Number);
+      const tooYoungDate = new Date(Date.UTC(year, month - 1, day + 1));
+
+      component.modelo.update((datos) => ({
+        ...datos,
+        role,
+        birthDate: tooYoungDate.toISOString().slice(0, 10),
+        acceptTerms: true,
+      }));
+
+      component.enviar(new Event('submit'));
+
+      expect(component.formulario.birthDate().invalid()).toBe(true);
+      expect(component.formulario.birthDate().errors()[0]?.message)
+        .toContain('mayores de 18 años');
+      expect(authMock.register).not.toHaveBeenCalled();
+    }
+  );
+
   it('shows only the message from a JSON-string server error', () => {
     authMock.register.mockReturnValue(throwError(() => new HttpErrorResponse({
       status: 500,
@@ -199,6 +272,7 @@ describe('Registro', () => {
       password: 'password-seguro',
       birthDate: '2000-01-01',
       phoneNumber: '12345678',
+      acceptTerms: true,
     }));
 
     component.enviar(new Event('submit'));

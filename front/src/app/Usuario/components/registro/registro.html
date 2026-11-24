@@ -108,6 +108,10 @@
           paciente es menor de 18 años, necesitará vincular un tutor para usar
           las demás funciones del sistema.
         </p>
+      } @else {
+        <p class="reg-help" role="note">
+          Los médicos y los tutores deben ser mayores de 18 años.
+        </p>
       }
 
       @if (modelo().role === 'ROLE_DOCTOR') {
@@ -158,6 +162,22 @@
           <app-form-error [field]="formulario.relationship()" />
         </label>
       }
+
+      <div class="reg-terms">
+        <label class="reg-terms__check">
+          <input type="checkbox" [formField]="formulario.acceptTerms">
+          <span>Acepto los términos y condiciones</span>
+        </label>
+        <app-form-error [field]="formulario.acceptTerms()" />
+        <a
+          class="reg-terms__link"
+          routerLink="/terminos-y-condiciones"
+          target="_blank"
+          rel="noopener"
+        >
+          Leer los términos y condiciones
+        </a>
+      </div>
 
       <button class="reg-submit" type="submit">Crear cuenta</button>
     </form>
