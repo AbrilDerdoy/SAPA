@@ -51,12 +51,14 @@ export class App {
 
   readonly roles = signal(readRole());
   readonly requiresTutor = signal(this.auth.requiresTutor());
+  readonly hasActiveTutor = signal(this.auth.hasActiveTutor());
 
   constructor() {
     effect(() => {
       this.role();
       this.auth.sessionVersion();
       this.requiresTutor.set(this.auth.requiresTutor());
+      this.hasActiveTutor.set(this.auth.hasActiveTutor());
       this.followService.reset();
     });
   }

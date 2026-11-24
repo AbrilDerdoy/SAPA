@@ -391,6 +391,7 @@ public class UserService {
                     null,
                     null,
                     false,
+                    false,
                     user.getProfileImageUrl()
             );
         }
@@ -413,6 +414,7 @@ public class UserService {
                             : null,
                     null,
                     patientAccessService.requiresTutor(patient),
+                    patientAccessService.hasActiveTutor(patient),
                     user.getProfileImageUrl()
             );
         }
@@ -433,6 +435,7 @@ public class UserService {
                     null,
                     null,
                     false,
+                    false,
                     user.getProfileImageUrl()
             );
         }
@@ -450,6 +453,7 @@ public class UserService {
                 doctor.getPhoneNumber(),
                 null,
                 doctor.getLicenseNumber(),
+                false,
                 false,
                 user.getProfileImageUrl()
         );

@@ -22,6 +22,7 @@ export class Home {
 
   isPatient = false;
   readonly restricted = signal(false);
+  readonly hasActiveTutor = signal(false);
 
   assignments = signal<AssignmentResponse[]>([]);
   loadingQuestionnaires = signal(false);
@@ -37,6 +38,7 @@ export class Home {
 
       this.isPatient = patientSession;
       this.restricted.set(restricted);
+      this.hasActiveTutor.set(this.auth.hasActiveTutor());
 
       // Limpia los datos anteriores cada vez que cambia la sesión.
       this.assignments.set([]);

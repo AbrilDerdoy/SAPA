@@ -13,8 +13,15 @@
   @if (restricted()) {
     <div class="notice notice--restricted" role="status">
       <span>
-        Tu cuenta está restringida porque sos menor de 18 años. Para habilitar
-        el resto de las funciones de SAPA, vinculá un tutor desde esta sección.
+        @if (tutor()) {
+          Como sos menor de 18 años, tu cuenta sigue restringida aunque ya
+          tengas un tutor vinculado. Tu tutor es quien usa SAPA en tu nombre; vos
+          solo podés gestionar el vínculo desde esta sección.
+        } @else {
+          Tu cuenta está restringida porque sos menor de 18 años. Solo podés
+          gestionar tu tutela desde esta sección. Cuando vincules un tutor, será
+          él quien use SAPA en tu nombre.
+        }
       </span>
     </div>
   }

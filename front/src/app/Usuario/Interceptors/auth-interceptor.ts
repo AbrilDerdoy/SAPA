@@ -15,7 +15,7 @@ function withBearerToken<T>(req: HttpRequest<T>, token: string): HttpRequest<T> 
 
 /**
  * El backend responde 403 con error TUTOR_REQUIRED cuando un paciente menor
- * de edad sin tutor intenta usar una función restringida.
+ * de edad intenta usar una función restringida, tenga o no tutor.
  */
 function isTutorRequired(error: HttpErrorResponse): boolean {
   const body: unknown = error.error;

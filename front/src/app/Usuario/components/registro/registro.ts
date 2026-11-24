@@ -212,7 +212,8 @@ export class Registro {
                 || user.email,
               email: user.email,
               role: user.role,
-              requiresTutor: user.requiresTutor === true
+              requiresTutor: user.requiresTutor === true,
+              hasActiveTutor: user.hasActiveTutor === true
             };
 
             localStorage.setItem('usuario', JSON.stringify(usuario));

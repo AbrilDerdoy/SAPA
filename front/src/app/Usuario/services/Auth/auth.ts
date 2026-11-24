@@ -24,6 +24,7 @@ interface UsuarioSesion {
   email: string;
   role: string;
   requiresTutor?: boolean;
+  hasActiveTutor?: boolean;
 }
 
 interface JwtPayload {
@@ -141,8 +142,9 @@ export class Auth {
   }
 
   /**
-   * Indica si el paciente autenticado es menor de edad y todavía no tiene un
-   * tutor vinculado. En ese caso solo puede gestionar la tutela.
+   * Indica si el paciente autenticado es menor de edad. En ese caso queda
+   * restringido siempre, tenga o no un tutor vinculado: solo puede gestionar
+   * la tutela y el tutor opera en su nombre.
    */
   requiresTutor(): boolean {
     try {
@@ -151,6 +153,21 @@ export class Auth {
       );
 
       return usuario?.requiresTutor === true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Indica si el paciente autenticado ya tiene un tutor activo vinculado.
+   */
+  hasActiveTutor(): boolean {
+    try {
+      const usuario = JSON.parse(
+        localStorage.getItem(USER_STORAGE_KEY) ?? '{}'
+      );
+
+      return usuario?.hasActiveTutor === true;
     } catch {
       return false;
     }
@@ -192,7 +209,8 @@ export class Auth {
             || user.email,
           email: user.email,
           role: user.role,
-          requiresTutor: user.requiresTutor === true
+          requiresTutor: user.requiresTutor === true,
+          hasActiveTutor: user.hasActiveTutor === true
         };
 
         localStorage.setItem(

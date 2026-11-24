@@ -3,9 +3,8 @@ import { CanActivateFn, Router } from '@angular/router';
 import { Auth } from '../../Usuario/services/Auth/auth';
 
 /**
- * Evita que un paciente menor de edad sin tutor acceda a las funciones del
- * sistema. El backend aplica la misma regla, por lo que esta guarda es solo
- * la parte de experiencia de usuario.
+ * Evita que un paciente menor de edad acceda a funciones del sistema,
+ * tenga o no un tutor vinculado. El backend aplica la misma regla.
  */
 export const tutorRequirementGuard: CanActivateFn = () => {
   const auth = inject(Auth);

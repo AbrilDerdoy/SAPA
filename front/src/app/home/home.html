@@ -16,16 +16,26 @@
 
           <div>
             <span class="section-label">CUENTA RESTRINGIDA</span>
-            <h2>Necesitás un tutor para continuar</h2>
-            <p>
-              Como sos menor de 18 años, por ahora solo podés solicitar o
-              aceptar una tutela. Cuando tu tutor quede vinculado, se habilitarán
-              el resto de las funciones de SAPA.
-            </p>
+
+            @if (hasActiveTutor()) {
+              <h2>Tu tutor gestiona tu cuenta</h2>
+              <p>
+                Como sos menor de 18 años, no podés usar las funciones de SAPA
+                directamente. Tu tutor vinculado realiza las acciones en tu
+                nombre. Desde esta sección podés ver o revocar el vínculo.
+              </p>
+            } @else {
+              <h2>Necesitás un tutor para continuar</h2>
+              <p>
+                Como sos menor de 18 años, por ahora solo podés solicitar o
+                aceptar una tutela. Cuando tu tutor quede vinculado, podrá usar
+                SAPA en tu nombre.
+              </p>
+            }
           </div>
 
           <a routerLink="/mi-tutor" class="card-button">
-            Solicitar tutela
+            {{ hasActiveTutor() ? 'Ver mi tutor' : 'Solicitar tutela' }}
           </a>
         </section>
       } @else {

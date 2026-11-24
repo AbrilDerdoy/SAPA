@@ -60,11 +60,6 @@ export class Login {
 
         this.auth.guardarDatosUsuario().subscribe({
           next: (user) => {
-            this.alerta.mostrarInfo(
-              'Puedes usar el sistema',
-              'Sesion iniciada'
-            );
-
             const usuario = {
               id: user.id,
               username: user.username
@@ -72,7 +67,8 @@ export class Login {
                 || user.email,
               email: user.email,
               role: user.role,
-              requiresTutor: user.requiresTutor === true
+              requiresTutor: user.requiresTutor === true,
+              hasActiveTutor: user.hasActiveTutor === true
             };
 
             console.log('Usuario:', usuario);
@@ -85,11 +81,20 @@ export class Login {
             // Notifica a los componentes que la sesión fue iniciada.
             this.auth.notifySessionChanged();
 
-            // Un paciente menor de edad sin tutor solo puede gestionar la tutela.
+            // Un paciente menor de edad queda siempre en la gestión de tutela.
             if (usuario.requiresTutor) {
+              this.alerta.mostrarInfo(
+                'Tu tutor debe realizar las acciones del sistema en tu nombre',
+                'Acceso restringido'
+              );
               this.router.navigate(['/mi-tutor']);
               return;
             }
+
+            this.alerta.mostrarInfo(
+              'Puedes usar el sistema',
+              'Sesion iniciada'
+            );
 
             const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 

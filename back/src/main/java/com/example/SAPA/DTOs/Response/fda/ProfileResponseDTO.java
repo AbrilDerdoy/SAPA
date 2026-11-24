@@ -13,5 +13,6 @@ public record ProfileResponseDTO(
         Long medicalRecordId,
         String licenseNumber,
         boolean requiresTutor,
+        boolean hasActiveTutor,
         String profileImageUrl
 ) {}

@@ -20,7 +20,7 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => (_route, sta
   }
 
   if (allowedRoles.includes(getRole())) {
-    // Un paciente menor sin tutor solo puede gestionar su tutela.
+    // Un paciente menor solo puede gestionar su tutela.
     if (auth.requiresTutor() && !state.url.startsWith('/mi-tutor')) {
       return router.createUrlTree(['/mi-tutor']);
     }

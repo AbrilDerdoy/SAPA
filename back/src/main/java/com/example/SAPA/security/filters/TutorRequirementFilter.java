@@ -3,9 +3,7 @@ package com.example.SAPA.security.filters;
 import com.example.SAPA.Models.Entities.PatientEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Repositories.PatientRepository;
-import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.Repositories.UserRepository;
-import com.example.SAPA.enums.TutorLinkStatus;
 import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.service.AgePolicy;
 import jakarta.servlet.FilterChain;
@@ -25,10 +23,10 @@ import java.time.LocalDate;
 
 /**
  * Bloquea el acceso a las funciones del sistema para los pacientes menores de
- * 18 años que todavía no tienen un tutor activo.
+ * 18 años, tengan o no un tutor activo. El tutor es quien opera en su nombre.
  *
  * <p>Solo se permite el acceso a los endpoints necesarios para autenticarse,
- * consultar los datos propios y solicitar, aceptar o rechazar una tutela.</p>
+ * consultar los datos propios y gestionar la tutela.</p>
  */
 @Component
 @RequiredArgsConstructor
@@ -36,12 +34,11 @@ public class TutorRequirementFilter extends OncePerRequestFilter {
 
     private static final String TUTOR_REQUIRED_CODE = "TUTOR_REQUIRED";
     private static final String TUTOR_REQUIRED_MESSAGE =
-            "Para usar esta función necesitás un tutor vinculado. "
-                    + "Solicitá una tutela desde la sección Mi tutor.";
+            "Como paciente menor de edad, tu tutor debe realizar esta acción en tu nombre. "
+                    + "Solo podés gestionar tu tutela desde la sección Mi tutor.";
 
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
-    private final TutorPatientRepository tutorPatientRepository;
 
     @Override
     protected void doFilterInternal(
@@ -70,15 +67,6 @@ public class TutorRequirementFilter extends OncePerRequestFilter {
         if (patient == null
                 || patient.getBirthDate() == null
                 || !AgePolicy.isMinor(patient.getBirthDate(), LocalDate.now())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        boolean hasActiveTutor = tutorPatientRepository
-                .findByPatientAndStatus(patient, TutorLinkStatus.ACTIVE)
-                .isPresent();
-
-        if (hasActiveTutor) {
             filterChain.doFilter(request, response);
             return;
         }

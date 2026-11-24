@@ -6,5 +6,6 @@ export interface Usuario {
     role:string,
     email:string,
     birthDate?: string | null,
-    requiresTutor?: boolean
+    requiresTutor?: boolean,
+    hasActiveTutor?: boolean
 }

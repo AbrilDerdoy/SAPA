@@ -164,6 +164,15 @@
   margin: 0;
 }
 
+.footer-contact a {
+  color: var(--primary-dark);
+  text-decoration: none;
+}
+
+.footer-contact a:hover {
+  text-decoration: underline;
+}
+
 .footer-copy {
   color: var(--text-muted);
   opacity: 0.8;

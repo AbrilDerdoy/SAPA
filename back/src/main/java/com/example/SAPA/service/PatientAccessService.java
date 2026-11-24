@@ -56,8 +56,8 @@ public class PatientAccessService {
 
     /**
      * Igual que {@link #resolve(Long)}, pero aplica la regla de negocio:
-     * un paciente menor de edad sin tutor vinculado no puede operar sobre
-     * datos clínicos. El tutor y el médico quedan exentos.
+     * un paciente menor de edad no puede operar sobre datos clínicos, aunque
+     * tenga un tutor activo. El tutor y el médico quedan exentos.
      */
     @Transactional(readOnly = true)
     public PatientEntity resolveClinical(Long patientId) {
@@ -66,7 +66,7 @@ public class PatientAccessService {
 
         if (user.getRole() == UserCategory.PATIENT && requiresTutor(patient)) {
             throw new AccessDeniedException(
-                    "TUTOR_REQUIRED: el paciente es menor de edad y todavía no tiene un tutor vinculado.");
+                    "TUTOR_REQUIRED: el paciente es menor de edad. Su tutor debe realizar esta acción en su nombre.");
         }
 
         return patient;
@@ -116,8 +116,8 @@ public class PatientAccessService {
     }
 
     /**
-     * Regla: un paciente menor de 18 años necesita un tutor activo para
-     * operar sobre el sistema. Sin tutor, solo puede gestionar la tutela.
+     * Regla: un paciente menor de 18 años queda restringido siempre, tenga o
+     * no un tutor activo. El tutor es quien opera en su nombre.
      */
     @Transactional(readOnly = true)
     public boolean requiresTutor(PatientEntity patient) {
@@ -125,11 +125,21 @@ public class PatientAccessService {
             return false;
         }
 
-        boolean isMinor = AgePolicy.isMinor(patient.getBirthDate(), LocalDate.now());
+        return AgePolicy.isMinor(patient.getBirthDate(), LocalDate.now());
+    }
 
-        return isMinor && tutorPatientRepository
+    /**
+     * Indica si el paciente tiene un tutor activo vinculado.
+     */
+    @Transactional(readOnly = true)
+    public boolean hasActiveTutor(PatientEntity patient) {
+        if (patient == null) {
+            return false;
+        }
+
+        return tutorPatientRepository
                 .findByPatientAndStatus(patient, TutorLinkStatus.ACTIVE)
-                .isEmpty();
+                .isPresent();
     }
 
     private PatientEntity resolveForPatient(Long patientId) {
