@@ -17,9 +17,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class ReportController {
-
     private final ReportService reportService;
-
 
     @PostMapping
     public ResponseEntity<ReportResponseDTO> createReport(@RequestBody CreateReportRequestDTO request) throws AccessDeniedException {
@@ -39,17 +37,29 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getAllReports());
     }
 
-
     @PatchMapping("/{reportId}/review")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportResponseDTO> markAsReviewed(@PathVariable Long reportId) {
         return ResponseEntity.ok(reportService.markAsReviewed(reportId));
     }
 
+    @PatchMapping("/{reportId}/pending")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ReportResponseDTO> markAsPending(@PathVariable Long reportId) {
+        return ResponseEntity.ok(reportService.markAsPending(reportId));
+    }
+
     @PatchMapping("/{reportId}/delete-post")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteReportedPost(@PathVariable Long reportId) {
         reportService.deleteReportedPost(reportId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{reportId}/delete-forum")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteReportedForum(@PathVariable Long reportId) {
+        reportService.deleteReportedForum(reportId);
         return ResponseEntity.noContent().build();
     }
 }

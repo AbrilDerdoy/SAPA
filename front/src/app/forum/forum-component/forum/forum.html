@@ -23,10 +23,10 @@
             tabindex="0">
             <div class="forum-card-header">
                 <h2>{{ forum.title }}</h2>
-                @if (sesionIniciada) {
-                <app-content-menu [canReport]="true" [canEdit]="esPropietario(forum)" [canDelete]="esPropietario(forum)"
-                    (report)="openReportModal(forum.forumId)" (edit)="navigateToEditForum(forum)"
-                    (delete)="deleteForum(forum.forumId)" />
+                @if (sesionIniciada && !esAdmin()) {
+                <app-content-menu [canReport]="puedeReportar(forum)" [canEdit]="esPropietario(forum)"
+                    [canDelete]="esPropietario(forum)" (report)="openReportModal(forum.forumId)"
+                    (edit)="navigateToEditForum(forum)" (delete)="deleteForum(forum.forumId)" />
                 }
             </div>
 

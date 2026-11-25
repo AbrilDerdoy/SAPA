@@ -3,7 +3,6 @@ import { ReportService } from '../../report-services/report-service';
 import { ReportResponse } from '../../report-DTOs/report-response';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { PostService } from '../../../post/post-service/post-service';
 import { ForumService } from '../../../forum/forum-service/forum-service';
 
 @Component({
@@ -89,6 +88,23 @@ export class AdminReports implements OnInit {
     })
   }
 
+  markAsPending(reportId: number): void {
+    this.reportService.markAsPending(reportId).subscribe({
+      next: (updatedReport: ReportResponse) => {
+        this.reports.update(reports =>
+          reports.map(report =>
+            report.reportId === updatedReport.reportId
+              ? updatedReport
+              : report
+          )
+        )
+      },
+      error: () => {
+        this.error.set('No se pudo quitar la revisión del reporte.')
+      }
+    })
+  }
+
   changePage(page: number): void {
     if (page < 1 || page > this.totalPages()) return;
 
@@ -124,7 +140,7 @@ export class AdminReports implements OnInit {
   }
 
   deleteReportedPost(report: ReportResponse): void {
-    if (report.contentType !== 'POST' || report.reviewed) return
+    if (report.contentType !== 'POST') return
 
     const confirmed = window.confirm(
       '¿Estás segura de que querés eliminar esta publicación? Dejará de estar visible para los usuarios.'
@@ -138,6 +154,25 @@ export class AdminReports implements OnInit {
       },
       error: () => {
         this.error.set('No se pudo eliminar la publicación reportada.')
+      }
+    })
+  }
+
+  deleteReportedForum(report: ReportResponse): void {
+    if (report.contentType !== 'FORUM') return
+
+    const confirmed = window.confirm(
+      '¿Estás segura de que querés eliminar este foro? Dejará de estar visible para los usuarios.'
+    )
+
+    if (!confirmed) return
+
+    this.reportService.deleteReportedForum(report.reportId).subscribe({
+      next: () => {
+        this.loadReports()
+      },
+      error: () => {
+        this.error.set('No se pudo eliminar el foro reportado.')
       }
     })
   }

@@ -255,6 +255,17 @@
   color: white;
 }
 
+.forum-title-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.forum-title-actions h1 {
+  margin: 0;
+}
+
 .post-footer {
   display: flex;
   justify-content: space-between;

@@ -32,8 +32,18 @@ export class ReportService {
     return this.http.patch<ReportResponse>(`${this.BASE_URL}/${reportId}/review`, null)
   }
 
-  // Eliminar una publicación reportada (moderación ADMIN).
+  // Marcar un reporte como pendiente.
+  markAsPending(reportId: number): Observable<ReportResponse> {
+    return this.http.patch<ReportResponse>(`${this.BASE_URL}/${reportId}/pending`, null)
+  }
+
+  // Eliminar una publicación reportada.
   deleteReportedPost(reportId: number): Observable<void> {
     return this.http.patch<void>(`${this.BASE_URL}/${reportId}/delete-post`, null)
+  }
+
+  // Eliminar un foro reportada.
+  deleteReportedForum(reportId: number): Observable<void> {
+    return this.http.patch<void>(`${this.BASE_URL}/${reportId}/delete-forum`, null)
   }
 }

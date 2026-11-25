@@ -83,7 +83,16 @@
     ? 'linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url(http://localhost:8080' + currentForum.imageUrl + ')'
     : 'none'">
     <div class="forum-cover-content">
-      <h1>{{ currentForum.title }}</h1>
+      <div class="forum-title-actions">
+        <h1>{{ currentForum.title }}</h1>
+
+        @if (sesionIniciada && !esAdmin()) {
+        <app-content-menu [canReport]="puedeReportarForo()" [canEdit]="esPropietarioForo()"
+          [canDelete]="esPropietarioForo()" (report)="openForumReportModal()" (edit)="editForum()"
+          (delete)="deleteForum()" />
+        }
+      </div>
+
       <p>{{ currentForum.content }}</p>
       <i>{{ currentForum.createdByName }}</i>
       <p>Publicaciones de la comunidad</p>
@@ -169,6 +178,6 @@
   }
 
   @if (showReportModal() && reportContentId() !== null) {
-  <app-report-modal [contentId]="reportContentId()!" [contentType]="'POST'" (close)="closeReportModal()" />
+  <app-report-modal [contentId]="reportContentId()!" [contentType]="reportContentType()" (close)="closeReportModal()" />
   }
 </section>
