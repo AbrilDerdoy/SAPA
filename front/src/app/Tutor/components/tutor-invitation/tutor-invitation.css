@@ -1,0 +1,133 @@
+:host {
+  display: block;
+  min-height: 70vh;
+  color: var(--text);
+}
+
+.invitation-page {
+  display: grid;
+  place-items: center;
+  min-height: 70vh;
+  padding: 2.5rem 1.25rem;
+}
+
+.invitation-card {
+  width: min(100%, 620px);
+  padding: 2.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.invitation-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 18px;
+  background: var(--primary-light);
+  font-size: 2rem;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.invitation-card h1 {
+  margin: 0.35rem 0 0.8rem;
+  font-size: clamp(1.7rem, 5vw, 2.3rem);
+}
+
+.lead,
+.hint {
+  margin: 0 auto;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.hint {
+  margin-top: 1rem;
+  font-size: 0.86rem;
+}
+
+.invitation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  padding: 0.7rem 1.2rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn--outline {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+.btn--danger {
+  background: var(--surface);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--danger-light);
+}
+
+.notice {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  border-radius: 9px;
+  text-align: left;
+}
+
+.notice--error {
+  background: var(--danger-light);
+  border-left: 4px solid var(--danger);
+  color: var(--danger-strong);
+}
+
+.notice--success {
+  background: var(--primary-light);
+  border-left: 4px solid var(--primary);
+  color: var(--primary-dark);
+}

@@ -2,19 +2,36 @@ import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Auth } from '../../services/Auth/auth';
 import { registerRequest } from '../../models/registerRequest';
-import { form, minLength, required, FormField, min, applyWhen, validate } from '@angular/forms/signals';
+import { form, minLength, required, FormField, applyWhen, validate } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
-type RegistroFormModel = Omit<registerRequest, 'licenseNumber'> & {
+type RegistroFormModel = Omit<registerRequest, 'licenseNumber' | 'phoneNumber'> & {
   licenseNumber: string;
+  phoneNumber: string;
+  acceptTerms: boolean;
 };
+
+function fechaHaceMeses(meses: number): string {
+  const fecha = new Date();
+  const dia = fecha.getDate();
+  fecha.setMinutes(fecha.getMinutes() - fecha.getTimezoneOffset());
+  fecha.setDate(1);
+  fecha.setMonth(fecha.getMonth() - meses);
+  const ultimoDiaDelMes = new Date(
+    fecha.getFullYear(),
+    fecha.getMonth() + 1,
+    0
+  ).getDate();
+  fecha.setDate(Math.min(dia, ultimoDiaDelMes));
+  return fecha.toISOString().slice(0, 10);
+}
 
 @Component({
   selector: 'app-registro',
-  imports: [FormField,FormError],
+  imports: [FormField,FormError,RouterLink],
   templateUrl: './registro.html',
   styleUrls: ['./registro.css','../../shared/form.css']
 })
@@ -32,13 +49,17 @@ export class Registro {
     birthDate:'',
     phoneNumber:'',
     licenseNumber:'',
-    speciality:null
+    speciality:null,
+    relationship:'',
+    acceptTerms:false
   });
   readonly fechaMaxima = (() => {
     const hoy = new Date();
     hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
     return hoy.toISOString().slice(0, 10);
   })();
+  readonly fechaNacimientoMaximaPaciente = fechaHaceMeses(6);
+  readonly fechaNacimientoMaximaAdulto = fechaHaceMeses(18 * 12);
   readonly errorRegistro = signal<string | null>(null);
   readonly mostrarPassword = signal(false);
   readonly formulario = form(this.modelo, (ruta) => {
@@ -49,19 +70,83 @@ export class Registro {
     required(ruta.firstName, {message: 'El nombre es obligatorio'});
     required(ruta.lastName, {message: 'El apellido es obligatorio'});
     required(ruta.birthDate, {message: 'La fecha de nacimiento es obligatoria'});
-    validate(ruta.birthDate, ({value}) =>
-      value() >= this.fechaMaxima
-        ? {kind: 'past', message: 'La fecha de nacimiento debe ser anterior a hoy'}
-        : undefined
-    );
-    required(ruta.phoneNumber, {message: 'El telefono es obligatorio'});
-    min(ruta.phoneNumber, 1, {message: 'El telefono debe ser positivo'});
+    validate(ruta.birthDate, ({value, valueOf}) => {
+      const fecha = value();
+
+      if (!fecha) {
+        return undefined;
+      }
+
+      if (fecha >= this.fechaMaxima) {
+        return {
+          kind: 'past',
+          message: 'La fecha de nacimiento debe ser anterior a hoy'
+        };
+      }
+
+      const rol = valueOf(ruta.role);
+
+      if (rol === 'ROLE_PATIENT' && fecha > this.fechaNacimientoMaximaPaciente) {
+        return {
+          kind: 'minAgePatient',
+          message: 'El paciente debe tener al menos 6 meses de edad para registrarse'
+        };
+      }
+
+      if (
+        (rol === 'ROLE_DOCTOR' || rol === 'ROLE_TUTOR')
+        && fecha > this.fechaNacimientoMaximaAdulto
+      ) {
+        return {
+          kind: 'minAgeAdult',
+          message: 'El médico y el tutor deben ser mayores de 18 años'
+        };
+      }
+
+      return undefined;
+    });
+    validate(ruta.phoneNumber, ({value}) => {
+      const phoneNumber = value().trim();
+
+      if (!phoneNumber) {
+        return undefined;
+      }
+
+      if (phoneNumber.length < 7 || phoneNumber.length > 20) {
+        return {
+          kind: 'phoneLength',
+          message: 'El teléfono debe tener entre 7 y 20 caracteres.',
+        };
+      }
+
+      if (!/^\+?[0-9\s\-()]+$/.test(phoneNumber)) {
+        return {
+          kind: 'phonePattern',
+          message: 'Solo se permiten números, espacios, guiones, paréntesis o el signo +.',
+        };
+      }
+
+      return undefined;
+    });
     applyWhen(ruta, ({valueOf}) =>
       valueOf(ruta.role) === 'ROLE_DOCTOR',
     (ruta) => {
       required(ruta.licenseNumber, {message: 'La matricula es obligatoria'});
       required(ruta.speciality, {message: 'La especialidad es obligatoria'});
-    })
+    }),
+    applyWhen(ruta, ({valueOf}) =>
+      valueOf(ruta.role) === 'ROLE_TUTOR',
+    (ruta) => {
+      required(ruta.relationship, {message: 'El parentesco es obligatorio'});
+    }),
+    validate(ruta.acceptTerms, ({value}) =>
+      value()
+        ? undefined
+        : {
+            kind: 'termsNotAccepted',
+            message: 'Tenés que aceptar los términos y condiciones para continuar'
+          }
+    )
   })
 
   especialidades = this.userService.specialities;
@@ -82,6 +167,8 @@ export class Registro {
     this.formulario.phoneNumber().markAsTouched();
     this.formulario.licenseNumber().markAsTouched();
     this.formulario.speciality().markAsTouched();
+    this.formulario.relationship().markAsTouched();
+    this.formulario.acceptTerms().markAsTouched();
 
     if (this.formulario().invalid()) return;
 
@@ -93,23 +180,53 @@ export class Registro {
         lastName:datos.lastName,
         email:datos.email,
         password:datos.password,
-        phoneNumber:datos.phoneNumber,
+        phoneNumber: datos.phoneNumber.trim() || null,
         birthDate:datos.birthDate,
         licenseNumber: datos.role === 'ROLE_DOCTOR' ? datos.licenseNumber : null,
-        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null
+        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null,
+        relationship: datos.role === 'ROLE_TUTOR' ? datos.relationship : ''
       }
 
     this.errorRegistro.set(null);
     this.auth.register(registro).subscribe({
       next: (res) => {
         console.log('Registro exitoso', res);
-        if(this.modelo().role === 'ROLE_DOCTOR'){
-          this.alerta.mostrarInfo('Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión','Espere la aprobacion de un administrador')
-        } else {
-          localStorage.setItem('jwt',JSON.stringify(res));  
-          this.auth.guardarDatosUsuario()
+
+        if (this.modelo().role === 'ROLE_DOCTOR') {
+          this.alerta.mostrarInfo(
+            'Su cuenta fue creada. Por favor, espera a que un administrador apruebe tu cuenta antes de iniciar sesión',
+            'Espere la aprobacion de un administrador'
+          );
+          this.router.navigate(['/home']);
+          return;
         }
-          this.router.navigate(['/home'])
+
+        localStorage.setItem('jwt', JSON.stringify(res));
+
+        this.auth.guardarDatosUsuario().subscribe({
+          next: (user) => {
+            const usuario = {
+              id: user.id,
+              username: user.username
+                || [user.firstName, user.lastName].filter(Boolean).join(' ')
+                || user.email,
+              email: user.email,
+              role: user.role,
+              requiresTutor: user.requiresTutor === true,
+              hasActiveTutor: user.hasActiveTutor === true
+            };
+
+            localStorage.setItem('usuario', JSON.stringify(usuario));
+            this.auth.notifySessionChanged();
+
+            // Si es menor de edad, arranca directamente en la gestión de tutela.
+            this.router.navigate([usuario.requiresTutor ? '/mi-tutor' : '/home']);
+          },
+          error: (err) => {
+            console.error('No se pudo obtener el usuario registrado:', err);
+            this.router.navigate(['/home']);
+          }
+        });
       },
       error: (err: HttpErrorResponse) => {
         const detalle = this.mensajeError(err);
@@ -164,6 +281,13 @@ export class Registro {
   }    
   cambiarMedico(): void {
     this.modelo.update((datos) => ({...datos, role: 'ROLE_DOCTOR'}));
+  }
+  cambiarTutor(): void {
+    this.modelo.update((datos) => ({
+      ...datos,
+      role: 'ROLE_TUTOR',
+      relationship: datos.relationship || ''
+    }));
   }
 
   seleccionarEspecialidad(evento: Event): void {

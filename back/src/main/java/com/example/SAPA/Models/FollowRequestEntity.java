@@ -2,6 +2,7 @@ package com.example.SAPA.Models;
 
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.enums.FollowRequestStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,6 +26,11 @@ public class FollowRequestEntity {
     @ManyToOne
     @JoinColumn(name = "patient_id")
     private PatientEntity patient;
+
+    // Tutor que solicitó el seguimiento en nombre del paciente.
+    @ManyToOne
+    @JoinColumn(name = "tutor_follower_id")
+    private TutorEntity tutorFollower;
 
     // Se completa cuando quien sigue es otro médico.
     @ManyToOne

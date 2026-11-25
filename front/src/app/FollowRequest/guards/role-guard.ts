@@ -11,7 +11,7 @@ function getRole(): string {
   }
 }
 
-export const roleGuard = (allowedRoles: string[]): CanActivateFn => () => {
+export const roleGuard = (allowedRoles: string[]): CanActivateFn => (_route, state) => {
   const auth = inject(Auth);
   const router = inject(Router);
 
@@ -20,6 +20,11 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => () => {
   }
 
   if (allowedRoles.includes(getRole())) {
+    // Un paciente menor solo puede gestionar su tutela.
+    if (auth.requiresTutor() && !state.url.startsWith('/mi-tutor')) {
+      return router.createUrlTree(['/mi-tutor']);
+    }
+
     return true;
   }
 

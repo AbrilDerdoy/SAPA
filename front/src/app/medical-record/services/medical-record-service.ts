@@ -1,4 +1,3 @@
-
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -19,10 +18,16 @@ export class MedicalRecordService {
   private readonly BASE_URL = 'http://localhost:8080/medical-records';
   private readonly http = inject(HttpClient);
 
-  getMyMedicalRecord(): Observable<MedicalRecord> {
-    return this.http.get<MedicalRecord>(
-      `${this.BASE_URL}/my`
-    );
+  private buildParams(patientId?: number | null): HttpParams {
+    return patientId != null
+      ? new HttpParams().set('patientId', patientId)
+      : new HttpParams();
+  }
+
+  getMyMedicalRecord(patientId?: number | null): Observable<MedicalRecord> {
+    return this.http.get<MedicalRecord>(`${this.BASE_URL}/my`, {
+      params: this.buildParams(patientId)
+    });
   }
 
   getPatientMedicalRecord(patientId: number): Observable<MedicalRecord> {
@@ -31,9 +36,10 @@ export class MedicalRecordService {
     );
   }
 
-  getMyMedications(): Observable<Medication[]> {
+  getMyMedications(patientId?: number | null): Observable<Medication[]> {
     return this.http.get<Medication[]>(
-      `${this.BASE_URL}/my/medications`
+      `${this.BASE_URL}/my/medications`,
+      { params: this.buildParams(patientId) }
     );
   }
 

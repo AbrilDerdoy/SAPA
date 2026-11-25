@@ -36,9 +36,17 @@ public class PatientController {
             @ApiResponse(responseCode = "404", description = "No se encontró el registro del paciente asociado al usuario autenticado.", content = @Content)
     })
     @PutMapping("/profile")
-    public ResponseEntity<Void> updateProfile(@Valid @RequestBody UpdatePatientRequestDTO request) {
-        patientService.updatePatient(request);
+    public ResponseEntity<Void> updateProfile(
+            @Valid @RequestBody UpdatePatientRequestDTO request,
+            @RequestParam(required = false) Long patientId) {
+        patientService.updatePatient(patientId, request);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<PatientResponseDTO> getProfile(
+            @RequestParam(required = false) Long patientId) {
+        return ResponseEntity.ok(patientService.getPatientProfile(patientId));
     }
 
     @GetMapping("/my-patients")

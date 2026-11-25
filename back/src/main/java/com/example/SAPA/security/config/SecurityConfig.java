@@ -3,8 +3,10 @@ package com.example.SAPA.security.config;
 
 import com.example.SAPA.security.filters.JwtAuthenticationFilter;
 import com.example.SAPA.security.filters.RestAuthenticationEntryPoint;
+import com.example.SAPA.security.filters.TutorRequirementFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -35,20 +37,40 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TutorRequirementFilter tutorRequirementFilter;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     private static final String[] PATIENT_AND_DOCTOR = {
             "ROLE_PATIENT", "ROLE_DOCTOR", "PATIENT", "DOCTOR"
     };
 
+    private static final String[] PATIENT_TUTOR_DOCTOR = {
+            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR",
+            "PATIENT", "TUTOR", "DOCTOR"
+    };
+
+    private static final String[] PATIENT_AND_TUTOR = {
+            "ROLE_PATIENT", "ROLE_TUTOR", "PATIENT", "TUTOR"
+    };
+
     private static final String[] ALL_ROLES = {
-            "ROLE_PATIENT", "ROLE_DOCTOR", "ROLE_ADMIN",
-            "PATIENT", "DOCTOR", "ADMIN"
+            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR", "ROLE_ADMIN",
+            "PATIENT", "TUTOR", "DOCTOR", "ADMIN"
     };
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public FilterRegistrationBean<TutorRequirementFilter> tutorRequirementFilterRegistration(
+            TutorRequirementFilter filter
+    ) {
+        FilterRegistrationBean<TutorRequirementFilter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
@@ -159,9 +181,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/forums/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
                 .requestMatchers("/forums/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
                 .requestMatchers("/posts/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Administración
                 .requestMatchers("/admin/**")
@@ -179,32 +201,35 @@ public class SecurityConfig {
                 // Consejos de salud
                 .requestMatchers(HttpMethod.GET, "/health-tips/**").permitAll()
                 .requestMatchers("/health-tips/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Solicitudes de seguimiento
                 .requestMatchers("/follow-requests/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Conversaciones
                 .requestMatchers("/conversations/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Cuestionarios y asignaciones
                 .requestMatchers("/questionnaires/**")
                     .hasAnyAuthority(
-                            "PATIENT", "DOCTOR",
-                            "ROLE_PATIENT", "ROLE_DOCTOR"
+                            "PATIENT", "TUTOR", "DOCTOR",
+                            "ROLE_PATIENT", "ROLE_TUTOR", "ROLE_DOCTOR"
                     )
 
                 .requestMatchers("/assignments/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Historias clínicas y tratamientos
                 .requestMatchers("/medical-records/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 .requestMatchers("/treatments/**")
-                    .hasAnyAuthority(PATIENT_AND_DOCTOR)
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
+
+                .requestMatchers("/tutors/**")
+                    .hasAnyAuthority(PATIENT_AND_TUTOR)
 
                 // Notificaciones
                 .requestMatchers("/notifications/**")
@@ -251,7 +276,7 @@ public class SecurityConfig {
                     .hasAnyAuthority("ROLE_DOCTOR", "DOCTOR")
 
                 .requestMatchers("/patients/**")
-                    .hasAuthority("ROLE_PATIENT")
+                    .hasAnyAuthority(PATIENT_TUTOR_DOCTOR)
 
                 // Documentación
                 .requestMatchers(
@@ -269,6 +294,11 @@ public class SecurityConfig {
             .addFilterBefore(
                     jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class
+            )
+
+            .addFilterAfter(
+                    tutorRequirementFilter,
+                    JwtAuthenticationFilter.class
             )
 
             .exceptionHandling(exception -> exception

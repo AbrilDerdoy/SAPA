@@ -60,37 +60,63 @@
     <hr>
     }
 
+      @if (role() === 'TUTOR' || role()==='ROLE_TUTOR') {
+        <a [routerLink]="['/profile']" (click)="toggleMenu()">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          Mi perfil
+        </a>
+        <hr>
+        <a [routerLink]="['/tutor']" (click)="toggleMenu()">
+          <i class="bi bi-people"></i>
+          Panel de tutor
+        </a>
+        <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-check"></i>
+          Cuestionarios
+        </a>
+        <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history"></i>
+          Historial de pacientes
+        </a>
+        <hr>
+      }
+
     @if (auth.isPatient() || role() === 'PATIENT') {
-    <a [routerLink]="['/perfil-paciente']" (click)="toggleMenu()">
-      <i class="bi bi-person" aria-hidden="true"></i>
-      Mi perfil
-    </a>
-
-    <hr>
-
-    <a [routerLink]="['/mis-solicitudes']" (click)="toggleMenu()">
-      <i class="bi bi-person-check" aria-hidden="true"></i>
-      Mis solicitudes
-    </a>
-
-    <hr>
-
-    <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
-      <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
-      Mis cuestionarios
-    </a>
-
-    <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
-      <i class="bi bi-clock-history" aria-hidden="true"></i>
-      Mi historial
-    </a>
-
-    <a [routerLink]="['/medical-record']" (click)="toggleMenu()">
-      <i class="bi bi-file-medical" aria-hidden="true"></i>
-      Mi ficha médica
-    </a>
-
-    <hr>
+      @if (auth.requiresTutor()) {
+        <a [routerLink]="['/mi-tutor']" (click)="toggleMenu()">
+          <i class="bi bi-person-heart" aria-hidden="true"></i>
+          {{ auth.hasActiveTutor() ? 'Mi tutor' : 'Solicitar tutela' }}
+        </a>
+        <hr>
+      } @else {
+        <a [routerLink]="['/perfil-paciente']" (click)="toggleMenu()">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          Mi perfil
+        </a>
+        <hr>
+        <a [routerLink]="['/mis-solicitudes']" (click)="toggleMenu()">
+          <i class="bi bi-person-check" aria-hidden="true"></i>
+          Mis solicitudes
+        </a>
+        <hr>
+        <a [routerLink]="['/mis-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
+          Mis cuestionarios
+        </a>
+        <a [routerLink]="['/mi-tutor']" (click)="toggleMenu()">
+          <i class="bi bi-person-heart" aria-hidden="true"></i>
+          Mi tutor / Solicitar tutela
+        </a>
+        <a [routerLink]="['/historial-cuestionarios']" (click)="toggleMenu()">
+          <i class="bi bi-clock-history" aria-hidden="true"></i>
+          Mi historial
+        </a>
+        <a [routerLink]="['/medical-record']" (click)="toggleMenu()">
+          <i class="bi bi-file-medical" aria-hidden="true"></i>
+          Mi ficha médica
+        </a>
+        <hr>
+      }
     }
 
     @if (auth.isAdmin()) {
@@ -109,13 +135,13 @@
     <hr>
     }
 
-    <!-- Acceso directo al chat -->
-    <a [routerLink]="['/chat']" (click)="toggleMenu()">
-      <i class="bi bi-chat-dots" aria-hidden="true"></i>
-      Chat
-    </a>
-
-    <hr>
+    @if (!auth.isAdmin() && !auth.requiresTutor()) {
+      <a [routerLink]="['/chat']" (click)="toggleMenu()">
+        <i class="bi bi-chat-dots" aria-hidden="true"></i>
+        Chat
+      </a>
+      <hr>
+    }
 
     <button
       type="button"

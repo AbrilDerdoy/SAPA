@@ -1,16 +1,17 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { form, required, validate, FormField, disabled } from '@angular/forms/signals';
+import { form, required, validate, FormField, disabled, maxLength } from '@angular/forms/signals';
 import { UsuarioService } from '../../services/Usuario/usuario-service';
 import { Auth } from '../../services/Auth/auth';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 import { FormError } from '../../../Common/form-error/form-error';
+import { DeleteAccount } from '../delete-account/delete-account';
 
 export interface datosUsuario {
   firstName: string;
   lastName: string;
   email: string;
   birthDate: Date;
-  phoneNumber: number;
+  phoneNumber: string;
   profileImageUrl: string | null;
 }
 
@@ -26,7 +27,7 @@ function dateValue(value: Date | string): string {
 
 @Component({
   selector: 'app-profile',
-  imports: [FormField, FormError],
+  imports: [FormField, FormError,DeleteAccount],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -40,6 +41,7 @@ export class Profile {
   modificarDatos = signal<boolean>(false);
   subiendoFoto = signal<boolean>(false);
   eliminandoFoto = signal<boolean>(false);
+  private readonly fotoPerfilActualizada = signal<string | null | undefined>(undefined);
 
   readonly datosOriginales = computed(() => {
     const datos = this.profile.value();
@@ -62,28 +64,34 @@ export class Profile {
   });
 
   readonly fotoPerfilUrl = computed(() => {
-    const url = this.profile.value()?.profileImageUrl;
+    const url = this.fotoPerfilActualizada() !== undefined
+      ? this.fotoPerfilActualizada()
+      : this.profile.value()?.profileImageUrl;
 
     if (!url) {
       return null;
     }
 
-    return url.startsWith('http')
+    return /^https?:\/\//i.test(url)
       ? url
-      : `http://localhost:8080${url}`;
+      : `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
   });
 
   readonly modelo = linkedSignal<datosUsuario>(() => {
     const datos = this.profile.value();
 
     return datos
-      ? { ...datos, birthDate: datos.birthDate }
+      ? {
+          ...datos,
+          birthDate: datos.birthDate,
+          phoneNumber: datos.phoneNumber ?? ''
+        }
       : {
           firstName: '',
           lastName: '',
           email: '',
           birthDate: new Date(),
-          phoneNumber: 0,
+          phoneNumber: '',
           profileImageUrl: null
         };
   });
@@ -93,7 +101,7 @@ export class Profile {
     required(ruta.lastName, { message: 'El apellido es obligatorio' });
     required(ruta.birthDate, { message: 'La fecha de nacimiento es obligatoria' });
     required(ruta.email, { message: 'El email es obligatorio' });
-    required(ruta.phoneNumber, { message: 'El telefono es obligatorio' });
+    maxLength(ruta.phoneNumber, 20, { message: 'El teléfono no puede superar los 20 caracteres.' });
 
     disabled(ruta, () => !this.modificarDatos());
 
@@ -102,6 +110,30 @@ export class Profile {
         ? { kind: 'past', message: 'La fecha de nacimiento debe ser anterior a hoy' }
         : undefined
     );
+
+    validate(ruta.phoneNumber, ({value}) => {
+      const phoneNumber = value().trim();
+
+      if (!phoneNumber) {
+        return undefined;
+      }
+
+      if (phoneNumber.length < 7) {
+        return {
+          kind: 'minLength',
+          message: 'El teléfono debe tener al menos 7 caracteres.',
+        };
+      }
+
+      if (!/^\+?[0-9\s\-()]+$/.test(phoneNumber)) {
+        return {
+          kind: 'pattern',
+          message: 'Solo se permiten números, espacios, guiones, paréntesis o el signo +.',
+        };
+      }
+
+      return undefined;
+    });
   });
 
   toggleFormulario(): void {
@@ -117,7 +149,10 @@ export class Profile {
     const datos = this.datosOriginales();
 
     if (datos) {
-      this.modelo.set({ ...datos });
+      this.modelo.set({
+        ...datos,
+        phoneNumber: datos.phoneNumber ?? ''
+      });
     }
 
     this.modificarDatos.set(false);
@@ -136,7 +171,7 @@ export class Profile {
       || actual.lastName !== original.lastName
       || actual.email !== original.email
       || dateValue(actual.birthDate) !== dateValue(original.birthDate)
-      || String(actual.phoneNumber) !== String(original.phoneNumber);
+      || actual.phoneNumber.trim() !== (original.phoneNumber ?? '').trim();
   }
 
   private marcarCamposComoTocados(): void {
@@ -164,12 +199,15 @@ export class Profile {
       lastName: this.modelo().lastName,
       email: this.modelo().email,
       birthDate: this.modelo().birthDate,
-      phoneNumber: this.modelo().phoneNumber
+      phoneNumber: this.modelo().phoneNumber.trim() || null
     }).subscribe({
       next: (tokens) => {
         localStorage.setItem('jwt', JSON.stringify(tokens));
         this.modificarDatos.set(false);
         this.profile.reload();
+
+        // La edad puede cambiar la restricción por tutor.
+        this.auth.refreshSessionUser().subscribe({ error: () => undefined });
 
         this.alerta.mostrarInfo(
           'Se modificaron tus datos exitosamente',
@@ -188,7 +226,12 @@ export class Profile {
   }
 
   seleccionarFoto(evento: Event): void {
-    if (this.esAdmin() || this.subiendoFoto() || this.eliminandoFoto()) {
+    if (
+      this.esAdmin()
+      || !this.modificarDatos()
+      || this.subiendoFoto()
+      || this.eliminandoFoto()
+    ) {
       return;
     }
 
@@ -199,9 +242,9 @@ export class Profile {
       return;
     }
 
-    if (!['image/jpeg', 'image/png'].includes(archivo.type)) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)) {
       this.alerta.mostrarError(
-        'Seleccioná una imagen JPG o PNG.',
+        'Seleccioná una imagen JPG, PNG o WEBP.',
         'Formato no válido'
       );
       input.value = '';
@@ -220,7 +263,8 @@ export class Profile {
     this.subiendoFoto.set(true);
 
     this.userService.uploadProfilePhoto(archivo).subscribe({
-      next: () => {
+      next: (response) => {
+        this.fotoPerfilActualizada.set(response.profileImageUrl);
         this.profile.reload();
 
         this.alerta.mostrarInfo(
@@ -246,7 +290,8 @@ export class Profile {
   quitarFoto(): void {
     if (
       this.esAdmin()
-      || !this.profile.value()?.profileImageUrl
+      || !this.modificarDatos()
+      || !this.fotoPerfilUrl()
       || this.eliminandoFoto()
     ) {
       return;
@@ -256,6 +301,7 @@ export class Profile {
 
     this.userService.removeProfilePhoto().subscribe({
       next: () => {
+        this.fotoPerfilActualizada.set(null);
         this.profile.reload();
 
         this.alerta.mostrarInfo(

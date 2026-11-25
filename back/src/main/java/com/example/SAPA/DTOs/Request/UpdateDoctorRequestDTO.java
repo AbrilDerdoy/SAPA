@@ -36,9 +36,8 @@ public record UpdateDoctorRequestDTO(
         @DecimalMax(value = "180.0", message = "La longitud debe estar entre -180 y 180.")
         Double hospitalLongitude,
 
-        @NotBlank(message = "El número de teléfono es obligatorio.")
-        @Size(min = 7, max = 20, message = "El número de teléfono debe tener entre 7 y 20 caracteres.")
-        @Pattern(regexp = "^\\+?[0-9\\s\\-\\(]+$", message = "El número de teléfono solo puede contener números, espacios, guiones o el signo +.")
+        @Size(max = 20, message = "El número de teléfono no puede superar los 20 caracteres.")
+        @Pattern(regexp = "^$|^\\+?[0-9\\s\\-()]{7,20}$", message = "El número de teléfono debe tener entre 7 y 20 caracteres y solo puede contener números, espacios, guiones, paréntesis o el signo +.")
         String phoneNumber,
 
         @NotBlank(message = "El número de matrícula es obligatorio.")

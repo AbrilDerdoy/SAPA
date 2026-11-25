@@ -105,9 +105,10 @@ public class ProfilePhotoService {
 
     private void validateUserRole(UserEntity user) {
         if (user.getRole() != UserCategory.PATIENT
+                && user.getRole() != UserCategory.TUTOR
                 && user.getRole() != UserCategory.DOCTOR) {
             throw new IllegalArgumentException(
-                    "Solamente los pacientes y médicos pueden tener foto de perfil."
+                    "Solamente los pacientes, tutores y médicos pueden tener foto de perfil."
             );
         }
     }

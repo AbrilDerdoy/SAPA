@@ -35,18 +35,23 @@
 
   } @else {
     <div class="access-heading">
-      <h2>Solicitudes de acceso a tu ficha</h2>
+      <h2>
+        {{ mode === 'tutor'
+          ? 'Solicitudes de acceso a la ficha del paciente'
+          : 'Solicitudes de acceso a tu ficha' }}
+      </h2>
       <p>
-        Revisá quién solicita consultar tu información médica.
-        Solo vos podés autorizar el acceso.
+        {{ mode === 'tutor'
+          ? 'Revisá las solicitudes para el paciente menor bajo tu tutela y respondé en su nombre.'
+          : 'Revisá quién solicita consultar tu información médica. Solo vos podés autorizar el acceso.' }}
       </p>
     </div>
 
     <div class="privacy-information">
-      <strong>Protección de tus datos personales</strong>
+      <strong>Protección de los datos personales</strong>
       <p>
-        Al aceptar, autorizás al médico a consultar y modificar tu
-        ficha médica. Podés revocar el permiso posteriormente.
+        Al aceptar, autorizás al médico a consultar y modificar la ficha médica.
+        Podés revocar el permiso posteriormente.
       </p>
     </div>
 
@@ -63,7 +68,7 @@
               <div class="request-info">
                 <h3>{{ request.doctorName }}</h3>
                 <p>
-                  Solicita autorización para consultar tu ficha médica.
+                  Solicita autorización para consultar la ficha médica.
                 </p>
                 <small>
                   {{ request.requestedAt | date:'dd/MM/yyyy HH:mm' }}
@@ -99,7 +104,7 @@
 
         @if (approvedRequests().length === 0) {
           <p class="empty-state">
-            Actualmente ningún médico tiene acceso a tu ficha.
+            Actualmente ningún médico tiene acceso a esta ficha.
           </p>
         } @else {
           <div class="request-list">
@@ -166,7 +171,7 @@
       <h2 id="approval-title">Confirmación de privacidad</h2>
 
       <p>
-        Estás por compartir tu información médica con
+        Estás por compartir la información médica con
         <strong>{{ request.doctorName }}</strong>.
       </p>
 
@@ -174,14 +179,14 @@
         <strong>Protegé tus datos personales.</strong>
 
         <p>
-          Tu ficha médica contiene información privada y sensible.
+          La ficha médica contiene información privada y sensible.
           Compartila únicamente con profesionales de la salud
           cuya identidad hayas verificado.
         </p>
 
         <p>
           Al confirmar, este médico podrá consultar y modificar
-          tu ficha mientras mantengas la autorización.
+          la ficha mientras se mantenga la autorización.
           Podés revocar el permiso posteriormente.
         </p>
       </div>

@@ -28,16 +28,16 @@
 
             <div class="profile-photo__controls">
               <strong>Foto de perfil</strong>
-              <p>JPG o PNG. Tamaño máximo: 5 MB.</p>
+              <p>JPG, PNG o WEBP. Tamaño máximo: 5 MB.</p>
 
               <label class="photo-button">
                 {{ subiendoFoto() ? 'Subiendo...' : (fotoPerfilUrl() ? 'Cambiar foto' : 'Agregar foto') }}
 
                 <input
                   type="file"
-                  accept="image/jpeg,image/png"
+                  accept="image/jpeg,image/png,image/webp"
                   (change)="seleccionarFoto($event)"
-                  [disabled]="subiendoFoto() || eliminandoFoto()"
+                  [disabled]="!modificarDatos() || subiendoFoto() || eliminandoFoto()"
                   hidden>
               </label>
 
@@ -46,7 +46,7 @@
                   class="photo-remove"
                   type="button"
                   (click)="quitarFoto()"
-                  [disabled]="subiendoFoto() || eliminandoFoto()">
+                  [disabled]="!modificarDatos() || subiendoFoto() || eliminandoFoto()">
                   {{ eliminandoFoto() ? 'Quitando...' : 'Quitar foto' }}
                 </button>
               }
@@ -85,8 +85,8 @@
           </label>
 
           <label>
-            Teléfono:
-            <input type="number" [formField]="formulario.phoneNumber">
+            Teléfono (opcional):
+            <input type="tel" inputmode="tel" autocomplete="tel" [formField]="formulario.phoneNumber">
             <app-form-error [field]="formulario.phoneNumber()" />
           </label>
 
@@ -109,6 +109,9 @@
         }
 
       </form>
+    }
+    @if(!auth.isAdmin()){
+      <app-delete-account/>
     }
   </section>
 }

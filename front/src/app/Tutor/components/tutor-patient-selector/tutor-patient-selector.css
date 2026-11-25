@@ -1,0 +1,50 @@
+:host {
+  display: block;
+}
+
+.patient-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.patient-selector label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.patient-selector select {
+  max-width: 460px;
+}
+
+.patient-selector__status,
+.patient-selector__error {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.patient-selector__error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--danger);
+}
+
+.patient-selector__error button {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}

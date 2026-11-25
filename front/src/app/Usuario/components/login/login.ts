@@ -11,7 +11,7 @@ import {
   email
 } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AlertaService } from '../../../Common/alerta/alerta-service';
 
 @Component({
@@ -23,6 +23,7 @@ import { AlertaService } from '../../../Common/alerta/alerta-service';
 export class Login {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly alerta = inject(AlertaService);
 
   readonly modelo = signal<loginRequest>({
@@ -59,16 +60,15 @@ export class Login {
 
         this.auth.guardarDatosUsuario().subscribe({
           next: (user) => {
-            this.alerta.mostrarInfo(
-              'Puedes usar el sistema',
-              'Sesion iniciada'
-            );
-
             const usuario = {
               id: user.id,
-              username: user.username,
+              username: user.username
+                || [user.firstName, user.lastName].filter(Boolean).join(' ')
+                || user.email,
               email: user.email,
-              role: user.role
+              role: user.role,
+              requiresTutor: user.requiresTutor === true,
+              hasActiveTutor: user.hasActiveTutor === true
             };
 
             console.log('Usuario:', usuario);
@@ -80,6 +80,28 @@ export class Login {
 
             // Notifica a los componentes que la sesión fue iniciada.
             this.auth.notifySessionChanged();
+
+            // Un paciente menor de edad queda siempre en la gestión de tutela.
+            if (usuario.requiresTutor) {
+              this.alerta.mostrarInfo(
+                'Tu tutor debe realizar las acciones del sistema en tu nombre',
+                'Acceso restringido'
+              );
+              this.router.navigate(['/mi-tutor']);
+              return;
+            }
+
+            this.alerta.mostrarInfo(
+              'Puedes usar el sistema',
+              'Sesion iniciada'
+            );
+
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+
+            if (returnUrl && returnUrl.startsWith('/')) {
+              void this.router.navigateByUrl(returnUrl);
+              return;
+            }
 
             this.router.navigate(['/home']);
           },

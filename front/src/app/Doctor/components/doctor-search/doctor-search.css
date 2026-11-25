@@ -87,6 +87,25 @@
   margin-top: 2rem;
 }
 
+.patient-choice {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 32rem;
+  margin-top: 1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.patient-choice select {
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
 .list {
   display: grid;
   gap: 0.85rem;
@@ -177,6 +196,10 @@
 
 .btn:disabled {
   opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--loading:disabled {
   cursor: wait;
 }
 

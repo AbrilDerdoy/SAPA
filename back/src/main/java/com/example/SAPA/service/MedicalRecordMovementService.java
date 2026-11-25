@@ -39,6 +39,7 @@ public class MedicalRecordMovementService {
     private final ConversationRepository conversationRepository;
     private final ConversationService conversationService;
     private final UserContextService userContextService;
+    private final PatientAccessService patientAccessService;
     private final NotificationService notificationService;
     private final MedicalRecordAttachmentStorageService attachmentStorageService;
 
@@ -534,7 +535,7 @@ public class MedicalRecordMovementService {
 
     /**
      * Verifica que el usuario autenticado pueda consultar la ficha.
-     * El paciente puede consultar su propia ficha.
+     * El paciente puede consultar su propia ficha y un tutor la de su tutelado.
      * Un médico necesita autorización aprobada vigente.
      */
     private PatientEntity validateAndGetPatientAccess(Long patientId) {
@@ -543,19 +544,29 @@ public class MedicalRecordMovementService {
         UserEntity authenticatedUser =
                 userContextService.getAuthenticatedUser();
 
-        if (patient.getUser().getId().equals(authenticatedUser.getId())) {
-            return patient;
-        }
-
-        DoctorEntity doctor = doctorRepository.findByUser(authenticatedUser)
-                .orElseThrow(() ->
-                        new AccessDeniedException(
-                                "No tenés permiso para consultar esta ficha"
-                        ));
-
-        validateDoctorAccess(patient, doctor);
-
-        return patient;
+        return switch (authenticatedUser.getRole()) {
+            case PATIENT -> {
+                if (!patient.getUser().getId().equals(authenticatedUser.getId())) {
+                    throw new AccessDeniedException(
+                            "No tenés permiso para consultar esta ficha"
+                    );
+                }
+                yield patient;
+            }
+            case TUTOR -> patientAccessService.resolve(patientId);
+            case DOCTOR -> {
+                DoctorEntity doctor = doctorRepository.findByUser(authenticatedUser)
+                        .orElseThrow(() ->
+                                new AccessDeniedException(
+                                        "No tenés permiso para consultar esta ficha"
+                                ));
+                validateDoctorAccess(patient, doctor);
+                yield patient;
+            }
+            default -> throw new AccessDeniedException(
+                    "No tenés permiso para consultar esta ficha"
+            );
+        };
     }
 
     /**

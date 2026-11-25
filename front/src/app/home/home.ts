@@ -21,6 +21,8 @@ export class Home {
   private readonly questionnaireService = inject(QuestionnaireService);
 
   isPatient = false;
+  readonly restricted = signal(false);
+  readonly hasActiveTutor = signal(false);
 
   assignments = signal<AssignmentResponse[]>([]);
   loadingQuestionnaires = signal(false);
@@ -32,15 +34,19 @@ export class Home {
       this.auth.sessionVersion();
 
       const patientSession = this.auth.isPatient();
+      const restricted = this.auth.requiresTutor();
 
       this.isPatient = patientSession;
+      this.restricted.set(restricted);
+      this.hasActiveTutor.set(this.auth.hasActiveTutor());
 
       // Limpia los datos anteriores cada vez que cambia la sesión.
       this.assignments.set([]);
       this.loadingQuestionnaires.set(false);
 
-      // Si no hay un paciente autenticado, no se consultan cuestionarios.
-      if (!patientSession || !this.auth.isAuthenticated()) {
+      // Si no hay un paciente autenticado o su cuenta está restringida, no se
+      // consultan cuestionarios.
+      if (!patientSession || !this.auth.isAuthenticated() || restricted) {
         return;
       }
 

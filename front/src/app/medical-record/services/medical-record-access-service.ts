@@ -1,5 +1,5 @@
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -31,15 +31,25 @@ export class MedicalRecordAccessService {
     );
   }
 
-  getPendingRequests(): Observable<MedicalRecordAccessRequest[]> {
+  getPendingRequests(patientId?: number | null): Observable<MedicalRecordAccessRequest[]> {
+    const params = patientId != null
+      ? new HttpParams().set('patientId', patientId)
+      : undefined;
+
     return this.http.get<MedicalRecordAccessRequest[]>(
-      `${this.apiUrl}/pending`
+      `${this.apiUrl}/pending`,
+      { params }
     );
   }
 
-  getApprovedRequests(): Observable<MedicalRecordAccessRequest[]> {
+  getApprovedRequests(patientId?: number | null): Observable<MedicalRecordAccessRequest[]> {
+    const params = patientId != null
+      ? new HttpParams().set('patientId', patientId)
+      : undefined;
+
     return this.http.get<MedicalRecordAccessRequest[]>(
-      `${this.apiUrl}/approved`
+      `${this.apiUrl}/approved`,
+      { params }
     );
   }
 

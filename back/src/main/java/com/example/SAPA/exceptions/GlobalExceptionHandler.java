@@ -91,6 +91,13 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(java.nio.file.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleNioAccessDeniedException(
+            java.nio.file.AccessDeniedException ex,
+            WebRequest request) {
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalStateException(
             IllegalStateException ex,

@@ -5,13 +5,17 @@ import com.example.SAPA.Models.Chat.ConversationEntity;
 import com.example.SAPA.Models.Chat.MessageEntity;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
+import com.example.SAPA.Models.FollowRequestEntity;
 import com.example.SAPA.Repositories.ConversationRepository;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.FollowRequestRepository;
 import com.example.SAPA.Repositories.MessageRepository;
 import com.example.SAPA.Repositories.PatientRepository;
 import com.example.SAPA.enums.FollowRequestStatus;
+import com.example.SAPA.enums.MessageType;
+import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.mappers.MessageMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +31,14 @@ import java.util.List;
 public class ConversationService {
 
     private final ConversationRepository conversationRepository;
+    private final FollowRequestRepository followRequestRepository;
     private final MessageRepository messageRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
-    private final FollowRequestRepository followRequestRepository;
     private final MessageMapper messageMapper;
     private final UserContextService userContextService;
     private final ChatPresenceService chatPresenceService;
+    private final PatientAccessService patientAccess;
 
     @Transactional
     public ConversationEntity createConversation(
@@ -70,7 +75,21 @@ public class ConversationService {
                 });
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
+    public ConversationEntity createTutorConversation(
+            TutorEntity tutor,
+            DoctorEntity doctor
+    ) {
+        return conversationRepository.findByTutorAndDoctor(tutor, doctor)
+                .orElseGet(() -> conversationRepository.save(
+                        ConversationEntity.builder()
+                                .tutor(tutor)
+                                .doctor(doctor)
+                                .build()
+                ));
+    }
+
+    @Transactional
     public List<ChatDTO.ConversationSummary> getMyConversations() {
 
         UserEntity user = userContextService.getAuthenticatedUser();
@@ -80,11 +99,16 @@ public class ConversationService {
 
         List<ConversationEntity> conversations;
         DoctorEntity authenticatedDoctor = null;
+        TutorEntity authenticatedTutor = null;
 
         boolean isPatient = patient != null;
 
         if (isPatient) {
             conversations = conversationRepository.findByPatient(patient);
+        } else if (user.getRole() == UserCategory.TUTOR) {
+            authenticatedTutor = userContextService.getAuthenticatedTutor();
+            ensureTutorConversations(authenticatedTutor);
+            conversations = conversationRepository.findByTutor(authenticatedTutor);
         } else {
             authenticatedDoctor = doctorRepository.findByUser(user)
                     .orElseThrow(() -> new EntityNotFoundException(
@@ -98,6 +122,7 @@ public class ConversationService {
         }
 
         DoctorEntity currentDoctor = authenticatedDoctor;
+        TutorEntity currentTutor = authenticatedTutor;
 
         return conversations.stream()
                 .filter(conversation -> {
@@ -122,12 +147,16 @@ public class ConversationService {
 
                     if (isPatient) {
                         otherParticipant = conversation.getDoctor().getUser();
-
                         otherName = "Dr. "
                                 + conversation.getDoctor().getFirstName()
                                 + " "
                                 + conversation.getDoctor().getLastName();
-
+                    } else if (currentTutor != null) {
+                        otherParticipant = conversation.getDoctor().getUser();
+                        otherName = "Dr. "
+                                + conversation.getDoctor().getFirstName()
+                                + " "
+                                + conversation.getDoctor().getLastName();
                     } else if (conversation.getPatient() != null) {
                         otherParticipant = conversation.getPatient().getUser();
 
@@ -224,6 +253,39 @@ public class ConversationService {
         );
     }
 
+    private void ensureTutorConversations(TutorEntity tutor) {
+        List<PatientEntity> patients = patientAccess.getAccessiblePatients();
+        if (patients.isEmpty()) {
+            return;
+        }
+
+        followRequestRepository.findByPatientIn(patients).stream()
+                .filter(request -> request.getStatus() == FollowRequestStatus.APPROVED)
+                .filter(request -> request.getDoctor() != null)
+                .forEach(request -> {
+                    ConversationEntity conversation = createTutorConversation(
+                            tutor,
+                            request.getDoctor()
+                    );
+                    String systemMessage = "Se creó un seguimiento para "
+                            + request.getPatient().getFirstName() + " "
+                            + request.getPatient().getLastName() + ".";
+
+                    if (!messageRepository.existsByConversationAndContentAndType(
+                            conversation,
+                            systemMessage,
+                            MessageType.SYSTEM
+                    )) {
+                        messageRepository.save(MessageEntity.builder()
+                                .conversation(conversation)
+                                .sender(tutor.getUser())
+                                .content(systemMessage)
+                                .type(MessageType.SYSTEM)
+                                .build());
+                    }
+                });
+    }
+
     @Transactional(readOnly = true)
     public ChatDTO.PresenceStatus getOtherParticipantPresence(
             Long conversationId,
@@ -278,6 +340,13 @@ public class ConversationService {
             ConversationEntity conversation,
             UserEntity currentUser
     ) {
+        if (conversation.getTutor() != null) {
+            UserEntity tutorUser = conversation.getTutor().getUser();
+            UserEntity doctorUser = conversation.getDoctor().getUser();
+            return tutorUser.getId().equals(currentUser.getId())
+                    ? doctorUser
+                    : tutorUser;
+        }
 
         if (conversation.getPatient() != null) {
             UserEntity patientUser =
@@ -319,7 +388,15 @@ public class ConversationService {
                 && conversation.getDoctorFollower().getUser().getId()
                 .equals(user.getId());
 
-        if (!isPatient && !isDoctor && !isDoctorFollower) {
+        boolean isConversationTutor = conversation.getTutor() != null
+                && conversation.getTutor().getUser().getId()
+                .equals(user.getId());
+
+        boolean isTutor = conversation.getPatient() != null
+                && patientAccess.isTutorOf(user, conversation.getPatient());
+
+        if (!isPatient && !isDoctor && !isDoctorFollower
+                && !isConversationTutor && !isTutor) {
             throw new AccessDeniedException(
                     "No tenés permiso para acceder a esta conversación"
             );

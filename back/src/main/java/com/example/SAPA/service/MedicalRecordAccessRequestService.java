@@ -4,12 +4,17 @@ package com.example.SAPA.service;
 import com.example.SAPA.DTOs.Response.MedicalRecordAccessRequestResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordAccessRequestEntity;
 import com.example.SAPA.Repositories.MedicalRecordAccessRequestRepository;
 import com.example.SAPA.Repositories.PatientRepository;
+import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.enums.MedicalRecordAccessStatus;
+import com.example.SAPA.enums.TutorLinkStatus;
+import com.example.SAPA.enums.UserCategory;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +28,8 @@ public class MedicalRecordAccessRequestService {
     private final MedicalRecordAccessRequestRepository accessRequestRepository;
     private final PatientRepository patientRepository;
     private final UserContextService userContext;
+    private final PatientAccessService patientAccess;
+    private final TutorPatientRepository tutorPatientRepository;
     private final NotificationService notificationService;
 
     @Transactional
@@ -35,6 +42,13 @@ public class MedicalRecordAccessRequestService {
         PatientEntity patient = patientRepository.findById(patientId)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Paciente no encontrado."));
+
+        if (patientAccess.requiresTutor(patient)
+                && !patientAccess.hasActiveTutor(patient)) {
+            throw new AccessDeniedException(
+                    "El paciente menor todavía no tiene un tutor activo que pueda responder la solicitud."
+            );
+        }
 
         if (accessRequestRepository.existsByPatientAndDoctorAndStatus(
                 patient, doctor, MedicalRecordAccessStatus.APPROVED)) {
@@ -63,7 +77,7 @@ public class MedicalRecordAccessRequestService {
                 accessRequestRepository.save(request);
 
         notificationService.notifyMedicalRecordEvent(
-                patient.getUser(),
+                getRequestRecipient(patient),
                 "Solicitud de acceso a ficha médica",
                 "El Dr./Dra. " + doctor.getFirstName() + " "
                         + doctor.getLastName()
@@ -74,8 +88,10 @@ public class MedicalRecordAccessRequestService {
     }
 
     @Transactional(readOnly = true)
-    public List<MedicalRecordAccessRequestResponseDTO> getMyPendingRequests() {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
+    public List<MedicalRecordAccessRequestResponseDTO> getMyPendingRequests(
+            Long patientId
+    ) {
+        PatientEntity patient = getAuthorizedPatient(patientId);
 
         return accessRequestRepository
                 .findByPatientAndStatusOrderByRequestedAtDesc(
@@ -88,8 +104,10 @@ public class MedicalRecordAccessRequestService {
     }
 
     @Transactional(readOnly = true)
-    public List<MedicalRecordAccessRequestResponseDTO> getMyApprovedRequests() {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
+    public List<MedicalRecordAccessRequestResponseDTO> getMyApprovedRequests(
+            Long patientId
+    ) {
+        PatientEntity patient = getAuthorizedPatient(patientId);
 
         return accessRequestRepository
                 .findByPatientAndStatusOrderByRequestedAtDesc(
@@ -114,10 +132,8 @@ public class MedicalRecordAccessRequestService {
 
     @Transactional
     public MedicalRecordAccessRequestResponseDTO approve(Long requestId) {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
-
-        MedicalRecordAccessRequestEntity request =
-                getPatientRequest(requestId, patient);
+        MedicalRecordAccessRequestEntity request = getAuthorizedRequest(requestId);
+        PatientEntity patient = request.getPatient();
 
         validatePending(request);
 
@@ -139,10 +155,8 @@ public class MedicalRecordAccessRequestService {
 
     @Transactional
     public MedicalRecordAccessRequestResponseDTO reject(Long requestId) {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
-
-        MedicalRecordAccessRequestEntity request =
-                getPatientRequest(requestId, patient);
+        MedicalRecordAccessRequestEntity request = getAuthorizedRequest(requestId);
+        PatientEntity patient = request.getPatient();
 
         validatePending(request);
 
@@ -164,10 +178,8 @@ public class MedicalRecordAccessRequestService {
 
     @Transactional
     public MedicalRecordAccessRequestResponseDTO revoke(Long requestId) {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
-
-        MedicalRecordAccessRequestEntity request =
-                getPatientRequest(requestId, patient);
+        MedicalRecordAccessRequestEntity request = getAuthorizedRequest(requestId);
+        PatientEntity patient = request.getPatient();
 
         if (request.getStatus() != MedicalRecordAccessStatus.APPROVED) {
             throw new IllegalStateException(
@@ -191,16 +203,64 @@ public class MedicalRecordAccessRequestService {
         return toResponse(saved);
     }
 
-    private MedicalRecordAccessRequestEntity getPatientRequest(
-            Long requestId,
-            PatientEntity patient
-    ) {
+    private PatientEntity getAuthorizedPatient(Long patientId) {
+        UserEntity user = userContext.getAuthenticatedUser();
+
+        if (user.getRole() == UserCategory.PATIENT) {
+            PatientEntity patient = userContext.getAuthenticatedPatient();
+            if (patientId != null && !patient.getId().equals(patientId)) {
+                throw new AccessDeniedException(
+                        "No tenés permiso para consultar solicitudes de otro paciente."
+                );
+            }
+            return patient;
+        }
+
+        if (user.getRole() == UserCategory.TUTOR && patientId != null) {
+            PatientEntity patient = patientAccess.resolve(patientId);
+            requireMinorPatient(patient);
+            return patient;
+        }
+
+        throw new AccessDeniedException(
+                "Solo el paciente o su tutor activo pueden gestionar estas solicitudes."
+        );
+    }
+
+    private MedicalRecordAccessRequestEntity getAuthorizedRequest(Long requestId) {
+        MedicalRecordAccessRequestEntity request = accessRequestRepository
+                .findById(requestId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "No se encontró la solicitud para este paciente."
+                        ));
+
+        PatientEntity patient = getAuthorizedPatient(request.getPatient().getId());
         return accessRequestRepository
                 .findByIdAndPatient(requestId, patient)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
                                 "No se encontró la solicitud para este paciente."
                         ));
+    }
+
+    private void requireMinorPatient(PatientEntity patient) {
+        if (!patientAccess.requiresTutor(patient)) {
+            throw new AccessDeniedException(
+                    "El tutor solo puede responder solicitudes en nombre de un paciente menor de edad."
+            );
+        }
+    }
+
+    private UserEntity getRequestRecipient(PatientEntity patient) {
+        if (!patientAccess.requiresTutor(patient)) {
+            return patient.getUser();
+        }
+
+        return tutorPatientRepository
+                .findByPatientAndStatus(patient, TutorLinkStatus.ACTIVE)
+                .map(link -> link.getTutor().getUser())
+                .orElse(patient.getUser());
     }
 
     private void validatePending(MedicalRecordAccessRequestEntity request) {

@@ -56,10 +56,11 @@ public class AssigmentController {
 
     // Obtener los cuestionarios pendientes del paciente.
     @GetMapping("/my-assignments")
-    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
-    public ResponseEntity<List<QuestionnaireDTO.AssignmentResponse>> getMyAssignments() {
+    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT', 'TUTOR', 'ROLE_TUTOR')")
+    public ResponseEntity<List<QuestionnaireDTO.AssignmentResponse>> getMyAssignments(
+            @RequestParam(required = false) Long patientId) {
 
-        return ResponseEntity.ok(assignmentService.getMyAssignments());
+        return ResponseEntity.ok(assignmentService.getMyAssignments(patientId));
     }
 
     // Consultar las respuestas de un cuestionario.
@@ -86,18 +87,16 @@ public class AssigmentController {
 
     // Consultar el historial propio del paciente.
     @GetMapping("/my-responses")
-    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
+    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT', 'TUTOR', 'ROLE_TUTOR')")
     public ResponseEntity<List<QuestionnaireDTO.QuestionnaireResponseDTO>>
-    getMyResponses() {
+    getMyResponses(@RequestParam(required = false) Long patientId) {
 
-        return ResponseEntity.ok(
-                assignmentService.getMyResponses()
-        );
+        return ResponseEntity.ok(assignmentService.getMyResponses(patientId));
     }
 
     // Responder un cuestionario.
     @PostMapping("/{assignmentId}/submit")
-    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT')")
+    @PreAuthorize("hasAnyAuthority('PATIENT', 'ROLE_PATIENT', 'TUTOR', 'ROLE_TUTOR')")
     public ResponseEntity<QuestionnaireDTO.QuestionnaireResponseDTO> submitResponse(
             @PathVariable Long assignmentId,
             @RequestBody QuestionnaireDTO.SubmitResponseRequest request) {

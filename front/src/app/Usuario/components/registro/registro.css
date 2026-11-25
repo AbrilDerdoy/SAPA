@@ -59,7 +59,7 @@
 
 .reg-switch {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
   background: var(--surface-sunken);
@@ -161,12 +161,14 @@
   filter: brightness(0) invert(1);
 }
 
-.reg-field app-form-error {
+.reg-field app-form-error,
+.reg-terms app-form-error {
   display: block;
   min-height: 1rem;
 }
 
-:host ::ng-deep .reg-field .error {
+:host ::ng-deep .reg-field .error,
+:host ::ng-deep .reg-terms .error {
   margin: 0;
   max-width: none;
   font-size: 0.82rem;
@@ -199,6 +201,51 @@
 .reg-notice--error {
   background: var(--danger-light);
   border-left-color: var(--danger);
+}
+
+.reg-terms {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.reg-terms__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.reg-terms__check input {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  min-height: 0;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.reg-terms__link {
+  justify-self: start;
+  margin-left: 1.65rem;
+  color: var(--primary-dark);
+  font-size: 0.87rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.reg-terms__link:hover {
+  color: var(--primary);
+}
+
+.reg-terms__link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .reg-submit {

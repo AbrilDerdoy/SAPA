@@ -100,7 +100,7 @@ public class UserController {
 
     @Operation(
             summary = "Subir o reemplazar foto de perfil",
-            description = "Permite a médicos y pacientes subir o reemplazar su foto."
+            description = "Permite a pacientes, tutores y médicos subir o reemplazar su foto."
     )
     @PostMapping(
             value = "/profile/photo",
@@ -156,7 +156,7 @@ public class UserController {
 
     @Operation(
             summary = "Mostrar mi perfil",
-            description = "Permite visualizar los datos del perfil como médico o paciente."
+            description = "Permite visualizar los datos del perfil autenticado, incluida la foto."
     )
     @GetMapping("/me")
     public ResponseEntity<ProfileResponseDTO> me(

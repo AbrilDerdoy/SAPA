@@ -87,4 +87,26 @@ public class EmailService {
                 emailContent
         );
     }
+
+    public void sendTutorInvitationEmail(
+            String toEmail,
+            String inviterName,
+            String acceptUrl,
+            String actionDescription) {
+
+        String emailContent =
+                "Hola.\n\n"
+                        + inviterName + " " + actionDescription + " en " + senderName + ".\n\n"
+                        + "Para aceptar la invitación ingresá al siguiente enlace:\n\n"
+                        + acceptUrl
+                        + "\n\nEste enlace expira en 7 días.\n"
+                        + "Si no reconocés esta solicitud, podés ignorar este correo.\n\n"
+                        + "Saludos cordiales,\nEl equipo de " + senderName + ".";
+
+        enviarCorreo(
+                toEmail,
+                "Invitación de tutela - " + senderName,
+                emailContent
+        );
+    }
 }

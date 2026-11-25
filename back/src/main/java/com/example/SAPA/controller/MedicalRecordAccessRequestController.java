@@ -32,17 +32,21 @@ public class MedicalRecordAccessRequestController {
 
     @GetMapping("/pending")
     public ResponseEntity<List<MedicalRecordAccessRequestResponseDTO>>
-    getMyPendingRequests() {
+    getMyPendingRequests(
+            @RequestParam(required = false) Long patientId
+    ) {
         return ResponseEntity.ok(
-                accessRequestService.getMyPendingRequests()
+                accessRequestService.getMyPendingRequests(patientId)
         );
     }
 
     @GetMapping("/approved")
     public ResponseEntity<List<MedicalRecordAccessRequestResponseDTO>>
-    getMyApprovedRequests() {
+    getMyApprovedRequests(
+            @RequestParam(required = false) Long patientId
+    ) {
         return ResponseEntity.ok(
-                accessRequestService.getMyApprovedRequests()
+                accessRequestService.getMyApprovedRequests(patientId)
         );
     }
 

@@ -21,7 +21,7 @@ import {
   styleUrl: './medical-record-access.css'
 })
 export class MedicalRecordAccess implements OnInit {
-  @Input({ required: true }) mode!: 'doctor' | 'patient';
+  @Input({ required: true }) mode!: 'doctor' | 'patient' | 'tutor';
   @Input() patientId: number | null = null;
 
   private readonly accessService = inject(MedicalRecordAccessService);
@@ -52,8 +52,10 @@ export class MedicalRecordAccess implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    if (this.mode === 'patient') {
-      this.accessService.getPendingRequests().subscribe({
+    if (this.mode !== 'doctor') {
+      this.accessService.getPendingRequests(
+        this.mode === 'tutor' ? this.patientId : null
+      ).subscribe({
         next: data => {
           this.requests.set(data);
           this.loadApprovedRequests();
@@ -77,7 +79,9 @@ export class MedicalRecordAccess implements OnInit {
   }
 
   private loadApprovedRequests(): void {
-    this.accessService.getApprovedRequests().subscribe({
+    this.accessService.getApprovedRequests(
+      this.mode === 'tutor' ? this.patientId : null
+    ).subscribe({
       next: data => {
         this.approvedRequests.set(data);
         this.loading.set(false);

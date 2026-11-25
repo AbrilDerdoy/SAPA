@@ -1,12 +1,44 @@
 
-<main class="home">
-  <div class="home-layout">
+<main class="home" [class.home--restricted]="restricted()">
+  <div class="home-layout" [class.home-layout--restricted]="restricted()">
 
-    <aside class="home-sidebar">
-      <app-health-tip-carousel />
-    </aside>
+    @if (!restricted()) {
+      <aside class="home-sidebar">
+        <app-health-tip-carousel />
+      </aside>
+    }
 
     <section class="home-main">
+
+      @if (restricted()) {
+        <section class="restriction-notice">
+          <div class="restriction-notice__icon" aria-hidden="true">🔒</div>
+
+          <div>
+            <span class="section-label">CUENTA RESTRINGIDA</span>
+
+            @if (hasActiveTutor()) {
+              <h2>Tu tutor gestiona tu cuenta</h2>
+              <p>
+                Como sos menor de 18 años, no podés usar las funciones de SAPA
+                directamente. Tu tutor vinculado realiza las acciones en tu
+                nombre. Desde esta sección podés ver o revocar el vínculo.
+              </p>
+            } @else {
+              <h2>Necesitás un tutor para continuar</h2>
+              <p>
+                Como sos menor de 18 años, por ahora solo podés solicitar o
+                aceptar una tutela. Cuando tu tutor quede vinculado, podrá usar
+                SAPA en tu nombre.
+              </p>
+            }
+          </div>
+
+          <a routerLink="/mi-tutor" class="card-button">
+            {{ hasActiveTutor() ? 'Ver mi tutor' : 'Solicitar tutela' }}
+          </a>
+        </section>
+      } @else {
 
       <section class="welcome">
         <h1>¡Bienvenido a SAPA!</h1>
@@ -96,6 +128,8 @@
           </a>
         </article>
       </section>
+
+      }
 
     </section>
 

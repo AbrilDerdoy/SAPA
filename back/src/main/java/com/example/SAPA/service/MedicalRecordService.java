@@ -14,6 +14,7 @@ import com.example.SAPA.Repositories.PatientMedicationRepository;
 import com.example.SAPA.Repositories.PatientRepository;
 import com.example.SAPA.enums.MedicalRecordAccessStatus;
 import com.example.SAPA.enums.MedicationStatus;
+import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.mappers.MedicalRecordMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class MedicalRecordService {
     private final MedicalRecordAccessRequestRepository accessRequestRepository;
     private final MedicalRecordMapper medicalRecordMapper;
     private final UserContextService userContext;
+    private final PatientAccessService patientAccess;
     private final PatientMedicationRepository patientMedicationRepository;
     private final FdaService fdaService;
     private final MedicalRecordMovementService movementService;
@@ -57,21 +59,20 @@ public class MedicalRecordService {
 
     @Transactional
     public MedicalRecordResponseDTO getMyMedicalRecord() {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
+        return getMyMedicalRecord(null);
+    }
+
+    @Transactional
+    public MedicalRecordResponseDTO getMyMedicalRecord(Long patientId) {
+        PatientEntity patient = patientAccess.resolveClinical(patientId);
         MedicalRecordEntity record = getOrCreateMedicalRecord(patient);
 
         return medicalRecordMapper.toMedicalRecordResponse(record);
     }
 
     @Transactional(readOnly = true)
-    public MedicalRecordResponseDTO getPatientMedicalRecord(
-            Long patientId
-    ) {
-        DoctorEntity doctor = userContext.getAuthenticatedDoctor();
-
-        validateDoctorPatientAccess(doctor, patientId);
-
-        PatientEntity patient = getPatient(patientId);
+    public MedicalRecordResponseDTO getPatientMedicalRecord(Long patientId) {
+        PatientEntity patient = resolveAuthorizedPatient(patientId);
 
         if (patient.getMedicalRecord() == null) {
             throw new EntityNotFoundException(
@@ -86,7 +87,12 @@ public class MedicalRecordService {
 
     @Transactional(readOnly = true)
     public List<MedicationDetailResponseDTO> getMyMedications() {
-        PatientEntity patient = userContext.getAuthenticatedPatient();
+        return getMyMedications(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MedicationDetailResponseDTO> getMyMedications(Long patientId) {
+        PatientEntity patient = patientAccess.resolveClinical(patientId);
 
         if (patient.getMedicalRecord() == null) {
             return List.of();
@@ -100,14 +106,8 @@ public class MedicalRecordService {
     }
 
     @Transactional(readOnly = true)
-    public List<MedicationDetailResponseDTO> getPatientMedications(
-            Long patientId
-    ) {
-        DoctorEntity doctor = userContext.getAuthenticatedDoctor();
-
-        validateDoctorPatientAccess(doctor, patientId);
-
-        PatientEntity patient = getPatient(patientId);
+    public List<MedicationDetailResponseDTO> getPatientMedications(Long patientId) {
+        PatientEntity patient = resolveAuthorizedPatient(patientId);
 
         if (patient.getMedicalRecord() == null) {
             return List.of();
@@ -118,6 +118,16 @@ public class MedicalRecordService {
                 .stream()
                 .map(this::toMedicationResponse)
                 .toList();
+    }
+
+    private PatientEntity resolveAuthorizedPatient(Long patientId) {
+        if (userContext.getAuthenticatedUser().getRole() == UserCategory.DOCTOR) {
+            DoctorEntity doctor = userContext.getAuthenticatedDoctor();
+            validateDoctorPatientAccess(doctor, patientId);
+            return getPatient(patientId);
+        }
+
+        return patientAccess.resolveClinical(patientId);
     }
 
     @Transactional

@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,7 @@ public class PatientService {
 
     private final PatientMapper patientMapper;
     private final UserContextService userContextService;
+    private final PatientAccessService patientAccessService;
     private final FollowRequestRepository followRequestRepository;
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
@@ -33,13 +35,52 @@ public class PatientService {
 
     @Transactional
     public void updatePatient(UpdatePatientRequestDTO request) {
+        updatePatient(null, request);
+    }
 
-        PatientEntity patient = userContextService.getAuthenticatedPatient();
+    @Transactional
+    public void updatePatient(Long patientId, UpdatePatientRequestDTO request) {
+
+        PatientEntity patient = patientAccessService.resolve(patientId);
+
+        validatePatientBirthDate(request.birthDate());
 
         patient.setFirstName(request.firstName());
         patient.setLastName(request.lastName());
         patient.setBirthDate(request.birthDate());
-        patient.setPhoneNumber(request.phoneNumber());
+        patient.setPhoneNumber(
+                request.phoneNumber() == null || request.phoneNumber().isBlank()
+                        ? null
+                        : request.phoneNumber().trim()
+        );
+    }
+
+    private void validatePatientBirthDate(LocalDate birthDate) {
+        LocalDate today = LocalDate.now();
+
+        if (!birthDate.isBefore(today)) {
+            throw new IllegalArgumentException(
+                    "La fecha de nacimiento debe ser anterior a hoy.");
+        }
+
+        if (!AgePolicy.isAtLeastMonthsOld(
+                birthDate,
+                AgePolicy.MIN_PATIENT_AGE_MONTHS,
+                today
+        )) {
+            throw new IllegalArgumentException(
+                    "El paciente debe tener al menos 6 meses de edad.");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getPatientProfile() {
+        return getPatientProfile(null);
+    }
+
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getPatientProfile(Long patientId) {
+        return patientMapper.toResponseDTO(patientAccessService.resolve(patientId));
     }
 
     @Transactional(readOnly = true)

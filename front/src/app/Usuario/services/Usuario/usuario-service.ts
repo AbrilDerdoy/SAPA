@@ -11,7 +11,7 @@ export interface datosUsuario {
   email: string;
   role: string;
   birthDate: Date;
-  phoneNumber: number;
+  phoneNumber: string | null;
   licenseNumber: number | null;
   profileImageUrl: string | null;
 }

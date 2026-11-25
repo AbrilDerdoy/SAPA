@@ -6,7 +6,7 @@ export interface UpdateDoctorRequest {
     hospitalAddress: string | null;
     hospitalLatitude: number | null;
     hospitalLongitude: number | null;
-    phoneNumber: string;
+    phoneNumber: string | null;
     licenseNumber: string;
     speciality: number;
 }

@@ -1,11 +1,13 @@
 export interface registerRequest {
-    role:'ROLE_PATIENT' | 'ROLE_DOCTOR',
+    role:'ROLE_PATIENT' | 'ROLE_TUTOR' | 'ROLE_DOCTOR',
     email:string,
     password:string,
     firstName:string,
     lastName:string,
     birthDate:string,
-    phoneNumber:string,
+    phoneNumber:string|null,
     licenseNumber:string|null,
-    speciality:number|null
+    speciality:number|null,
+    specialities?:number[]|null,
+    relationship: string
 }

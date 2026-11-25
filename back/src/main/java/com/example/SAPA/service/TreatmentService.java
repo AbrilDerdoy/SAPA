@@ -1,4 +1,3 @@
-
 package com.example.SAPA.service;
 
 import com.example.SAPA.DTOs.Request.TreatmentRequestDTO;
@@ -7,12 +6,10 @@ import com.example.SAPA.DTOs.TreatmentDurationDTO;
 import com.example.SAPA.DTOs.TreatmentFrequencyDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
-import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.MedicalRecord.DurationEntity;
 import com.example.SAPA.Models.MedicalRecord.FrequencyEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordEntity;
 import com.example.SAPA.Models.MedicalRecord.TreatmentEntity;
-import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.DurationRepository;
 import com.example.SAPA.Repositories.FrequencyRepository;
 import com.example.SAPA.Repositories.MedicalRecordAccessRequestRepository;
@@ -41,8 +38,8 @@ public class TreatmentService {
     private final MedicalRecordRepository medicalRecordRepository;
     private final MedicalRecordAccessRequestRepository accessRequestRepository;
     private final PatientRepository patientRepository;
-    private final DoctorRepository doctorRepository;
     private final UserContextService userContext;
+    private final PatientAccessService patientAccess;
     private final TreatmentMapper treatmentMapper;
     private final MedicalRecordMovementService movementService;
 
@@ -92,12 +89,10 @@ public class TreatmentService {
     ) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
         PatientEntity patient = getPatient(patientId);
-
         validateDoctorAccess(doctor, patient);
         validateJustification(request.justification());
 
         MedicalRecordEntity record = getOrCreateMedicalRecord(patient);
-
         DurationEntity duration = buildDuration(request.duration());
         FrequencyEntity frequency = buildFrequency(request.frequency());
 
@@ -128,15 +123,8 @@ public class TreatmentService {
             TreatmentRequestDTO request
     ) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
-
         TreatmentEntity treatment = getTreatment(treatmentId);
-
-        PatientEntity patient = patientRepository
-                .findByMedicalRecordId(treatment.getMedicalRecord().getId())
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "No se encontró el paciente asociado al tratamiento."
-                        ));
+        PatientEntity patient = getPatientByTreatment(treatment);
 
         validateDoctorAccess(doctor, patient);
         validateJustification(request.justification());
@@ -180,13 +168,7 @@ public class TreatmentService {
     public void deleteTreatment(Long treatmentId, String justification) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
         TreatmentEntity treatment = getTreatment(treatmentId);
-
-        PatientEntity patient = patientRepository
-                .findByMedicalRecordId(treatment.getMedicalRecord().getId())
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "No se encontró el paciente asociado al tratamiento."
-                        ));
+        PatientEntity patient = getPatientByTreatment(treatment);
 
         validateDoctorAccess(doctor, patient);
         validateJustification(justification);
@@ -216,8 +198,7 @@ public class TreatmentService {
             return List.of();
         }
 
-        return treatmentRepository
-                .findByMedicalRecord(patient.getMedicalRecord())
+        return treatmentRepository.findByMedicalRecord(patient.getMedicalRecord())
                 .stream()
                 .map(treatmentMapper::toTreatmentResponse)
                 .toList();
@@ -244,11 +225,37 @@ public class TreatmentService {
                 .toList();
     }
 
+    private PatientEntity validateAndGetPatientAccess(Long patientId) {
+        UserCategory role = userContext.getAuthenticatedUser().getRole();
+
+        if (role == UserCategory.DOCTOR) {
+            DoctorEntity doctor = userContext.getAuthenticatedDoctor();
+            PatientEntity patient = getPatient(patientId);
+            validateDoctorAccess(doctor, patient);
+            return patient;
+        }
+
+        if (role == UserCategory.PATIENT || role == UserCategory.TUTOR) {
+            return patientAccess.resolveClinical(patientId);
+        }
+
+        throw new AccessDeniedException("Rol no autorizado.");
+    }
+
     private PatientEntity getPatient(Long patientId) {
         return patientRepository.findById(patientId)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
                                 "Paciente no encontrado con id: " + patientId
+                        ));
+    }
+
+    private PatientEntity getPatientByTreatment(TreatmentEntity treatment) {
+        return patientRepository
+                .findByMedicalRecordId(treatment.getMedicalRecord().getId())
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "No se encontró el paciente asociado al tratamiento."
                         ));
     }
 
@@ -258,41 +265,6 @@ public class TreatmentService {
                         new EntityNotFoundException(
                                 "Tratamiento no encontrado con id: " + treatmentId
                         ));
-    }
-
-    private PatientEntity validateAndGetPatientAccess(Long patientId) {
-        PatientEntity patient = getPatient(patientId);
-        UserEntity currentUser = userContext.getAuthenticatedUser();
-
-        if (currentUser.getRole() == UserCategory.PATIENT) {
-            PatientEntity authenticatedPatient = patientRepository
-                    .findByUserId(currentUser.getId())
-                    .orElseThrow(() ->
-                            new AccessDeniedException(
-                                    "No se encontró el perfil del paciente."
-                            ));
-
-            if (!authenticatedPatient.getId().equals(patientId)) {
-                throw new AccessDeniedException(
-                        "No tenés permiso para consultar la ficha de otro paciente."
-                );
-            }
-
-            return patient;
-        }
-
-        if (currentUser.getRole() == UserCategory.DOCTOR) {
-            DoctorEntity doctor = doctorRepository.findByUser(currentUser)
-                    .orElseThrow(() ->
-                            new AccessDeniedException(
-                                    "No se encontró el perfil del médico."
-                            ));
-
-            validateDoctorAccess(doctor, patient);
-            return patient;
-        }
-
-        throw new AccessDeniedException("Rol no autorizado.");
     }
 
     private void validateDoctorAccess(

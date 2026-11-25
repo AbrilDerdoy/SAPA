@@ -17,6 +17,7 @@ import {
   minLength,
   pattern,
   required,
+  validate,
 } from '@angular/forms/signals';
 import { httpResource } from '@angular/common/http';
 import * as L from 'leaflet';
@@ -505,21 +506,32 @@ export class DoctorProfile {
       message: 'El apellido no puede superar los 50 caracteres.',
     });
 
-    required(path.phoneNumber, {
-      message: 'El número de teléfono es obligatorio.',
-    });
-
-    minLength(path.phoneNumber, 7, {
-      message: 'El teléfono debe tener al menos 7 caracteres.',
-    });
-
     maxLength(path.phoneNumber, 20, {
       message: 'El teléfono no puede superar los 20 caracteres.',
     });
 
-    pattern(path.phoneNumber, /^\+?[0-9\s\-()]+$/, {
-      message:
-        'Solo se permiten números, espacios, guiones o el signo +.',
+    validate(path.phoneNumber, ({ value }) => {
+      const phoneNumber = value().trim();
+
+      if (!phoneNumber) {
+        return undefined;
+      }
+
+      if (phoneNumber.length < 7) {
+        return {
+          kind: 'minLength',
+          message: 'El teléfono debe tener al menos 7 caracteres.',
+        };
+      }
+
+      if (!/^\+?[0-9\s\-()]+$/.test(phoneNumber)) {
+        return {
+          kind: 'pattern',
+          message: 'Solo se permiten números, espacios, guiones, paréntesis o el signo +.',
+        };
+      }
+
+      return undefined;
     });
 
     required(path.licenseNumber, {
@@ -622,7 +634,7 @@ export class DoctorProfile {
     const request: UpdateDoctorRequest = {
       firstName: value.firstName.trim(),
       lastName: value.lastName.trim(),
-      phoneNumber: value.phoneNumber.trim(),
+      phoneNumber: value.phoneNumber.trim() || null,
       licenseNumber: value.licenseNumber.trim(),
       bio: value.bio.trim() || null,
       hospitalUrl: value.hospitalUrl.trim() || null,
@@ -642,7 +654,7 @@ export class DoctorProfile {
           firstName: request.firstName,
           lastName: request.lastName,
           email: this.model().email,
-          phoneNumber: request.phoneNumber,
+          phoneNumber: request.phoneNumber ?? '',
           licenseNumber: request.licenseNumber,
           bio: request.bio ?? '',
           hospitalUrl: request.hospitalUrl ?? '',

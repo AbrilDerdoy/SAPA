@@ -55,6 +55,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
   showForm = false;
   isDoctor = false;
+  isPatient = false;
   isLoggedIn = false;
 
   title = '';
@@ -109,12 +110,14 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
         )
         .subscribe(() => {
           const previousRole = this.isDoctor;
+          const previousPatientRole = this.isPatient;
           const previousLogin = this.isLoggedIn;
 
           this.checkRole();
 
           if (
             previousRole !== this.isDoctor ||
+            previousPatientRole !== this.isPatient ||
             previousLogin !== this.isLoggedIn
           ) {
             this.loadTips();
@@ -133,6 +136,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   private checkRole(): void {
     this.isLoggedIn = this.auth.isAuthenticated();
     this.isDoctor = false;
+    this.isPatient = false;
 
     if (!this.isLoggedIn) {
       this.showForm = false;
@@ -153,12 +157,14 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
         .replace('ROLE_', '');
 
       this.isDoctor = role === 'DOCTOR';
+      this.isPatient = role === 'PATIENT';
 
     } catch (error) {
       console.error('Error al obtener el rol:', error);
 
       this.isLoggedIn = false;
       this.isDoctor = false;
+      this.isPatient = false;
     }
 
     if (!this.isDoctor) {
@@ -201,8 +207,10 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
 
           if (this.isDoctor) {
             this.loadCurrentDoctor();
-          } else {
+          } else if (this.isPatient) {
             this.loadRecommendations();
+            this.loadFollowedDoctorsTips();
+          } else {
             this.loadFollowedDoctorsTips();
           }
         },
@@ -274,6 +282,11 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   }
 
   private loadRecommendations(): void {
+    if (!this.isPatient && !this.isDoctor) {
+      this.recommendations = [];
+      return;
+    }
+
     this.subscriptions.add(
       this.http.get<Doctor[]>(`${this.DOCTORS_URL}/search`).subscribe({
         next: doctors => {
@@ -380,6 +393,7 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
   requestFollow(doctorId: number): void {
     if (
       !this.isLoggedIn ||
+      (!this.isPatient && !this.isDoctor) ||
       this.requestingDoctorId !== null ||
       this.sentDoctorIds.includes(doctorId)
     ) {
@@ -389,7 +403,10 @@ export class HealthTipCarousel implements OnInit, OnDestroy {
     this.requestingDoctorId = doctorId;
     this.errorMessage = '';
     this.successMessage = '';
+    this.sendFollowRequest(doctorId);
+  }
 
+  private sendFollowRequest(doctorId: number): void {
     this.subscriptions.add(
       this.followService.send(doctorId).subscribe({
         next: () => {

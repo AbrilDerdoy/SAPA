@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record RegisterRequest(
 
@@ -31,12 +32,15 @@ public record RegisterRequest(
         @Past(message = "La fecha de nacimiento debe ser una fecha pasada.")
         LocalDate birthDate,
 
-        @NotBlank(message = "El número de teléfono es obligatorio.")
-        @Size(min = 7, max = 20, message = "El número de teléfono debe tener entre 7 y 20 caracteres.")
-        @Pattern(regexp = "^\\+?[0-9\\s\\-\\(]+$", message = "El número de teléfono solo puede contener números, espacios, guiones o el signo +.")
+        @Size(max = 20, message = "El número de teléfono no puede superar los 20 caracteres.")
+        @Pattern(regexp = "^$|^\\+?[0-9\\s\\-()]{7,20}$", message = "El número de teléfono debe tener entre 7 y 20 caracteres y solo puede contener números, espacios, guiones, paréntesis o el signo +.")
         String phoneNumber,
 
         String licenseNumber,
 
-        Long speciality
+        Long speciality,
+
+        List<Long> specialities,
+
+        String relationship
 ) {}

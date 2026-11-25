@@ -13,6 +13,31 @@ function withBearerToken<T>(req: HttpRequest<T>, token: string): HttpRequest<T> 
   return req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
 }
 
+/**
+ * El backend responde 403 con error TUTOR_REQUIRED cuando un paciente menor
+ * de edad intenta usar una función restringida, tenga o no tutor.
+ */
+function isTutorRequired(error: HttpErrorResponse): boolean {
+  const body: unknown = error.error;
+
+  if (typeof body === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(body);
+      return !!parsed
+        && typeof parsed === 'object'
+        && Reflect.get(parsed, 'error') === 'TUTOR_REQUIRED';
+    } catch {
+      return body.includes('TUTOR_REQUIRED');
+    }
+  }
+
+  if (body && typeof body === 'object') {
+    return Reflect.get(body, 'error') === 'TUTOR_REQUIRED';
+  }
+
+  return false;
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const auth = inject(Auth);
@@ -33,6 +58,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const sessionExpired = (error: HttpErrorResponse) => {
+    if (error.status === 403 && isTutorRequired(error)) {
+      auth.markTutorRequired();
+
+      if (!router.url.startsWith('/mi-tutor')) {
+        void router.navigate(['/mi-tutor']);
+      }
+
+      return throwError(() => error);
+    }
+
     // Solo se cierra la sesión si el backend rechazó explícitamente el refresh.
     if (error.status !== 400 && error.status !== 401) {
       return throwError(() => error);
@@ -92,6 +127,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         return retryWithRefreshedToken();
+      }
+
+      if (error.status === 403 && isTutorRequired(error)) {
+        auth.markTutorRequired();
+
+        if (!router.url.startsWith('/mi-tutor')) {
+          void router.navigate(['/mi-tutor']);
+        }
       }
 
       return throwError(() => error);

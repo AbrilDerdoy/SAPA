@@ -2,9 +2,11 @@ package com.example.SAPA.service;
 
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.PatientRepository;
+import com.example.SAPA.Repositories.TutorRepository;
 import com.example.SAPA.security.entities.CredentialEntity;
 import com.example.SAPA.security.repositories.CredentialRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,6 +23,7 @@ public class UserContextService {
     private final CredentialRepository credentialRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final TutorRepository tutorRepository;
 
     public UserEntity getAuthenticatedUser() {
         String email = SecurityContextHolder.getContext()
@@ -41,6 +44,11 @@ public class UserContextService {
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el médico autenticado"));
     }
 
+    public TutorEntity getAuthenticatedTutor() {
+        return tutorRepository.findByUser(getAuthenticatedUser())
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el tutor autenticado"));
+    }
+
     public String resolveDoctorName(DoctorEntity doctor) {
         return "Dr. " + doctor.getFirstName() + " " + doctor.getLastName();
     }
@@ -54,7 +62,9 @@ public class UserContextService {
                 .map(p -> p.getFirstName() + " " + p.getLastName())
                 .orElseGet(() -> doctorRepository.findByUser(user)
                         .map(d -> "Dr. " + d.getFirstName() + " " + d.getLastName())
-                        .orElse(user.getEmail()));
+                        .orElseGet(() -> tutorRepository.findByUser(user)
+                                .map(t -> t.getFirstName() + " " + t.getLastName())
+                                .orElse(user.getEmail())));
     }
 
     public UserEntity getUserFromPrincipal(Principal principal) {

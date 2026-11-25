@@ -6,10 +6,12 @@ import com.example.SAPA.DTOs.Response.UserResponseDTO;
 import com.example.SAPA.DTOs.Response.fda.ProfileResponseDTO;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.PatientRepository;
 import com.example.SAPA.Repositories.SpecialityRepository;
+import com.example.SAPA.Repositories.TutorRepository;
 import com.example.SAPA.Repositories.UserRepository;
 import com.example.SAPA.enums.AccountStatus;
 import com.example.SAPA.enums.NotificationType;
@@ -31,7 +33,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 import java.util.List;
@@ -41,9 +45,20 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final List<String> ALLOWED_TUTOR_RELATIONSHIPS = List.of(
+            "Madre",
+            "Padre",
+            "Tutor legal",
+            "Abuelo/a",
+            "Hermano/a",
+            "Tío/a",
+            "Otro familiar"
+    );
+
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final TutorRepository tutorRepository;
     private final CredentialRepository credentialRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -51,10 +66,13 @@ public class UserService {
     private final UserMapper userMapper;
     private final SpecialityRepository specialityRepository;
     private final NotificationService notificationService;
+    private final PatientAccessService patientAccessService;
 
 
     @Transactional
     public AuthResponse registerUser(RegisterRequest request) {
+
+        validateRegistrationAge(request);
 
         if (request.role() == Role.ROLE_DOCTOR) {
             if (request.licenseNumber() == null || request.licenseNumber().isBlank()) {
@@ -66,6 +84,7 @@ public class UserService {
         }
 
         String encryptedPassword = passwordEncoder.encode(request.password());
+        String phoneNumber = normalizeOptionalPhoneNumber(request.phoneNumber());
 
         AccountStatus initialStatus = (request.role() == Role.ROLE_DOCTOR)
                 ? AccountStatus.PENDING
@@ -87,7 +106,7 @@ public class UserService {
                     .firstName(request.firstName())
                     .lastName(request.lastName())
                     .birthDate(request.birthDate())
-                    .phoneNumber(request.phoneNumber())
+                    .phoneNumber(phoneNumber)
                     .licenseNumber(request.licenseNumber())
                     .speciality(specialityRepository.findById(request.speciality())
                             .orElseThrow(() -> new IllegalArgumentException("La especialidad no existe.")))
@@ -103,9 +122,28 @@ public class UserService {
                     .firstName(request.firstName())
                     .lastName(request.lastName())
                     .birthDate(request.birthDate())
-                    .phoneNumber(request.phoneNumber())
+                    .phoneNumber(phoneNumber)
                     .build();
             patientRepository.save(patient);
+        } else if (request.role() == Role.ROLE_TUTOR) {
+            String relationship = request.relationship() == null
+                    ? ""
+                    : request.relationship().trim();
+
+            if (!ALLOWED_TUTOR_RELATIONSHIPS.contains(relationship)) {
+                throw new IllegalArgumentException(
+                        "El parentesco debe ser uno de: " + String.join(", ", ALLOWED_TUTOR_RELATIONSHIPS) + ".");
+            }
+
+            TutorEntity tutor = TutorEntity.builder()
+                    .user(userConnector)
+                    .firstName(request.firstName())
+                    .lastName(request.lastName())
+                    .birthDate(request.birthDate())
+                    .phoneNumber(phoneNumber)
+                    .relationship(relationship)
+                    .build();
+            tutorRepository.save(tutor);
         }
 
         RoleEntity assignedRole = roleRepository.findByRole(request.role())
@@ -134,6 +172,72 @@ public class UserService {
         return new AuthResponse(accessToken, refreshToken);
     }
 
+    /**
+     * Los pacientes pueden registrarse desde los 6 meses de edad. Los médicos
+     * y tutores, en cambio, deben ser mayores de edad porque ejercen funciones
+     * profesionales o de representación legal.
+     */
+    private void validateRegistrationAge(RegisterRequest request) {
+        LocalDate birthDate = request.birthDate();
+        LocalDate today = LocalDate.now();
+
+        validatePastBirthDate(birthDate, today);
+
+        if (request.role() == Role.ROLE_PATIENT) {
+            if (!AgePolicy.isAtLeastMonthsOld(
+                    birthDate,
+                    AgePolicy.MIN_PATIENT_AGE_MONTHS,
+                    today
+            )) {
+                throw new IllegalArgumentException(
+                        "El paciente debe tener al menos 6 meses de edad para registrarse.");
+            }
+            return;
+        }
+
+        if (request.role() == Role.ROLE_DOCTOR || request.role() == Role.ROLE_TUTOR) {
+            if (!AgePolicy.isAdult(birthDate, today)) {
+                throw new IllegalArgumentException(
+                        "El médico y el tutor deben ser mayores de 18 años.");
+            }
+        }
+    }
+
+    private void validateProfileAge(LocalDate birthDate, UserCategory role) {
+        LocalDate today = LocalDate.now();
+
+        validatePastBirthDate(birthDate, today);
+
+        if (role == UserCategory.PATIENT) {
+            if (!AgePolicy.isAtLeastMonthsOld(
+                    birthDate,
+                    AgePolicy.MIN_PATIENT_AGE_MONTHS,
+                    today
+            )) {
+                throw new IllegalArgumentException(
+                        "El paciente debe tener al menos 6 meses de edad.");
+            }
+            return;
+        }
+
+        if ((role == UserCategory.DOCTOR || role == UserCategory.TUTOR)
+                && !AgePolicy.isAdult(birthDate, today)) {
+            throw new IllegalArgumentException(
+                    "El médico y el tutor deben ser mayores de 18 años.");
+        }
+    }
+
+    private void validatePastBirthDate(LocalDate birthDate, LocalDate today) {
+        if (birthDate == null) {
+            throw new IllegalArgumentException("La fecha de nacimiento es obligatoria.");
+        }
+
+        if (!birthDate.isBefore(today)) {
+            throw new IllegalArgumentException(
+                    "La fecha de nacimiento debe ser anterior a hoy.");
+        }
+    }
+
 
     @Transactional(readOnly = true)
     public UserResponseDTO getMyProfile(String email) {
@@ -150,36 +254,55 @@ public class UserService {
         CredentialEntity credential = credentialRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Credenciales del usuario no encontradas"));
 
+        validateProfileAge(request.birthDate(), user.getRole());
+
         if (!user.getEmail().equals(request.email())
                 && (userRepository.existsByEmail(request.email())
                 || credentialRepository.existsByEmail(request.email()))) {
             throw new ResourceAlreadyExistsException("El email ya está registrado.");
         }
 
+        String phoneNumber = normalizeOptionalPhoneNumber(request.phoneNumber());
+
         switch (user.getRole()) {
             case PATIENT -> {
                 PatientEntity patient = patientRepository.findByUser(user)
                         .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
-                if (!patient.getPhoneNumber().equals(request.phoneNumber())
-                        && patientRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), patient.getId())) {
+                if (!Objects.equals(patient.getPhoneNumber(), phoneNumber)
+                        && phoneNumber != null
+                        && patientRepository.existsByPhoneNumberAndIdNot(phoneNumber, patient.getId())) {
                     throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
                 }
                 patient.setFirstName(request.firstName());
                 patient.setLastName(request.lastName());
                 patient.setBirthDate(request.birthDate());
-                patient.setPhoneNumber(request.phoneNumber());
+                patient.setPhoneNumber(phoneNumber);
             }
             case DOCTOR -> {
                 DoctorEntity doctor = doctorRepository.findByUser(user)
                         .orElseThrow(() -> new EntityNotFoundException("Médico no encontrado"));
-                if (!doctor.getPhoneNumber().equals(request.phoneNumber())
-                        && doctorRepository.existsByPhoneNumberAndIdNot(request.phoneNumber(), doctor.getId())) {
+                if (!Objects.equals(doctor.getPhoneNumber(), phoneNumber)
+                        && phoneNumber != null
+                        && doctorRepository.existsByPhoneNumberAndIdNot(phoneNumber, doctor.getId())) {
                     throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
                 }
                 doctor.setFirstName(request.firstName());
                 doctor.setLastName(request.lastName());
                 doctor.setBirthDate(request.birthDate());
-                doctor.setPhoneNumber(request.phoneNumber());
+                doctor.setPhoneNumber(phoneNumber);
+            }
+            case TUTOR -> {
+                TutorEntity tutor = tutorRepository.findByUser(user)
+                        .orElseThrow(() -> new EntityNotFoundException("Tutor no encontrado"));
+                if (!Objects.equals(tutor.getPhoneNumber(), phoneNumber)
+                        && phoneNumber != null
+                        && tutorRepository.existsByPhoneNumberAndIdNot(phoneNumber, tutor.getId())) {
+                    throw new ResourceAlreadyExistsException("El teléfono ya está registrado.");
+                }
+                tutor.setFirstName(request.firstName());
+                tutor.setLastName(request.lastName());
+                tutor.setBirthDate(request.birthDate());
+                tutor.setPhoneNumber(phoneNumber);
             }
             case ADMIN -> throw new IllegalStateException("El perfil de administrador no se puede modificar desde este endpoint.");
         }
@@ -194,6 +317,12 @@ public class UserService {
         credentialRepository.save(credential);
 
         return new AuthResponse(accessToken, refreshToken);
+    }
+
+    private String normalizeOptionalPhoneNumber(String phoneNumber) {
+        return phoneNumber == null || phoneNumber.isBlank()
+                ? null
+                : phoneNumber.trim();
     }
 
     @Transactional(readOnly = true)
@@ -244,6 +373,7 @@ public class UserService {
         });
     }
 
+    @Transactional(readOnly = true)
     public ProfileResponseDTO getProfile(String email) {
 
         UserEntity user = userRepository.findByEmail(email)
@@ -259,7 +389,10 @@ public class UserService {
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    false,
+                    false,
+                    user.getProfileImageUrl()
             );
         }
 
@@ -279,7 +412,31 @@ public class UserService {
                     patient.getMedicalRecord() != null
                             ? patient.getMedicalRecord().getId()
                             : null,
-                    null
+                    null,
+                    patientAccessService.requiresTutor(patient),
+                    patientAccessService.hasActiveTutor(patient),
+                    user.getProfileImageUrl()
+            );
+        }
+
+        if (user.getRole() == UserCategory.TUTOR) {
+
+            TutorEntity tutor = tutorRepository.findByUser(user)
+                    .orElseThrow(() -> new EntityNotFoundException("Tutor no encontrado"));
+
+            return new ProfileResponseDTO(
+                    user.getId(),
+                    tutor.getFirstName(),
+                    tutor.getLastName(),
+                    user.getEmail(),
+                    user.getRole().name(),
+                    tutor.getBirthDate(),
+                    tutor.getPhoneNumber(),
+                    null,
+                    null,
+                    false,
+                    false,
+                    user.getProfileImageUrl()
             );
         }
 
@@ -295,7 +452,10 @@ public class UserService {
                 doctor.getBirthDate(),
                 doctor.getPhoneNumber(),
                 null,
-                doctor.getLicenseNumber()
+                doctor.getLicenseNumber(),
+                false,
+                false,
+                user.getProfileImageUrl()
         );
     }
     private void notifyAdminsOfNewDoctorRegistration(DoctorEntity doctor) {

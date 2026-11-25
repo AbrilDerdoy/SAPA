@@ -1,11 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormField, form } from '@angular/forms/signals';
 import { DoctorService } from '../../service/doctor.service';
 import { FollowRequestService } from '../../../FollowRequest/service/follow-request.service';
 import { Feedback } from '../../interfaces/feedback';
 import { DoctorSummary } from '../../interfaces/doctor-summary';
+import { Auth } from '../../../Usuario/services/Auth/auth';
+import { TutorService } from '../../../Tutor/services/tutor.service';
+import { TutorPatient } from '../../../Tutor/models/tutor.model';
 
 type LoadStatus = 'loading' | 'success' | 'error';
 
@@ -20,6 +24,8 @@ export class DoctorSearch {
   private readonly followService = inject(FollowRequestService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly auth = inject(Auth);
+  private readonly tutorService = inject(TutorService);
 
   readonly model = signal({ query: '' });
   readonly searchForm = form(this.model);
@@ -32,10 +38,25 @@ export class DoctorSearch {
   readonly lastQuery = signal('');
   readonly busyKey = signal<string | null>(null);
   readonly feedback = signal<Record<number, Feedback>>({});
+  readonly isTutor = this.auth.isTutor();
+  readonly tutorPatients = signal<TutorPatient[]>([]);
+  readonly selectedPatientId = signal<number | null>(null);
+  readonly patientLoadError = signal(false);
 
   constructor() {
     this.doctorService.loadMyId();
-    this.followService.loadSent();
+    if (!this.isTutor) {
+      this.followService.loadSent();
+    }
+    if (this.isTutor) {
+      this.tutorService.getMyPatients().subscribe({
+        next: (patients) => this.tutorPatients.set(patients),
+        error: (error) => {
+          console.error('No se pudieron cargar los pacientes tutelados:', error);
+          this.patientLoadError.set(true);
+        },
+      });
+    }
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const query = params.get('query') ?? '';
       this.model.set({ query });
@@ -78,24 +99,35 @@ export class DoctorSearch {
   }
 
   requestFollow(id: number): void {
+    if (this.isTutor && this.selectedPatientId() === null) {
+      this.setFeedback(id, {
+        kind: 'error',
+        text: 'Elegí el paciente para el que querés solicitar el seguimiento.',
+      });
+      return;
+    }
+
     this.busyKey.set(`${id}:follow`);
-    this.followService.send(id).subscribe({
-      next: () => {
-        this.setFeedback(id, {
-          kind: 'ok',
-          text: 'Solicitud enviada. Podés seguirla desde Mis solicitudes.',
-        });
-        this.busyKey.set(null);
-      },
-      error: () => {
-        this.setFeedback(id, {
-          kind: 'error',
-          text: 'No se pudo enviar la solicitud. Puede que ya tengas una pendiente con este médico.',
-        });
-        this.followService.loadSent();
-        this.busyKey.set(null);
-      },
-    });
+    this.followService
+      .send(id, this.isTutor ? this.selectedPatientId() : undefined)
+      .pipe(finalize(() => this.busyKey.set(null)))
+      .subscribe({
+        next: () => {
+          this.setFeedback(id, {
+            kind: 'ok',
+            text: 'Solicitud enviada. Podés seguirla desde Mis solicitudes.',
+          });
+        },
+        error: () => {
+          this.setFeedback(id, {
+            kind: 'error',
+            text: 'No se pudo enviar la solicitud. Puede que ya tengas una pendiente con este médico.',
+          });
+          this.followService.loadSent(
+            this.isTutor ? this.selectedPatientId() ?? undefined : undefined
+          );
+        },
+      });
   }
 
   isBusy(id: number, action: 'follow'): boolean {
@@ -103,11 +135,35 @@ export class DoctorSearch {
   }
 
   locked(id: number): boolean {
-    return this.followService.isLocked(id);
+    if (this.isTutor && this.selectedPatientId() === null) return false;
+
+    return this.followService.isLocked(
+      id,
+      this.isTutor ? this.selectedPatientId() : undefined
+    );
   }
 
   lockedLabel(id: number): string {
-    return this.followService.lockedLabel(id);
+    if (this.isTutor && this.selectedPatientId() === null) return '';
+
+    return this.followService.lockedLabel(
+      id,
+      this.isTutor ? this.selectedPatientId() : undefined
+    );
+  }
+
+  selectPatient(event: Event): void {
+    const select = event.target;
+    if (!(select instanceof HTMLSelectElement)) return;
+
+    const patientId = select.value ? Number(select.value) : null;
+    this.selectedPatientId.set(patientId);
+    this.feedback.set({});
+    if (patientId === null) {
+      this.followService.reset();
+    } else {
+      this.followService.loadSent(patientId);
+    }
   }
 
   initials(firstName: string, lastName: string): string {

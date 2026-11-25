@@ -205,7 +205,9 @@ public class MessageService {
 
         UserEntity systemSender;
 
-        if (conversation.getPatient() != null) {
+        if (conversation.getTutor() != null) {
+            systemSender = conversation.getTutor().getUser();
+        } else if (conversation.getPatient() != null) {
             systemSender = conversation.getPatient().getUser();
         } else {
             systemSender = conversation.getDoctor().getUser();

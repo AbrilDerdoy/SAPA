@@ -101,7 +101,7 @@
     </div>
   }
 
-  @if (isLoggedIn && recommendations.length > 0) {
+  @if ((isPatient || isDoctor) && recommendations.length > 0) {
     <div class="doctor-recommendations">
 
       <h3>Profesionales para seguir</h3>
@@ -150,7 +150,7 @@
     </p>
   }
 
-  @if (isLoggedIn && !loading && followedDoctorIds.length === 0) {
+  @if ((isPatient || isDoctor) && !loading && followedDoctorIds.length === 0) {
     <p class="follow-invitation">
       Seguí a profesionales de SAPA para recibir sus consejos de salud.
     </p>

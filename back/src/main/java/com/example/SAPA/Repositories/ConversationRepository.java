@@ -3,6 +3,7 @@ package com.example.SAPA.Repositories;
 import com.example.SAPA.Models.Chat.ConversationEntity;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +24,14 @@ public interface ConversationRepository
             DoctorEntity doctorFollower
     );
 
+    Optional<ConversationEntity> findByTutorAndDoctor(
+            TutorEntity tutor,
+            DoctorEntity doctor
+    );
+
     List<ConversationEntity> findByPatient(PatientEntity patient);
+
+    List<ConversationEntity> findByTutor(TutorEntity tutor);
 
     List<ConversationEntity> findByDoctorOrDoctorFollower(
             DoctorEntity doctor,

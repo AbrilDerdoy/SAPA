@@ -4,6 +4,7 @@ export type NotificationType =
   | 'REMINDER'
   | 'FOLLOW'
   | 'QUESTIONNAIRE'
+  | 'TUTORSHIP'
   | 'MEDICAL_RECORD'
   | 'REPORT';
 

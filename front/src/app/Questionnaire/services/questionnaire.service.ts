@@ -82,9 +82,10 @@ export class QuestionnaireService {
     );
   }
 
-  getMyAssignments(): Observable<AssignmentResponse[]> {
+  getMyAssignments(patientId?: number | null): Observable<AssignmentResponse[]> {
+    const params = patientId != null ? `?patientId=${patientId}` : '';
     return this.http.get<AssignmentResponse[]>(
-      `${this.assignmentUrl}/my-assignments`
+      `${this.assignmentUrl}/my-assignments${params}`
     );
   }
 
@@ -105,9 +106,10 @@ export class QuestionnaireService {
     );
   }
 
-  getMyResponses(): Observable<QuestionnaireResponseDTO[]> {
+  getMyResponses(patientId?: number | null): Observable<QuestionnaireResponseDTO[]> {
+    const params = patientId != null ? `?patientId=${patientId}` : '';
     return this.http.get<QuestionnaireResponseDTO[]>(
-      `${this.assignmentUrl}/my-responses`
+      `${this.assignmentUrl}/my-responses${params}`
     );
   }
 
