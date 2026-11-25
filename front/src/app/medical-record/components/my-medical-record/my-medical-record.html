@@ -1,21 +1,26 @@
+
 <main class="medical-record-page">
   <header class="header">
+    <div>
+      <span class="page-eyebrow">SAPA · HISTORIA CLÍNICA</span>
+      <h1>Mi ficha médica</h1>
+      <p>Consultá tu información médica en un solo lugar.</p>
+    </div>
+  </header>
 
-    <section class="personal-info-card">
-      <div class="heading">
-        <h2>Mis datos personales</h2>
-      </div>
+  <section class="personal-info-card">
+    <div class="heading">
+      <h2>Mis datos personales</h2>
+    </div>
 
-      @if (cargandoPerfil()) {
+    @if (cargandoPerfil()) {
       <p>Cargando datos personales...</p>
-
-      } @else if (errorPerfil()) {
+    } @else if (errorPerfil()) {
       <div class="error">
         <p>{{ errorPerfil() }}</p>
         <button type="button" (click)="cargarPerfil()">Reintentar</button>
       </div>
-
-      } @else if (perfil(); as paciente) {
+    } @else if (perfil(); as paciente) {
       <div class="record-info">
         <div class="info-item">
           <span>Nombre</span>
@@ -32,117 +37,155 @@
           <strong>{{ paciente.phoneNumber || 'No registrado' }}</strong>
         </div>
       </div>
-      }
-    </section>
-
-    <div>
-      <h1>Mi ficha médica</h1>
-      <p>Consultá tu información médica en un solo lugar.</p>
-    </div>
-  </header>
-
-  @if (cargando()) {
-  <section class="state-card">
-    <div class="spinner"></div>
-    <p>Cargando ficha médica...</p>
-  </section>
-
-  } @else if (error()) {
-  <section class="error">
-    <p>{{ error() }}</p>
-    <button type="button" (click)="cargarFichaMedica()">Reintentar</button>
-  </section>
-
-  } @else if (fichaMedica(); as ficha) {
-  <section class="information-card">
-    <div class="section-heading">
-      <h2>Información médica</h2>
-    </div>
-    <p>
-      Desde esta sección vas a poder consultar y gestionar la información
-      de tu ficha médica, incluyendo tus medicaciones registradas.
-    </p>
-  </section>
-
-  <section class="record-actions">
-    <button type="button" class="record-action" [class.active]="medicacionesVisibles()" (click)="toggleMedicaciones()">
-      <span>Mis medicaciones</span>
-      <span class="action-description">Consultá tus medicamentos registrados</span>
-      <span class="action-arrow">
-        {{ medicacionesVisibles() ? 'Cerrar' : 'Consultar' }}
-      </span>
-    </button>
-
-    <a routerLink="/mis-tratamientos" class="record-action">
-      <span>Mis tratamientos</span>
-      <span class="action-description">Consultá tus tratamientos actuales</span>
-      <span class="action-arrow">Consultar</span>
-    </a>
-  </section>
-
-  @if (medicacionesVisibles()) {
-  <section class="medications-card">
-    <div class="section-heading">
-      <h2>Mis medicaciones</h2>
-    </div>
-
-    @if (cargandoMedicaciones()) {
-    <p>Cargando medicaciones...</p>
-    } @else if (errorMedicaciones()) {
-    <p class="error-message">{{ errorMedicaciones() }}</p>
-    } @else {
-
-    <div class="medication-section">
-      <h3>Medicaciones actuales</h3>
-
-      @if (medicacionesActivas().length === 0) {
-      <p class="empty-message">No tenés medicaciones recetadas actualmente.</p>
-      } @else {
-      <div class="medications-list">
-        @for (medicacion of medicacionesActivas(); track medicacion.medicationId) {
-        <article class="medication-item">
-          <div class="medication-item-header">
-            <h3>{{ medicacion.fdaDrugName }}</h3>
-            <span class="status-badge status-prescribed">Recetado</span>
-          </div>
-
-          <p><strong>Notas:</strong> {{ medicacion.notes || 'Sin notas médicas' }}</p>
-          <p><strong>Fecha de inicio:</strong> {{ medicacion.startDate }}</p>
-          <p><strong>Fecha de finalización:</strong> {{ medicacion.endDate || 'Sin fecha de finalización' }}</p>
-        </article>
-        }
-      </div>
-      }
-    </div>
-
-    <details class="suspended-section">
-      <summary>
-        Medicaciones suspendidas
-        <span class="suspended-count">{{ medicacionesSuspendidas().length }}</span>
-      </summary>
-
-      @if (medicacionesSuspendidas().length === 0) {
-      <p class="empty-message">No tenés medicaciones suspendidas.</p>
-      } @else {
-      <div class="medications-list">
-        @for (medicacion of medicacionesSuspendidas(); track medicacion.medicationId) {
-        <article class="medication-item">
-          <div class="medication-item-header">
-            <h3>{{ medicacion.fdaDrugName }}</h3>
-            <span class="status-badge status-suspended">Suspendido</span>
-          </div>
-
-          <p><strong>Notas:</strong> {{ medicacion.notes || 'Sin notas médicas' }}</p>
-          <p><strong>Fecha de inicio:</strong> {{ medicacion.startDate }}</p>
-          <p><strong>Fecha de finalización:</strong> {{ medicacion.endDate || 'Sin fecha de finalización' }}</p>
-        </article>
-        }
-      </div>
-      }
-    </details>
     }
   </section>
-  }
 
+  <app-medical-record-access mode="patient"></app-medical-record-access>
+
+  @if (cargando()) {
+    <section class="state-card">
+      <div class="spinner"></div>
+      <p>Cargando ficha médica...</p>
+    </section>
+  } @else if (error()) {
+    <section class="state-card error">
+      <p>{{ error() }}</p>
+      <button type="button" (click)="cargarFichaMedica()">
+        Reintentar
+      </button>
+    </section>
+  } @else if (fichaMedica(); as ficha) {
+    <section class="information-card">
+      <div class="section-heading">
+        <h2>Información médica</h2>
+      </div>
+      <p>
+        Consultá los movimientos, medicamentos y tratamientos
+        registrados en tu ficha médica.
+      </p>
+      <div class="record-id">
+        Número de ficha: <strong>{{ ficha.medicalRecordId }}</strong>
+      </div>
+    </section>
+
+    @if (perfil(); as paciente) {
+      <app-medical-record-movements
+        [patientId]="paciente.patientId"
+        [readonly]="true">
+      </app-medical-record-movements>
+    }
+
+    <section class="record-actions">
+      <button
+        type="button"
+        class="record-action"
+        [class.active]="medicacionesVisibles()"
+        (click)="toggleMedicaciones()">
+        <span>Mis medicaciones</span>
+        <span class="action-description">
+          Consultá tus medicamentos registrados
+        </span>
+        <span class="action-arrow">
+          {{ medicacionesVisibles() ? 'Cerrar' : 'Consultar' }}
+        </span>
+      </button>
+
+      <a routerLink="/mis-tratamientos" class="record-action">
+        <span>Mis tratamientos</span>
+        <span class="action-description">
+          Consultá tus tratamientos actuales
+        </span>
+        <span class="action-arrow">Consultar</span>
+      </a>
+    </section>
+
+    @if (medicacionesVisibles()) {
+      <section class="medications-card">
+        <div class="section-heading">
+          <h2>Mis medicaciones</h2>
+        </div>
+
+        @if (cargandoMedicaciones()) {
+          <p>Cargando medicaciones...</p>
+        } @else if (errorMedicaciones()) {
+          <p class="error-message">{{ errorMedicaciones() }}</p>
+        } @else {
+          <div class="medication-section">
+            <h3>Medicaciones actuales</h3>
+
+            @if (medicacionesActivas().length === 0) {
+              <p class="empty-message">
+                No tenés medicaciones recetadas actualmente.
+              </p>
+            } @else {
+              <div class="medications-list">
+                @for (medicacion of medicacionesActivas(); track medicacion.medicationId) {
+                  <article class="medication-item">
+                    <div class="medication-item-header">
+                      <h3>{{ medicacion.fdaDrugName }}</h3>
+                      <span class="status-badge status-prescribed">
+                        Recetado
+                      </span>
+                    </div>
+
+                    <p>
+                      <strong>Notas:</strong>
+                      {{ medicacion.notes || 'Sin notas médicas' }}
+                    </p>
+                    <p>
+                      <strong>Inicio:</strong>
+                      {{ medicacion.startDate }}
+                    </p>
+                    <p>
+                      <strong>Finalización:</strong>
+                      {{ medicacion.endDate || 'Sin fecha de finalización' }}
+                    </p>
+                  </article>
+                }
+              </div>
+            }
+          </div>
+
+          <details class="suspended-section">
+            <summary>
+              Medicaciones suspendidas
+              <span>{{ medicacionesSuspendidas().length }}</span>
+            </summary>
+
+            @if (medicacionesSuspendidas().length === 0) {
+              <p class="empty-message">
+                No tenés medicaciones suspendidas.
+              </p>
+            } @else {
+              <div class="medications-list">
+                @for (medicacion of medicacionesSuspendidas(); track medicacion.medicationId) {
+                  <article class="medication-item">
+                    <div class="medication-item-header">
+                      <h3>{{ medicacion.fdaDrugName }}</h3>
+                      <span class="status-badge status-suspended">
+                        Suspendido
+                      </span>
+                    </div>
+
+                    <p>
+                      <strong>Notas:</strong>
+                      {{ medicacion.notes || 'Sin notas médicas' }}
+                    </p>
+                    <p>
+                      <strong>Inicio:</strong>
+                      {{ medicacion.startDate }}
+                    </p>
+                    <p>
+                      <strong>Finalización:</strong>
+                      {{ medicacion.endDate || 'Sin fecha de finalización' }}
+                    </p>
+                  </article>
+                }
+              </div>
+            }
+          </details>
+        }
+      </section>
+    }
   }
 </main>

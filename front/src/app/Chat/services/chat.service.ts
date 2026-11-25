@@ -22,6 +22,27 @@ export class ChatService {
     return this.http.get<Conversation[]>(this.API_URL);
   }
 
+  getDoctorConversation(doctorId: number): Observable<Conversation> {
+    return this.http.get<Conversation>(
+      `${this.API_URL}/doctor/${doctorId}`
+    );
+  }
+
+  sendMessage(
+    conversationId: number,
+    content: string,
+    medicalRecordMovementId: number | null = null
+  ): Observable<Message> {
+    return this.http.post<Message>(
+      `${this.API_URL}/${conversationId}/messages`,
+      {
+        content,
+        type: 'TEXT',
+        medicalRecordMovementId
+      }
+    );
+  }
+
   getMessages(conversationId: number): Observable<Message[]> {
     return this.http.get<Message[]>(
       `${this.API_URL}/${conversationId}/messages`

@@ -1,9 +1,11 @@
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormField, form } from '@angular/forms/signals';
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+
 import { TreatmentService } from '../../service/treatment.service';
 import { PatientService } from '../../../Patient/service/patient.service';
 import { TreatmentRequest } from '../../interfaces/treatment-request';
@@ -15,7 +17,15 @@ import { TreatmentForm } from '../treatment-form/treatment-form';
 
 type LoadStatus = 'loading' | 'success' | 'error';
 
-type SortOption = 'default' | 'recent' | 'name-asc' | 'name-desc' | 'freq-asc' | 'freq-desc' | 'dur-asc' | 'dur-desc';
+type SortOption =
+  | 'default'
+  | 'recent'
+  | 'name-asc'
+  | 'name-desc'
+  | 'freq-asc'
+  | 'freq-desc'
+  | 'dur-asc'
+  | 'dur-desc';
 
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'default', label: 'Sin ordenar' },
@@ -28,13 +38,28 @@ export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'dur-desc', label: 'Duración: más larga primero' },
 ];
 
-const FREQ_HOURS: Record<string, number> = { HOUR: 1, DAY: 24, WEEK: 168, MONTH: 720 };
-const DUR_DAYS: Record<string, number> = { DAY: 1, WEEK: 7, MONTH: 30, YEAR: 365, SESSIONS: 1 };
+const FREQ_HOURS: Record<string, number> = {
+  HOUR: 1,
+  DAY: 24,
+  WEEK: 168,
+  MONTH: 720,
+};
+
+const DUR_DAYS: Record<string, number> = {
+  DAY: 1,
+  WEEK: 7,
+  MONTH: 30,
+  YEAR: 365,
+  SESSIONS: 1,
+};
 
 function readRole(): string {
   try {
     const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
-    return String(usuario.role ?? '').toUpperCase().replace('ROLE_', '');
+
+    return String(usuario.role ?? '')
+      .toUpperCase()
+      .replace('ROLE_', '');
   } catch {
     return '';
   }
@@ -54,20 +79,33 @@ export class Treatments {
   readonly isDoctor = readRole() === 'DOCTOR';
 
   readonly patientId = signal<number | null>(
-    this.isDoctor ? Number(this.route.snapshot.paramMap.get('patientId')) || null : null
+    this.isDoctor
+      ? Number(this.route.snapshot.paramMap.get('patientId')) || null
+      : null
   );
+
   private readonly resolvingId = signal(!this.isDoctor);
 
-  readonly title = this.isDoctor ? 'Tratamientos del paciente' : 'Mis tratamientos';
+  readonly title = this.isDoctor
+    ? 'Tratamientos del paciente'
+    : 'Mis tratamientos';
+
   readonly lead = this.isDoctor
     ? 'Consultá, agregá y ajustá los tratamientos indicados a este paciente.'
     : 'Acá ves los tratamientos indicados para vos.';
+
   readonly backLink = this.isDoctor ? '/mis-pacientes' : '/home';
-  readonly backLabel = this.isDoctor ? 'Volver a mis pacientes' : 'Volver al inicio';
+
+  readonly backLabel = this.isDoctor
+    ? 'Volver a mis pacientes'
+    : 'Volver al inicio';
 
   readonly filterModel = signal({ filter: '' });
   readonly filterForm = form(this.filterModel);
-  readonly hasFilter = computed(() => this.filterModel().filter.trim().length > 0);
+
+  readonly hasFilter = computed(
+    () => this.filterModel().filter.trim().length > 0
+  );
 
   readonly filtersOpen = signal(false);
   readonly sortOptions = SORT_OPTIONS;
@@ -90,34 +128,45 @@ export class Treatments {
   readonly visibleTreatments = computed(() => {
     const dUnit = this.durationUnitFilter();
     const fUnit = this.frequencyUnitFilter();
+
     let list = this.treatments().filter(
       (t) =>
         (dUnit === 'ALL' || t.duration.unit === dUnit) &&
         (fUnit === 'ALL' || t.frequency.unit === fUnit)
     );
 
-    const freq = (t: Treatment) => t.frequency.length * (FREQ_HOURS[t.frequency.unit] ?? 1);
+    const freq = (t: Treatment) =>
+      t.frequency.length * (FREQ_HOURS[t.frequency.unit] ?? 1);
+
     const dur = (t: Treatment) =>
       t.duration.unit === 'INDETERMINATE'
         ? Number.MAX_SAFE_INTEGER
         : t.duration.length * (DUR_DAYS[t.duration.unit] ?? 1);
 
-list = [...list];
+    list = [...list];
+
     switch (this.sortBy()) {
       case 'recent':
         return list.sort((a, b) => b.treatmentId - a.treatmentId);
+
       case 'name-asc':
         return list.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+
       case 'name-desc':
         return list.sort((a, b) => b.name.localeCompare(a.name, 'es'));
+
       case 'freq-asc':
         return list.sort((a, b) => freq(a) - freq(b));
+
       case 'freq-desc':
         return list.sort((a, b) => freq(b) - freq(a));
+
       case 'dur-asc':
         return list.sort((a, b) => dur(a) - dur(b));
+
       case 'dur-desc':
         return list.sort((a, b) => dur(b) - dur(a));
+
       default:
         return list;
     }
@@ -134,7 +183,8 @@ list = [...list];
   readonly actionError = signal('');
 
   readonly confirmId = signal<number | null>(null);
-  readonly deletingId = signal<number | null>(null);
+  readonly suspendingId = signal<number | null>(null);
+  readonly suspendJustification = signal('');
 
   private current?: Subscription;
 
@@ -143,8 +193,14 @@ list = [...list];
       this.resolvePatient();
     }
 
-    toObservable(computed(() => this.filterModel().filter.trim()))
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+    toObservable(
+      computed(() => this.filterModel().filter.trim())
+    )
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed()
+      )
       .subscribe(() => this.load());
   }
 
@@ -168,21 +224,27 @@ list = [...list];
 
   load(): void {
     const id = this.patientId();
+
     if (id === null) {
       if (!this.resolvingId()) {
         this.loadError.set('No pudimos identificar al paciente.');
         this.loadStatus.set('error');
       }
+
       return;
     }
 
     this.current?.unsubscribe();
+
     if (this.loadStatus() !== 'success') {
       this.loadStatus.set('loading');
     }
 
     const term = this.filterModel().filter.trim();
-    const request = term ? this.service.filterByName(id, term) : this.service.getByPatient(id);
+
+    const request = term
+      ? this.service.filterByName(id, term)
+      : this.service.getByPatient(id);
 
     this.current = request.subscribe({
       next: (list) => {
@@ -190,21 +252,26 @@ list = [...list];
         this.loadStatus.set('success');
       },
       error: (err) => {
-        this.loadError.set(this.messageFor(err, 'No pudimos cargar los tratamientos.'));
+        this.loadError.set(
+          this.messageFor(err, 'No pudimos cargar los tratamientos.')
+        );
+
         this.loadStatus.set('error');
       },
     });
   }
 
-openCreate(): void {
+  openCreate(): void {
     if (!this.isDoctor) return;
+
     this.clearFeedback();
     this.editing.set(null);
     this.formOpen.set(true);
   }
 
   openEdit(treatment: Treatment): void {
-    if (!this.isDoctor) return;
+    if (!this.isDoctor || treatment.status !== 'ACTIVE') return;
+
     this.clearFeedback();
     this.confirmId.set(null);
     this.editing.set(treatment);
@@ -219,9 +286,11 @@ openCreate(): void {
 
   onSave(request: TreatmentRequest): void {
     const id = this.patientId();
+
     if (id === null) return;
 
     const target = this.editing();
+
     this.saving.set(true);
     this.actionError.set('');
 
@@ -234,12 +303,21 @@ openCreate(): void {
         this.saving.set(false);
         this.formOpen.set(false);
         this.editing.set(null);
-        this.notice.set(target ? 'Tratamiento actualizado.' : 'Tratamiento creado.');
+
+        this.notice.set(
+          target
+            ? 'Tratamiento actualizado.'
+            : 'Tratamiento creado.'
+        );
+
         this.load();
       },
       error: (err) => {
         this.saving.set(false);
-        this.actionError.set(this.messageFor(err, 'No se pudo guardar el tratamiento.'));
+
+        this.actionError.set(
+          this.messageFor(err, 'No se pudo guardar el tratamiento.')
+        );
       },
     });
   }
@@ -247,45 +325,87 @@ openCreate(): void {
   askDelete(id: number): void {
     this.clearFeedback();
     this.confirmId.set(id);
+    this.suspendJustification.set('');
   }
 
   cancelDelete(): void {
     this.confirmId.set(null);
+    this.suspendJustification.set('');
   }
 
   confirmDelete(treatment: Treatment): void {
-    this.deletingId.set(treatment.treatmentId);
-    this.service.remove(treatment.treatmentId).subscribe({
-      next: () => {
-        this.deletingId.set(null);
-        this.confirmId.set(null);
-        this.notice.set('Tratamiento eliminado.');
-        this.load();
-      },
-      error: (err) => {
-        this.deletingId.set(null);
-        this.confirmId.set(null);
-        this.actionError.set(this.messageFor(err, 'No se pudo eliminar el tratamiento.'));
-      },
-    });
+    const justification = this.suspendJustification().trim();
+
+    if (justification.length < 5) {
+      this.actionError.set(
+        'Ingresá una justificación de al menos 5 caracteres.'
+      );
+      return;
+    }
+
+    this.suspendingId.set(treatment.treatmentId);
+    this.actionError.set('');
+
+    this.service
+      .remove(treatment.treatmentId, justification)
+      .subscribe({
+        next: () => {
+          this.suspendingId.set(null);
+          this.confirmId.set(null);
+          this.suspendJustification.set('');
+
+          this.notice.set(
+            'Tratamiento suspendido. El registro se conservó en la ficha médica.'
+          );
+
+          this.load();
+        },
+        error: (err) => {
+          this.suspendingId.set(null);
+
+          this.actionError.set(
+            this.messageFor(err, 'No se pudo suspender el tratamiento.')
+          );
+        },
+      });
   }
 
   frequencyLabel(frequency: TreatmentFrequency): string {
-    const unit = FREQUENCY_UNITS.find((u) => u.value === frequency.unit);
-    if (!unit) return `Cada ${frequency.length} ${frequency.unit}`;
-    return frequency.length === 1 ? `Cada ${unit.singular}` : `Cada ${frequency.length} ${unit.plural}`;
+    const unit = FREQUENCY_UNITS.find(
+      (u) => u.value === frequency.unit
+    );
+
+    if (!unit) {
+      return `Cada ${frequency.length} ${frequency.unit}`;
+    }
+
+    return frequency.length === 1
+      ? `Cada ${unit.singular}`
+      : `Cada ${frequency.length} ${unit.plural}`;
   }
 
   durationLabel(duration: TreatmentDuration): string {
-    if (duration.unit === 'INDETERMINATE') return 'Duración indeterminada';
-    const unit = DURATION_UNITS.find((u) => u.value === duration.unit);
-    if (!unit) return `Durante ${duration.length} ${duration.unit}`;
-    return `Durante ${duration.length} ${duration.length === 1 ? unit.singular : unit.plural}`;
+    if (duration.unit === 'INDETERMINATE') {
+      return 'Duración indeterminada';
+    }
+
+    const unit = DURATION_UNITS.find(
+      (u) => u.value === duration.unit
+    );
+
+    if (!unit) {
+      return `Durante ${duration.length} ${duration.unit}`;
+    }
+
+    return duration.length === 1
+      ? `Durante ${duration.length} ${unit.singular}`
+      : `Durante ${duration.length} ${unit.plural}`;
   }
 
   private resolvePatient(): void {
     this.resolvingId.set(true);
     this.loadStatus.set('loading');
+
     this.patientService.getProfile().subscribe({
       next: (profile) => {
         this.patientId.set(profile.patientId);
@@ -294,7 +414,9 @@ openCreate(): void {
       },
       error: () => {
         this.resolvingId.set(false);
-        this.loadError.set('No pudimos identificar tu perfil de paciente.');
+        this.loadError.set(
+          'No pudimos identificar tu perfil de paciente.'
+        );
         this.loadStatus.set('error');
       },
     });
@@ -306,10 +428,23 @@ openCreate(): void {
   }
 
   private messageFor(err: unknown, fallback: string): string {
-    const status = err instanceof HttpErrorResponse ? err.status : 0;
-    if (status === 403) return 'No tenés permiso para acceder a los tratamientos de este paciente.';
-    if (status === 404) return 'No encontramos el paciente o el tratamiento.';
-    if (status === 400) return 'Los datos enviados no son válidos. Revisalos e intentá de nuevo.';
+    const status =
+      err instanceof HttpErrorResponse
+        ? err.status
+        : 0;
+
+    if (status === 403) {
+      return 'No tenés permiso para acceder a los tratamientos de este paciente.';
+    }
+
+    if (status === 404) {
+      return 'No encontramos el paciente o el tratamiento.';
+    }
+
+    if (status === 400) {
+      return 'Los datos enviados no son válidos. Revisalos e intentá de nuevo.';
+    }
+
     return fallback;
   }
 }

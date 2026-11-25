@@ -1,81 +1,146 @@
+
 <section class="management-container">
     <div class="management-header">
         <h3>Gestión de medicaciones</h3>
 
-        <button type="button" class="close-button" (click)="cerrarGestion()"
-            [disabled]="guardandoMedicacion()">Cerrar</button>
+        <button
+            type="button"
+            class="close-button"
+            (click)="cerrarGestion()"
+            [disabled]="guardandoMedicacion()">
+            Cerrar
+        </button>
     </div>
 
     @if (!mostrarForm()) {
-    <button type="button" class="add-button" (click)="abrirForm()">Agregar medicamento</button>
+        <button
+            type="button"
+            class="add-button"
+            (click)="abrirForm()">
+            Agregar medicamento
+        </button>
     }
 
     @if (mostrarForm()) {
-    <form class="medication-form" (submit)="$event.preventDefault(); guardarMedicacion()">
+        <form
+            class="medication-form"
+            (submit)="$event.preventDefault(); guardarMedicacion()">
 
-        <h4>
-            {{ editandoId() !== null ? 'Modificar medicación' : 'Nueva medicación' }}
-        </h4>
+            <h4>
+                {{ editandoId() !== null ? 'Modificar medicación' : 'Nueva medicación' }}
+            </h4>
 
-        @if (editandoId() === null) {
-        <app-medication-search #buscador (medicationSelected)="seleccionarMedicamento($event)"></app-medication-search>
-        }
+            @if (editandoId() === null) {
+                <app-medication-search
+                    #buscador
+                    (medicationSelected)="seleccionarMedicamento($event)">
+                </app-medication-search>
+            }
 
-        <label for="fdaDrugName">Nombre del medicamento</label>
-        <input id="fdaDrugName" type="text" [value]="modeloMedicacion().fdaDrugName" readonly
-            placeholder="Seleccioná un medicamento de OpenFDA">
+            <label for="fdaDrugName">Nombre del medicamento</label>
 
-        @if ( formularioMedicacion.fdaDrugName().touched() && formularioMedicacion.fdaDrugName().errors() ) {
-        @for (error of formularioMedicacion.fdaDrugName().errors(); track error) {
-        <span class="field-error">{{ error.message }}</span>
-        }
-        }
+            <input
+                id="fdaDrugName"
+                type="text"
+                [value]="modeloMedicacion().fdaDrugName"
+                readonly
+                placeholder="Seleccioná un medicamento de OpenFDA">
 
-        <label for="notes">Notas médicas</label>
-        <textarea id="notes" [formField]="formularioMedicacion.notes" placeholder="Indicaciones u observaciones..."></textarea>
+            @if (formularioMedicacion.fdaDrugName().touched() && formularioMedicacion.fdaDrugName().errors()) {
+                @for (error of formularioMedicacion.fdaDrugName().errors(); track error) {
+                    <span class="field-error">{{ error.message }}</span>
+                }
+            }
 
-        @if (formularioMedicacion.notes().errors()) {
-        @for (error of formularioMedicacion.notes().errors(); track error) {
-        <span class="field-error">{{ error.message }}</span>
-        }
-        }
+            <label for="notes">Notas médicas</label>
 
-        <label for="startDate">Fecha de inicio</label>
-        <input id="startDate" type="date" [formField]="formularioMedicacion.startDate">
+            <textarea
+                id="notes"
+                [formField]="formularioMedicacion.notes"
+                placeholder="Indicaciones u observaciones...">
+            </textarea>
 
-        @if ( formularioMedicacion.startDate().touched() && formularioMedicacion.startDate().errors() ) {
-        @for (error of formularioMedicacion.startDate().errors(); track error) {
-        <span class="field-error">{{ error.message }}</span>
-        }
-        }
+            @if (formularioMedicacion.notes().errors()) {
+                @for (error of formularioMedicacion.notes().errors(); track error) {
+                    <span class="field-error">{{ error.message }}</span>
+                }
+            }
 
-        <label for="endDate">Fecha de finalización</label>
-        <input id="endDate" type="date" [formField]="formularioMedicacion.endDate">
+            <label for="startDate">Fecha de inicio</label>
 
-        @if (formularioMedicacion.endDate().errors()) {
-        @for (error of formularioMedicacion.endDate().errors(); track error) {
-        <span class="field-error">{{ error.message }}</span>
-        }
-        }
+            <input
+                id="startDate"
+                type="date"
+                [formField]="formularioMedicacion.startDate">
 
-        @if (errorForm()) {
-        <p class="error">{{ errorForm() }}</p>
-        }
+            @if (formularioMedicacion.startDate().touched() && formularioMedicacion.startDate().errors()) {
+                @for (error of formularioMedicacion.startDate().errors(); track error) {
+                    <span class="field-error">{{ error.message }}</span>
+                }
+            }
 
-        <div class="form-actions">
-            <button type="button" class="cancel-button" (click)="cancelarForm()" [disabled]="guardandoMedicacion()">Cancelar</button>
+            <label for="endDate">Fecha de finalización</label>
 
-            <button type="submit" class="add-button" [disabled]="guardandoMedicacion()">
-                {{ guardandoMedicacion() ? 'Guardando...' : editandoId() !== null ? 'Guardar cambios' : 'Guardar medicación' }}
-            </button>
-        </div>
+            <input
+                id="endDate"
+                type="date"
+                [formField]="formularioMedicacion.endDate">
 
-    </form>
+            @if (formularioMedicacion.endDate().errors()) {
+                @for (error of formularioMedicacion.endDate().errors(); track error) {
+                    <span class="field-error">{{ error.message }}</span>
+                }
+            }
+
+            <label for="justification">Justificación del movimiento *</label>
+
+            <textarea
+                id="justification"
+                [formField]="formularioMedicacion.justification"
+                placeholder="Explicá por qué se agrega o modifica esta medicación..."
+                rows="4">
+            </textarea>
+
+            @if (formularioMedicacion.justification().touched() && formularioMedicacion.justification().errors()) {
+                @for (error of formularioMedicacion.justification().errors(); track error) {
+                    <span class="field-error">{{ error.message }}</span>
+                }
+            }
+
+            <p class="field-hint">
+                La justificación es obligatoria y quedará registrada en el historial de la ficha médica.
+            </p>
+
+            @if (errorForm()) {
+                <p class="error">{{ errorForm() }}</p>
+            }
+
+            <div class="form-actions">
+                <button
+                    type="button"
+                    class="cancel-button"
+                    (click)="cancelarForm()"
+                    [disabled]="guardandoMedicacion()">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="add-button"
+                    [disabled]="guardandoMedicacion()">
+                    {{ guardandoMedicacion()
+                        ? 'Guardando...'
+                        : editandoId() !== null
+                            ? 'Guardar cambios'
+                            : 'Guardar medicación' }}
+                </button>
+            </div>
+        </form>
     }
 
     @if (exitoForm()) {
-    <p class="success-message">
-        La medicación se guardó correctamente.
-    </p>
+        <p class="success-message">
+            La medicación se guardó correctamente.
+        </p>
     }
 </section>

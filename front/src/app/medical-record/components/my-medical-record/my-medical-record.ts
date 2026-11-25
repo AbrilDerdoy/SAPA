@@ -1,69 +1,98 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal
+} from '@angular/core';
+
+import { RouterLink } from '@angular/router';
+
 import { MedicalRecordService } from '../../services/medical-record-service';
 import { MedicalRecord } from '../../interfaces/medical-record';
 import { Medication } from '../../interfaces/medication/medication';
+
 import { PatientService } from '../../../Patient/service/patient.service';
 import { Patient } from '../../../Patient/interfaces/patient';
-import { RouterLink } from '@angular/router';
+
+import { MedicalRecordMovements } from '../medical-record-movements/medical-record-movements';
+import { MedicalRecordAccess } from '../medical-record-access/medical-record-access';
 
 @Component({
   selector: 'app-my-medical-record',
-  imports: [RouterLink],
+  standalone: true,
+  imports: [
+    RouterLink,
+    MedicalRecordMovements,
+    MedicalRecordAccess
+  ],
   templateUrl: './my-medical-record.html',
-  styleUrl: './my-medical-record.css',
+  styleUrl: './my-medical-record.css'
 })
 export class MyMedicalRecord implements OnInit {
-  private readonly medicalRecordService = inject(MedicalRecordService)
-  private readonly patientService = inject(PatientService)
+  private readonly medicalRecordService = inject(MedicalRecordService);
+  private readonly patientService = inject(PatientService);
 
-  perfil = signal<Patient | null>(null)
-  cargandoPerfil = signal(true)
-  errorPerfil = signal<string | null>(null)
+  readonly perfil = signal<Patient | null>(null);
+  readonly cargandoPerfil = signal(true);
+  readonly errorPerfil = signal<string | null>(null);
 
-  fichaMedica = signal<MedicalRecord | null>(null)
-  medicaciones = signal<Medication[]>([])
-  medicacionesVisibles = signal(false)
+  readonly fichaMedica = signal<MedicalRecord | null>(null);
+  readonly medicaciones = signal<Medication[]>([]);
+  readonly medicacionesVisibles = signal(false);
 
-  cargando = signal<boolean>(true)
-  cargandoMedicaciones = signal<boolean>(true)
+  readonly cargando = signal(true);
+  readonly cargandoMedicaciones = signal(false);
 
-  error = signal<string | null>(null)
-  errorMedicaciones = signal<string | null>(null)
+  readonly error = signal<string | null>(null);
+  readonly errorMedicaciones = signal<string | null>(null);
 
-  medicacionesActivas = computed(() => this.medicaciones().filter(m => m.status === 'PRESCRIBED'))
+  readonly medicacionesActivas = computed(() =>
+    this.medicaciones().filter(m => m.status === 'PRESCRIBED')
+  );
 
-  medicacionesSuspendidas = computed(() => this.medicaciones().filter(m => m.status === 'SUSPENDED'))
+  readonly medicacionesSuspendidas = computed(() =>
+    this.medicaciones().filter(m => m.status === 'SUSPENDED')
+  );
+
+  ngOnInit(): void {
+    this.cargarPerfil();
+    this.cargarFichaMedica();
+  }
 
   cargarPerfil(): void {
-    this, this.cargandoPerfil.set(true)
-    this.errorPerfil.set(null)
+    this.cargandoPerfil.set(true);
+    this.errorPerfil.set(null);
 
     this.patientService.getProfile().subscribe({
-      next: (datos) => {
-        this.perfil.set(datos)
-        this.cargandoPerfil.set(false)
+      next: datos => {
+        this.perfil.set(datos);
+        this.cargandoPerfil.set(false);
       },
       error: () => {
-        this.errorPerfil.set('No se pudieron cargar tus datos personales.')
-        this.cargandoPerfil.set(false)
+        this.errorPerfil.set('No se pudieron cargar tus datos personales.');
+        this.cargandoPerfil.set(false);
       }
-    })
+    });
   }
 
   cargarFichaMedica(): void {
-    this.cargando.set(true)
-    this.error.set(null)
+    this.cargando.set(true);
+    this.error.set(null);
 
     this.medicalRecordService.getMyMedicalRecord().subscribe({
-      next: (datos) => {
-        this.fichaMedica.set(datos)
-        this.cargando.set(false)
+      next: datos => {
+        this.fichaMedica.set(datos);
+        this.cargando.set(false);
       },
-      error: () => {
-        this.error.set('No se pudo cargar la ficha médica.')
-        this.cargando.set(false)
+      error: err => {
+        this.error.set(
+          err?.error?.message ?? 'No se pudo cargar la ficha médica.'
+        );
+        this.cargando.set(false);
       }
-    })
+    });
   }
 
   cargarMedicaciones(): void {
@@ -71,12 +100,14 @@ export class MyMedicalRecord implements OnInit {
     this.errorMedicaciones.set(null);
 
     this.medicalRecordService.getMyMedications().subscribe({
-      next: (datos) => {
-        this.medicaciones.set(datos);
+      next: datos => {
+        this.medicaciones.set(datos ?? []);
         this.cargandoMedicaciones.set(false);
       },
-      error: () => {
-        this.errorMedicaciones.set('No se pudieron cargar las medicaciones.');
+      error: err => {
+        this.errorMedicaciones.set(
+          err?.error?.message ?? 'No se pudieron cargar las medicaciones.'
+        );
         this.cargandoMedicaciones.set(false);
       }
     });
@@ -86,14 +117,8 @@ export class MyMedicalRecord implements OnInit {
     const mostrar = !this.medicacionesVisibles();
     this.medicacionesVisibles.set(mostrar);
 
-    if (mostrar && !this.medicaciones().length) {
+    if (mostrar) {
       this.cargarMedicaciones();
     }
   }
-
-  ngOnInit(): void {
-    this.cargarPerfil()
-    this.cargarFichaMedica()
-  }
-
 }

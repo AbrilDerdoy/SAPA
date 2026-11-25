@@ -169,8 +169,52 @@
 .retry-button:hover {
   background: var(--tone-teal-bg);
 }
+
 .notification-trigger .notification-icon {
   display: block;
   width: 22px;
   height: 22px;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 4px 10px;
+}
+
+.notification-header h2 {
+  margin: 0;
+  padding: 0;
+}
+
+.mark-all-button {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 6px 8px;
+}
+
+.mark-all-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+/* Acceso al historial completo */
+
+.notification-history-link {
+  display: block;
+  margin-top: 10px;
+  padding: 12px 8px 4px;
+  border-top: 1px solid var(--border);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.notification-history-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
 }

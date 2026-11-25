@@ -4,6 +4,7 @@ export type NotificationType =
   | 'REMINDER'
   | 'FOLLOW'
   | 'QUESTIONNAIRE'
+  | 'MEDICAL_RECORD'
   | 'REPORT';
 
 export interface NotificationResponse {

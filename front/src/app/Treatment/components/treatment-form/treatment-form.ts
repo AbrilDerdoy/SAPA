@@ -1,5 +1,15 @@
+
 import { Component, input, linkedSignal, output } from '@angular/core';
-import { FormField, applyWhen, form, maxLength, min, required } from '@angular/forms/signals';
+import {
+  FormField,
+  applyWhen,
+  form,
+  maxLength,
+  min,
+  minLength,
+  required,
+} from '@angular/forms/signals';
+
 import { TreatmentRequest } from '../../interfaces/treatment-request';
 import { Treatment } from '../../interfaces/treatment';
 import { TreatmentFormModel } from '../../interfaces/treatment-form-model';
@@ -13,6 +23,7 @@ function emptyModel(): TreatmentFormModel {
     durationUnit: 'DAY',
     frequencyLength: 1,
     frequencyUnit: 'HOUR',
+    justification: '',
   };
 }
 
@@ -34,7 +45,11 @@ export class TreatmentForm {
 
   readonly model = linkedSignal<TreatmentFormModel>(() => {
     const current = this.treatment();
-    if (!current) return emptyModel();
+
+    if (!current) {
+      return emptyModel();
+    }
+
     return {
       name: current.name,
       description: current.description,
@@ -42,27 +57,60 @@ export class TreatmentForm {
       durationUnit: current.duration.unit,
       frequencyLength: current.frequency.length,
       frequencyUnit: current.frequency.unit,
+      justification: '',
     };
   });
 
   readonly treatmentForm = form(this.model, (path) => {
-    required(path.name, { message: 'El nombre del tratamiento es obligatorio.' });
-    maxLength(path.name, 100, { message: 'El nombre no puede superar los 100 caracteres.' });
+    required(path.name, {
+      message: 'El nombre del tratamiento es obligatorio.',
+    });
 
-    required(path.description, { message: 'La descripción es obligatoria.' });
-    maxLength(path.description, 1000, { message: 'La descripción no puede superar los 1000 caracteres.' });
+    maxLength(path.name, 100, {
+      message: 'El nombre no puede superar los 100 caracteres.',
+    });
+
+    required(path.description, {
+      message: 'La descripción es obligatoria.',
+    });
+
+    maxLength(path.description, 1000, {
+      message: 'La descripción no puede superar los 1000 caracteres.',
+    });
 
     applyWhen(
       path.durationLength,
       ({ valueOf }) => valueOf(path.durationUnit) !== 'INDETERMINATE',
       (lengthPath) => {
-        required(lengthPath, { message: 'Indicá la duración.' });
-        min(lengthPath, 1, { message: 'La duración debe ser mayor a cero.' });
+        required(lengthPath, {
+          message: 'Indicá la duración.',
+        });
+
+        min(lengthPath, 1, {
+          message: 'La duración debe ser mayor a cero.',
+        });
       }
     );
 
-    required(path.frequencyLength, { message: 'Indicá la frecuencia.' });
-    min(path.frequencyLength, 1, { message: 'La frecuencia debe ser mayor a cero.' });
+    required(path.frequencyLength, {
+      message: 'Indicá la frecuencia.',
+    });
+
+    min(path.frequencyLength, 1, {
+      message: 'La frecuencia debe ser mayor a cero.',
+    });
+
+    required(path.justification, {
+      message: 'La justificación es obligatoria.',
+    });
+
+    minLength(path.justification, 5, {
+      message: 'La justificación debe tener al menos 5 caracteres.',
+    });
+
+    maxLength(path.justification, 10000, {
+      message: 'La justificación no puede superar los 10000 caracteres.',
+    });
   });
 
   submit(event: Event): void {
@@ -74,14 +122,22 @@ export class TreatmentForm {
     }
 
     const value = this.model();
+
     this.saved.emit({
       name: value.name.trim(),
       description: value.description.trim(),
       duration: {
-        length: value.durationUnit === 'INDETERMINATE' ? 1 : Number(value.durationLength),
+        length:
+          value.durationUnit === 'INDETERMINATE'
+            ? 1
+            : Number(value.durationLength),
         unit: value.durationUnit,
       },
-      frequency: { length: Number(value.frequencyLength), unit: value.frequencyUnit },
+      frequency: {
+        length: Number(value.frequencyLength),
+        unit: value.frequencyUnit,
+      },
+      justification: value.justification.trim(),
     });
   }
 }

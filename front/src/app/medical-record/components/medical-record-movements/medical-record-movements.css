@@ -1,0 +1,155 @@
+
+.movements-card {
+  padding: 24px;
+  margin: 22px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.movements-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.movements-header h2 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 20px;
+}
+
+.movements-header p,
+.state-message {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.movements-header > a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.movements-header > a:hover {
+  text-decoration: underline;
+}
+
+.movements-list {
+  display: grid;
+  gap: 13px;
+}
+
+.movement-item {
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+
+.movement-top {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.movement-type {
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: var(--tone-teal-bg);
+  color: var(--tone-teal-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.movement-top time {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.movement-item h3 {
+  margin: 0 0 9px;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.movement-description,
+.movement-author {
+  color: var(--text-muted);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.movement-author strong {
+  color: var(--text);
+}
+
+.movement-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.movement-attachments a {
+  color: var(--primary);
+}
+
+.movement-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.chat-link {
+  padding: 9px 15px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-link:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.error-message {
+  color: var(--danger-strong);
+}
+
+.error-message button {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--text);
+  cursor: pointer;
+}
+
+@media (max-width: 650px) {
+  .movements-card {
+    padding: 17px;
+  }
+
+  .movements-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .movement-actions {
+    justify-content: stretch;
+  }
+
+  .chat-link {
+    width: 100%;
+  }
+}

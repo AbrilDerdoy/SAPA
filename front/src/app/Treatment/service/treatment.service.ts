@@ -1,6 +1,8 @@
+
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
 import { Treatment } from '../interfaces/treatment';
 import { TreatmentRequest } from '../interfaces/treatment-request';
 
@@ -10,23 +12,55 @@ export class TreatmentService {
   private readonly baseUrl = 'http://localhost:8080/treatments';
 
   getByPatient(patientId: number): Observable<Treatment[]> {
-    return this.http.get<Treatment[]>(`${this.baseUrl}/patient/${patientId}`);
+    return this.http.get<Treatment[]>(
+      `${this.baseUrl}/patient/${patientId}`
+    );
   }
 
-  filterByName(patientId: number, name: string): Observable<Treatment[]> {
+  filterByName(
+    patientId: number,
+    name: string
+  ): Observable<Treatment[]> {
     const params = new HttpParams().set('name', name);
-    return this.http.get<Treatment[]>(`${this.baseUrl}/patient/${patientId}/filter`, { params });
+
+    return this.http.get<Treatment[]>(
+      `${this.baseUrl}/patient/${patientId}/filter`,
+      { params }
+    );
   }
 
-  create(patientId: number, request: TreatmentRequest): Observable<Treatment> {
-    return this.http.post<Treatment>(`${this.baseUrl}/patient/${patientId}`, request);
+  create(
+    patientId: number,
+    request: TreatmentRequest
+  ): Observable<Treatment> {
+    return this.http.post<Treatment>(
+      `${this.baseUrl}/patient/${patientId}`,
+      request
+    );
   }
 
-  update(treatmentId: number, request: TreatmentRequest): Observable<Treatment> {
-    return this.http.put<Treatment>(`${this.baseUrl}/${treatmentId}`, request);
+  update(
+    treatmentId: number,
+    request: TreatmentRequest
+  ): Observable<Treatment> {
+    return this.http.put<Treatment>(
+      `${this.baseUrl}/${treatmentId}`,
+      request
+    );
   }
 
-  remove(treatmentId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${treatmentId}`);
+  remove(
+    treatmentId: number,
+    justification: string
+  ): Observable<void> {
+    const params = new HttpParams().set(
+      'justification',
+      justification
+    );
+
+    return this.http.delete<void>(
+      `${this.baseUrl}/${treatmentId}`,
+      { params }
+    );
   }
 }

@@ -35,11 +35,12 @@ public class NotificationService {
             UserEntity user,
             String title,
             String msg,
-            NotificationType type) {
-
+            NotificationType type
+    ) {
         if (user == null || user.getId() == null) {
             throw new IllegalArgumentException(
-                    "No se puede crear una notificación sin un usuario válido.");
+                    "No se puede crear una notificación sin un usuario válido."
+            );
         }
 
         NotificationEntity notification = NotificationEntity.builder()
@@ -51,20 +52,27 @@ public class NotificationService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        NotificationEntity savedNotification =
+        NotificationEntity saved =
                 notificationRepository.saveAndFlush(notification);
 
         NotificationResponseDTO response =
-                notificationMapper.toResponse(savedNotification);
-
-        log.info(
-                "Notificación guardada. ID: {}, usuario: {}, tipo: {}",
-                savedNotification.getId(),
-                user.getEmail(),
-                type
-        );
+                notificationMapper.toResponse(saved);
 
         publishAfterCommit(user, response);
+    }
+
+    @Transactional
+    public void notifyMedicalRecordEvent(
+            UserEntity user,
+            String title,
+            String message
+    ) {
+        createNotification(
+                user,
+                title,
+                message,
+                NotificationType.MEDICAL_RECORD
+        );
     }
 
     @Transactional(readOnly = true)
@@ -97,24 +105,56 @@ public class NotificationService {
                 notificationRepository.findById(notificationId)
                         .orElseThrow(() -> new EntityNotFoundException(
                                 "Notificación con id " + notificationId
-                                        + " no encontrada"));
+                                        + " no encontrada."
+                        ));
 
-        if (!notification.getUser().getId().equals(user.getId())) {
-            throw new AccessDeniedException(
-                    "No tenés permiso para modificar esta notificación.");
-        }
+        validateOwner(notification, user);
 
         notification.setReaded(true);
 
-        NotificationEntity savedNotification =
+        NotificationEntity saved =
                 notificationRepository.save(notification);
 
         NotificationResponseDTO response =
-                notificationMapper.toResponse(savedNotification);
+                notificationMapper.toResponse(saved);
 
         publishAfterCommit(user, response);
 
         return response;
+    }
+
+    /**
+     * Marca como leídas todas las notificaciones del usuario autenticado.
+     * No modifica notificaciones pertenecientes a otros usuarios.
+     */
+    @Transactional
+    public void markAllAsRead() {
+        UserEntity user = userContext.getAuthenticatedUser();
+
+        List<NotificationEntity> unread =
+                notificationRepository.findByUserAndReadedFalse(user);
+
+        if (unread.isEmpty()) {
+            return;
+        }
+
+        unread.forEach(notification -> notification.setReaded(true));
+
+        List<NotificationEntity> saved =
+                notificationRepository.saveAll(unread);
+
+        saved.forEach(notification -> {
+            NotificationResponseDTO response =
+                    notificationMapper.toResponse(notification);
+
+            publishAfterCommit(user, response);
+        });
+
+        log.info(
+                "Se marcaron {} notificaciones como leídas para el usuario {}",
+                saved.size(),
+                user.getEmail()
+        );
     }
 
     @Transactional
@@ -125,20 +165,30 @@ public class NotificationService {
                 notificationRepository.findById(notificationId)
                         .orElseThrow(() -> new EntityNotFoundException(
                                 "Notificación con id " + notificationId
-                                        + " no encontrada"));
+                                        + " no encontrada."
+                        ));
 
-        if (!notification.getUser().getId().equals(user.getId())) {
-            throw new AccessDeniedException(
-                    "No tenés permiso para eliminar esta notificación.");
-        }
+        validateOwner(notification, user);
 
         notificationRepository.delete(notification);
     }
 
+    private void validateOwner(
+            NotificationEntity notification,
+            UserEntity user
+    ) {
+        if (notification.getUser() == null
+                || !notification.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException(
+                    "No tenés permiso para modificar esta notificación."
+            );
+        }
+    }
+
     private void publishAfterCommit(
             UserEntity user,
-            NotificationResponseDTO notification) {
-
+            NotificationResponseDTO notification
+    ) {
         Runnable publish = () -> {
             try {
                 messagingTemplate.convertAndSendToUser(

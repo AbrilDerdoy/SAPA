@@ -1,3 +1,4 @@
+
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.Request.AddMedicationRequestDTO;
@@ -24,46 +25,76 @@ import java.util.List;
 @RequestMapping("/medical-records")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-@Tag(name = "Fichas Médicas", description = "Operaciones para la consulta de antecedentes médicos, diagnósticos e historias clínicas de los pacientes")
+@Tag(
+        name = "Fichas Médicas",
+        description = "Operaciones para consultar y gestionar fichas médicas."
+)
 public class MedicalRecordController {
 
     private final MedicalRecordService medicalRecordService;
 
-    @Operation(
-            summary = "Obtener mi propia ficha medica",
-            description = "Permite al paciente autenticado consultar la totalidad de su ficha medica registrada en el sistema."
-    )
+    @Operation(summary = "Obtener mi propia ficha médica")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Historial clínico recuperado exitosamente.",
-                    content = @Content(schema = @Schema(implementation = MedicalRecordResponseDTO.class))),
-            @ApiResponse(responseCode = "401", description = "No autorizado - Token de sesión inválido o expirado.", content = @Content),
-            @ApiResponse(responseCode = "404", description = "No se encontró un historial clínico relacionado a este usuario.", content = @Content)
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Ficha médica recuperada correctamente.",
+                    content = @Content(
+                            schema = @Schema(
+                                    implementation = MedicalRecordResponseDTO.class
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "No autorizado.",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Ficha no encontrada.",
+                    content = @Content
+            )
     })
     @GetMapping("/my")
     public ResponseEntity<MedicalRecordResponseDTO> getMyMedicalRecord() {
-        return ResponseEntity.ok(medicalRecordService.getMyMedicalRecord());
+        return ResponseEntity.ok(
+                medicalRecordService.getMyMedicalRecord()
+        );
     }
 
-    @Operation(
-            summary = "Obtener el historial clínico de un paciente",
-            description = "Permite a un doctor consultar la ficha médica de un paciente específico utilizando su ID."
-    )
+    @Operation(summary = "Obtener la ficha médica de un paciente")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Ficha médica del paciente recuperada con éxito.",
-                    content = @Content(schema = @Schema(implementation = MedicalRecordResponseDTO.class))),
-            @ApiResponse(responseCode = "401", description = "No autorizado - Token JWT ausente.", content = @Content),
-            @ApiResponse(responseCode = "403", description = "Prohibido - No tienes permisos o un vínculo de seguimiento activo para auditar a este paciente.", content = @Content),
-            @ApiResponse(responseCode = "404", description = "El ID del paciente no existe o no tiene una ficha médica generada.", content = @Content)
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Ficha médica recuperada correctamente."
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "El paciente no autorizó el acceso."
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Paciente o ficha no encontrados."
+            )
     })
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<MedicalRecordResponseDTO> getPatientMedicalRecord(
-            @Parameter(description = "ID único del paciente del cual se requiere la ficha", required = true) @PathVariable Long patientId) {
-        return ResponseEntity.ok(medicalRecordService.getPatientMedicalRecord(patientId));
+            @Parameter(
+                    description = "Identificador del paciente",
+                    required = true
+            )
+            @PathVariable Long patientId
+    ) {
+        return ResponseEntity.ok(
+                medicalRecordService.getPatientMedicalRecord(patientId)
+        );
     }
 
     @GetMapping("/my/medications")
     public ResponseEntity<List<MedicationDetailResponseDTO>> getMyMedications() {
-        return ResponseEntity.ok(medicalRecordService.getMyMedications());
+        return ResponseEntity.ok(
+                medicalRecordService.getMyMedications()
+        );
     }
 
     @GetMapping("/patient/{patientId}/medications")
@@ -81,7 +112,12 @@ public class MedicalRecordController {
             @Valid @RequestBody AddMedicationRequestDTO request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(medicalRecordService.addMedication(patientId, request));
+                .body(
+                        medicalRecordService.addMedication(
+                                patientId,
+                                request
+                        )
+                );
     }
 
     @PutMapping("/medications/{medicationId}")
@@ -90,15 +126,23 @@ public class MedicalRecordController {
             @Valid @RequestBody UpdateMedicationRequestDTO request
     ) {
         return ResponseEntity.ok(
-                medicalRecordService.updateMedication(medicationId, request)
+                medicalRecordService.updateMedication(
+                        medicationId,
+                        request
+                )
         );
     }
 
     @DeleteMapping("/medications/{medicationId}")
-    public ResponseEntity<Void> deleteMedication(
-            @PathVariable Long medicationId
+    public ResponseEntity<Void> suspendMedication(
+            @PathVariable Long medicationId,
+            @RequestParam String justification
     ) {
-        medicalRecordService.deleteMedication(medicationId);
+        medicalRecordService.deleteMedication(
+                medicationId,
+                justification
+        );
+
         return ResponseEntity.noContent().build();
     }
 }
