@@ -43,9 +43,9 @@
 }
 
 .actions button {
-  background: var(--primary-light);
-  color: var(--primary-dark);
-  border: 1px solid transparent;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
   font-weight: 600;
   transition: all 0.2s ease;
 }
@@ -53,7 +53,6 @@
 .actions button:hover {
   background: var(--primary);
   color: white;
-  transform: translateY(-1px);
 }
 
 .forum-list {
@@ -68,7 +67,10 @@
   flex-direction: column;
   align-items: stretch;
   padding: 22px;
-  background: #fff;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--primary);
   border: 1px solid var(--border);
   border-top: 4px solid var(--primary);
   border-radius: var(--radius);
@@ -80,15 +82,15 @@
 }
 
 .forum-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .forum-card-header h2 {
-    min-width: 0;
-    overflow-wrap: anywhere;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .forum-card:hover {
@@ -104,7 +106,7 @@
 
 .forum-card h2 {
   margin: 0;
-  color: var(--primary-dark);
+  color: var(--text);
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1.4;
@@ -139,8 +141,8 @@
 }
 
 .forum-card .edit {
-    background: var(--tone-blue-bg);
-    color: var(--tone-blue-text);
+  background: var(--tone-blue-bg);
+  color: var(--tone-blue-text);
 }
 
 .forum-card .edit:hover {
@@ -166,19 +168,20 @@
   font-weight: 600;
 }
 
-.forum-list > p.error {
+.forum-list>p.error {
   color: var(--tone-red-text);
   background: var(--tone-red-bg);
   text-align: center;
 }
 
-.forum-list > p {
+.forum-list>p {
   color: var(--text-muted);
   text-align: center;
   grid-column: 1 / -1;
   padding: 40px 20px;
-  background: var(--primary-dark);
+  background: var(--surface);
   border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
 .forum-image {
@@ -187,7 +190,7 @@
   object-fit: cover;
   border-radius: 12px;
   margin: 2px 0;
-  background: var(--primary-light);
+  background: var(--surface);
 }
 
 @media (max-width: 600px) {
