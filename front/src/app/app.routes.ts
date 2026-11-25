@@ -24,8 +24,8 @@ import { QuestionnaireHistory } from './Questionnaire/components/questionnaire-h
 import { MyMedicalRecord } from './medical-record/components/my-medical-record/my-medical-record';
 import { PatientMedicalRecord } from './medical-record/components/patient-medical-record/patient-medical-record';
 import { DoctorProfilePublic } from './Doctor/components/doctor-profile-public/doctor-profile-public';
-import { SharedPost } from './post/post-component/shared-post/shared-post';
 import { NotFound } from './Common/not-found/not-found';
+import { AdminReports } from './report/report-components/admin-reports/admin-reports';
 
 export const routes: Routes = [
 
@@ -126,11 +126,8 @@ export const routes: Routes = [
   },
 
   // Administración
-  {
-    path: 'admin',
-    canActivate: [adminGuard],
-    component: PanelAdmin
-  },
+  {path: 'admin/reports', component: AdminReports, canActivate: [roleGuard(['ADMIN'])], data: {title: 'Moderación de contenido'}},
+  {path: 'admin', canActivate: [adminGuard], component: PanelAdmin},
 
   // Doctor
   { path: 'perfil-medico-publico/:doctorId', component: DoctorProfilePublic },

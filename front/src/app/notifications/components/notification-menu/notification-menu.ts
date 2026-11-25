@@ -15,6 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationResponse } from '../../models/notification-response';
 import { NotificationRealtimeService } from '../../services/notification-realtime.service';
 import { NotificationService } from '../../services/notification.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-notification-menu',
@@ -27,6 +28,7 @@ export class NotificationMenu implements OnDestroy, OnInit {
   private readonly notificationRealtime = inject(NotificationRealtimeService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly router = inject(Router)
 
   readonly menuAbierto = signal(false);
   readonly notifications = signal<NotificationResponse[]>([]);
@@ -154,5 +156,38 @@ export class NotificationMenu implements OnDestroy, OnInit {
           new Date(left.createdAt).getTime(),
       );
     });
+  }
+
+  openNotification(notification: NotificationResponse): void {
+      console.log('Notificación seleccionada:', notification);
+  console.log('Tipo:', notification.type);
+    if (notification.type === 'REPORT') {
+      this.menuAbierto.set(false)
+
+      if (notification.readed) {
+        void this.router.navigate(['/admin/reports'])
+        return
+      }
+
+      this.notificationService.markAsRead(notification.notificationId).subscribe({
+        next: (updatedNotification) => {
+          this.notifications.update(notifications =>
+            notifications.map(item =>
+              item.notificationId === updatedNotification.notificationId
+                ? updatedNotification
+                : item
+            )
+          )
+
+          void this.router.navigate(['/admin/reports'])
+        },
+        error: () => {
+          this.errorMessage.set('No se pudo abrir la notificación.')
+        }
+      })
+      return
+    }
+
+    this.markAsRead(notification);
   }
 }

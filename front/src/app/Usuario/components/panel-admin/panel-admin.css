@@ -108,7 +108,7 @@
   border-top-color: transparent;
 }
 
-.row--confirm + .row {
+.row--confirm+.row {
   border-top-color: transparent;
 }
 
@@ -277,6 +277,75 @@
   color: var(--text-muted);
 }
 
+.reports-box {
+  grid-column: 1 / -1;
+}
+
+.report-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color, #ddd);
+  margin-bottom: 18px;
+}
+
+.report-tabs button {
+  padding: 10px 14px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.report-tabs button.active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.report-row {
+  padding: 16px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  list-style: none;
+}
+
+.report-row__header,
+.report-row__info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.report-row__info {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #777);
+}
+
+.report-row__reason {
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+}
+
+.report-status {
+  color: #a66a00;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.report-status--reviewed {
+  color: #16845b;
+}
+
+.report-row__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 560px) {
   .panel {
     padding: 1.5rem 1rem 3rem;
@@ -321,5 +390,45 @@
   .add {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-box {
+    grid-column: 1;
+  }
+
+  .report-row {
+    padding: 12px;
+  }
+
+  .report-row__header,
+  .report-row__info {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .report-row__actions {
+    justify-content: stretch;
+  }
+
+  .report-row__actions .btn {
+    width: 100%;
+  }
+
+  .report-tabs {
+    gap: 4px;
+  }
+
+  .report-tabs button {
+    flex: 1;
+    padding: 10px 6px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .report-tabs button {
+    font-size: 0.78rem;
   }
 }

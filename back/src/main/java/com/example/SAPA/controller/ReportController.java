@@ -6,6 +6,7 @@ import com.example.SAPA.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,12 @@ public class ReportController {
     @GetMapping("/unreviewed")
     public ResponseEntity<List<ReportResponseDTO>> getUnreviewed() {
         return ResponseEntity.ok(reportService.getUnreviewed());
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReportResponseDTO>> getAllReports() {
+        return ResponseEntity.ok(reportService.getAllReports());
     }
 
 

@@ -76,6 +76,19 @@
   overflow-wrap: anywhere;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
+  position: relative
+}
+
+.forum-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.forum-card-header h2 {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .forum-card:hover {

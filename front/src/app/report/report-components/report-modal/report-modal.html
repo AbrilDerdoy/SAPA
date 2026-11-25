@@ -1,0 +1,50 @@
+<div class="modal-overlay" (click)="close.emit()">
+    <section class="report-modal" (click)="$event.stopPropagation()">
+        @if (success()) {
+        <div class="report-success">
+            <h2>Reporte enviado</h2>
+            <p>Gracias por ayudarnos a mantener una comunidad segura.</p>
+
+            <button type="button" (click)="close.emit()">
+                Cerrar
+            </button>
+        </div>
+        } @else {
+        <h2>Reportar contenido</h2>
+
+        <p>Contanos por qué considerás que este contenido es inapropiado.</p>
+        <form (submit)="submitReport(); $event.preventDefault()">
+            <label for="reason">Motivo del reporte</label>
+
+            <textarea id="reason" [formField]="reportForm.reason" placeholder="Describí el motivo del reporte..."
+                rows="5"></textarea>
+
+            <div class="character-count">
+                {{ model().reason.length }}/1000
+            </div>
+
+            @if (reportForm.reason().touched() &&
+            reportForm.reason().errors().length > 0) {
+
+            @for (error of reportForm.reason().errors(); track error) {
+            <p class="error-message">{{ error.message }}</p>
+            }
+            }
+
+            @if (error()) {
+            <p class="error-message">{{ error() }}</p>
+            }
+
+            <div class="modal-actions">
+                <button type="button" class="cancel-button" (click)="close.emit()" [disabled]="loading()">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="submit-button" [disabled]="loading() || !reportForm().valid()">
+                    {{ loading() ? 'Enviando...' : 'Enviar reporte' }}
+                </button>
+            </div>
+        </form>
+        }
+    </section>
+</div>

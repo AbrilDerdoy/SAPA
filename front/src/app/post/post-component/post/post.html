@@ -107,7 +107,6 @@
   <div class="posts-list">
     @for (post of filteredPosts(); track post.postId) {
     <article class="post-card">
-
       <div class="post-card-header">
         <h2>{{ post.title }}</h2>
 
@@ -134,16 +133,9 @@
         <span>{{ post.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
       </div>
 
-      @if (sesionIniciada && esPropietario(post)) {
-      <div class="post-actions">
-        <button type="button" class="edit-button" (click)="editPost(post)">
-          Editar
-        </button>
-
-        <button type="button" class="delete-button" (click)="deletePost(post.postId)">
-          Eliminar
-        </button>
-      </div>
+      @if (sesionIniciada) {
+      <app-content-menu [canReport]="true" [canEdit]="esPropietario(post)" [canDelete]="esPropietario(post)"
+        (report)="openReportModal(post.postId)" (edit)="editPost(post)" (delete)="deletePost(post.postId)" />
       }
 
       <div class="post-footer">
@@ -165,4 +157,7 @@
   </div>
   }
 
+  @if (showReportModal() && reportContentId() !== null) {
+  <app-report-modal [contentId]="reportContentId()!" [contentType]="'POST'" (close)="closeReportModal()" />
+  }
 </section>

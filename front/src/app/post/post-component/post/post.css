@@ -69,17 +69,20 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow);
+  position: relative;
 }
 
 .post-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
+  align-items: center;
 }
 
 .post-card-header h2 {
   margin: 0;
+  min-width: 0;
   color: var(--text);
   font-size: 1.2rem;
   overflow-wrap: anywhere;

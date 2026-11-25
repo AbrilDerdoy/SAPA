@@ -1,20 +1,20 @@
-import { Component, ElementRef, HostListener, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { PostService } from '../../../post/post-service/post-service';
 import { PostCommentResponse } from '../../post-comment-DTOs/post-comment-response';
 import { DatePipe } from '@angular/common';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { form, FormField, maxLength, required } from '@angular/forms/signals';
+import { ContentMenu } from '../../../content-menu/content-menu-component/content-menu/content-menu';
 
 @Component({
   selector: 'app-post-comment',
-  imports: [DatePipe, FormField],
+  imports: [DatePipe, FormField, ContentMenu],
   templateUrl: './post-comment.html',
   styleUrl: './post-comment.css',
 })
 export class PostComment implements OnInit {
   private postService = inject(PostService)
   private authService = inject(Auth)
-  private elementRef = inject(ElementRef)
 
   postId = input.required<number>()
 
@@ -25,23 +25,6 @@ export class PostComment implements OnInit {
 
   commentsVisible = signal(false)
   commentFormVisible = signal(false)
-
-  openMenuId = signal<number | null>(null)
-
-  toggleMenu(commentId: number): void {
-    this.openMenuId.update(current =>
-      current === commentId ? null : commentId
-    )
-  }
-
-  @HostListener('document:click', ['$event'])
-  closeMenu(event: MouseEvent): void {
-    const target = event.target as HTMLElement
-
-    if (!target.closest('.comment-menu')) {
-      this.openMenuId.set(null)
-    }
-  }
 
   commentModel = signal({
     content: ''
@@ -126,7 +109,6 @@ export class PostComment implements OnInit {
   }
 
   editComment(comment: PostCommentResponse): void {
-    this.openMenuId.set(null)
     this.editingCommentId.set(comment.commentId)
     this.commentModel.set({ content: comment.content })
     this.commentFormVisible.set(true)
@@ -144,7 +126,6 @@ export class PostComment implements OnInit {
     if (!confirm('¿Estás seguro de que querés eliminar este comentario?')) {
       return
     }
-    this.openMenuId.set(null)
 
     this.postService.deleteComment(this.postId(), commentId).subscribe({
       next: () => this.loadComments(),

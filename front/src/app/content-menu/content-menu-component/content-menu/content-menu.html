@@ -1,0 +1,30 @@
+<div class="content-menu">
+    <button type="button" class="menu-toggle" (click)="toggleMenu(); $event.stopPropagation()"
+        aria-label="Opciones de contenido" [attr.aria-expanded]="menuOpen()">
+        <img src="/images/menu.svg" alt="">
+    </button>
+
+    @if (menuOpen()) {
+    <div class="content-menu-dropdown" (click)="$event.stopPropagation()">
+        @if (canReport()) {
+        <button type="button" class="report-option" (click)="onReport()">
+            Reportar
+        </button>
+        }
+
+        @if (canEdit()) {
+        <button type="button" class="edit-option" (click)="onEdit()">
+            Editar
+        </button>
+        }
+
+        @if (canDelete()) {
+        <button type="button" class="delete-option" (click)="onDelete()">
+            Eliminar
+        </button>
+        }
+
+    </div>
+    }
+
+</div>

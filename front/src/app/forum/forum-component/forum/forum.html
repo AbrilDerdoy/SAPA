@@ -21,28 +21,33 @@
         @for (forum of filteredForums(); track forum.forumId) {
         <article class="forum-card" (click)="irAlForo(forum.title)" (keydown.enter)="irAlForo(forum.title)"
             tabindex="0">
-            <h2>{{ forum.title }}</h2>
+            <div class="forum-card-header">
+                <h2>{{ forum.title }}</h2>
+                @if (sesionIniciada) {
+                <app-content-menu [canReport]="true" [canEdit]="esPropietario(forum)" [canDelete]="esPropietario(forum)"
+                    (report)="openReportModal(forum.forumId)" (edit)="navigateToEditForum(forum)"
+                    (delete)="deleteForum(forum.forumId)" />
+                }
+            </div>
 
             @if (forum.imageUrl) {
             <img class="forum-image" [src]="'http://localhost:8080' + forum.imageUrl"
                 [alt]="'Imagen del foro ' + forum.title" />
             }
+
             <p>{{ forum.content }}</p>
-            <button type="button" class="view" [routerLink]="['/forums', forum.title]">Ver publicaciones</button>
 
-            @if(esPropietario(forum)){
-            <button type="button" class="edit" (click)="$event.stopPropagation()"
-                [routerLink]="['/forums/update', forum.title]">
-                Editar
+            <button type="button" class="view" [routerLink]="['/forums', forum.title]"
+                (click)="$event.stopPropagation()">
+                Ver publicaciones
             </button>
 
-            <button type="button" class="delete" (click)="$event.stopPropagation(); deleteForum(forum.forumId)">
-                Eliminar
-            </button>
-            }
         </article>
         } @empty {
         <p class="error">No hay foros para mostrar</p>
         }
     </div>
+    @if (showReportModal() && reportContentId() !== null) {
+    <app-report-modal [contentId]="reportContentId()!" [contentType]="'FORUM'" (close)="closeReportModal()" />
+    }
 </section>

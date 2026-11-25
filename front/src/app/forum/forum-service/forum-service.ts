@@ -2,8 +2,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ForumResponse } from '../forum-DTOs/forum-response';
 import { Observable } from 'rxjs';
-import { ForumRequest } from '../forum-DTOs/forum-request';
-import { form } from '@angular/forms/signals';
 
 @Injectable({
   providedIn: 'root',

@@ -7,7 +7,10 @@ import com.example.SAPA.Models.ReportEntity;
 import com.example.SAPA.Repositories.ForumRepository;
 import com.example.SAPA.Repositories.PostRepository;
 import com.example.SAPA.Repositories.ReportRepository;
+import com.example.SAPA.Repositories.UserRepository;
+import com.example.SAPA.enums.NotificationType;
 import com.example.SAPA.enums.ReportedContentType;
+import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.exceptions.ResourceAlreadyExistsException;
 import com.example.SAPA.mappers.ReportMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,6 +29,8 @@ public class ReportService {
     private final UserContextService userContext;
     private final PostRepository postRepository;
     private final ForumRepository forumRepository;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
 
     @Transactional
@@ -51,6 +56,8 @@ public class ReportService {
         ReportEntity saved = reportRepository.save(report);
 
         String reportedByName = userContext.resolveName(user);
+
+        notifyAdmins(saved);
         return reportMapper.toResponse(saved, reportedByName);
     }
 
@@ -69,6 +76,16 @@ public class ReportService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<ReportResponseDTO> getAllReports() {
+        return reportRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(r -> reportMapper.toResponse(
+                        r,
+                        userContext.resolveName(r.getReportedBy())
+                ))
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public List<ReportResponseDTO> getUnreviewed() {
@@ -87,5 +104,28 @@ public class ReportService {
         report.setReviewed(true);
         ReportEntity saved = reportRepository.save(report);
         return reportMapper.toResponse(saved, userContext.resolveName(saved.getReportedBy()));
+    }
+
+    private void notifyAdmins(ReportEntity report) {
+        List<UserEntity> admins = userRepository.findByRole(UserCategory.ADMIN);
+
+        String contentType = report.getContentType() == ReportedContentType.POST
+                ? "una publicación"
+                : "un foro";
+
+        String title = "Nuevo reporte recibido";
+
+        String msg = "Se reportó " + contentType
+                + " (ID: " + report.getContentId() + ")."
+                + " Motivo: " + report.getReason();
+
+        admins.forEach(admin ->
+                notificationService.createNotification(
+                        admin,
+                        title,
+                        msg,
+                        NotificationType.REPORT
+                )
+        );
     }
 }

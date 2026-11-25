@@ -14,6 +14,8 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
     @Query("SELECT r FROM ReportEntity r JOIN FETCH r.reportedBy WHERE r.reviewed = false")
     List<ReportEntity> findByReviewedFalseWithUser();
 
+    List<ReportEntity> findAllByOrderByCreatedAtDesc();
+
     boolean existsByReportedByIdAndContentTypeAndContentId(Long reportedById, ReportedContentType contentType,
                                                            Long contentId);
 }

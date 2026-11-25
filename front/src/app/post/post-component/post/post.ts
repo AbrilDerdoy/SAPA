@@ -11,10 +11,13 @@ import { PostAttachments } from '../post-attachments/post-attachments';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { PostComment } from '../../../post-comment/post-comment-component/post-comment/post-comment';
+import { ReportedContentType } from '../../../report/report-DTOs/reported-content-type.type';
+import { ContentMenu } from '../../../content-menu/content-menu-component/content-menu/content-menu';
+import { ReportModal } from '../../../report/report-components/report-modal/report-modal';
 
 @Component({
   selector: 'app-post',
-  imports: [DatePipe, PostForm, PostAttachments, PostComment],
+  imports: [DatePipe, PostForm, PostAttachments, PostComment, ContentMenu, ReportModal],
   templateUrl: './post.html',
   styleUrl: './post.css',
 })
@@ -46,6 +49,10 @@ export class Post {
 
   formVisible = signal(false)
   editingPost = signal<PostResponse | null>(null)
+
+  showReportModal = signal(false)
+  reportContentId = signal<number | null>(null)
+  reportContentType = signal<ReportedContentType>('POST')
 
   ngOnInit(): void {
     if (this.isSharedPost) {
@@ -285,5 +292,15 @@ export class Post {
         }
       }
     })
+  }
+
+  openReportModal(postId: number): void {
+    this.reportContentId.set(postId)
+    this.reportContentType.set('POST')
+    this.showReportModal.set(true)
+  }
+
+  closeReportModal(): void {
+    this.showReportModal.set(false)
   }
 }

@@ -1,0 +1,99 @@
+<section class="admin-reports">
+    <header>
+        <h1>{{ title() }}</h1>
+        <p>Gestioná los reportes de contenido de SAPA.</p>
+    </header>
+
+    <div class="report-tabs">
+        <button type="button" [class.active]="reportTab() === 'PENDING'" (click)="changeTab('PENDING')">
+            Pendientes ({{ pendingReports().length }})
+        </button>
+
+        <button type="button" [class.active]="reportTab() === 'REVIEWED'" (click)="changeTab('REVIEWED')">
+            Revisados ({{ reviewedReports().length }})
+        </button>
+    </div>
+
+    @if (loading()) {
+    <p>Cargando reportes...</p>
+
+    } @else if (error()) {
+    <p class="error-message">{{ error() }}</p>
+
+    <button type="button" (click)="loadReports()">
+        Reintentar
+    </button>
+
+    } @else if (displayedReports().length === 0) {
+    <div class="empty-state">
+        <h3>
+            {{ reportTab() === 'PENDING'
+            ? 'No hay reportes pendientes'
+            : 'No hay reportes revisados' }}
+        </h3>
+        <p>Los reportes aparecerán acá cuando haya actividad.</p>
+    </div>
+
+    } @else {
+    <div class="reports-list">
+        @for (report of paginatedReports(); track report.reportId) {
+        <article class="report-card">
+
+            <div class="report-header">
+                <span class="report-type">
+                    {{ report.contentType === 'FORUM' ? 'Foro' : 'Publicación' }}
+                </span>
+
+                <span class="report-date">
+                    {{ report.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+            </div>
+
+            <p>
+                <strong>Contenido ID:</strong>
+                {{ report.contentId }}
+            </p>
+
+            <p>
+                <strong>Reportado por:</strong>
+                {{ report.reportedByName }}
+            </p>
+
+            <div class="report-reason">
+                <strong>Motivo:</strong>
+                <p>{{ report.reason }}</p>
+            </div>
+
+            <div class="report-actions">
+                <button type="button" class="view-content-button" (click)="viewReportedContent(report)">
+                    Ver contenido reportado
+                </button>
+
+                @if (!report.reviewed) {
+                <button type="button" class="review-button" (click)="markAsReviewed(report.reportId)">
+                    Marcar como revisado
+                </button>
+                } @else {
+                <span class="reviewed-label">Revisado</span>
+                }
+            </div>
+
+        </article>
+        }
+    </div>
+
+    <div class="pagination">
+        <button type="button" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)">
+            Anterior
+        </button>
+
+        <span>
+            Página {{ currentPage() }} de {{ totalPages() }}
+        </span>
+
+        <button type="button" [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)">
+            Siguiente
+        </button>
+    </div>
+    }
+</section>

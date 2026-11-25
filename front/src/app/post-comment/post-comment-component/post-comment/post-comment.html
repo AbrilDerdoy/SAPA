@@ -26,28 +26,8 @@
         <p>{{ comment.content }}</p>
 
         @if (sesionIniciada && esPropietario(comment)) {
-        <div class="comment-menu">
-
-            <button type="button" class="menu-toggle" (click)="toggleMenu(comment.commentId); $event.stopPropagation()"
-                aria-label="Opciones del comentario" [attr.aria-expanded]="openMenuId() === comment.commentId">
-
-                <img src="/images/menu.svg" alt="">
-            </button>
-
-            @if (openMenuId() === comment.commentId) {
-            <div class="comment-menu-dropdown" (click)="$event.stopPropagation()">
-
-                <button type="button" class="edit-option" (click)="editComment(comment)">
-                    Editar
-                </button>
-
-                <button type="button" class="delete-option" (click)="deleteComment(comment.commentId)">
-                    Eliminar
-                </button>
-
-            </div>
-            }
-        </div>
+        <app-content-menu [canReport]="false" [canEdit]="esPropietario(comment)" [canDelete]="esPropietario(comment)"
+            (edit)="editComment(comment)" (delete)="deleteComment(comment.commentId)" />
         }
 
     </article>
