@@ -134,7 +134,7 @@ export const routes: Routes = [
   // Medicamentos
   {
     path: 'medicamentos',
-    canActivate: [roleGuard(['PATIENT', 'DOCTOR'])],
+    canActivate: [roleGuard(['PATIENT', 'DOCTOR', 'TUTOR'])],
     loadComponent: () =>
       import('./Medication/components/medication-search/medication-search')
         .then(m => m.MedicationSearch)

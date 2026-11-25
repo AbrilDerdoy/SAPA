@@ -94,12 +94,20 @@ export class FollowRequests implements OnInit {
 
   load(): void {
     this.loadStatus.set('loading');
+    const requestedPatientId = Number(
+      this.route.snapshot.queryParamMap.get('patientId')
+    );
+    const patientId = Number.isInteger(requestedPatientId)
+      && requestedPatientId > 0
+      ? requestedPatientId
+      : undefined;
+
     const request$ =
       this.mode === 'doctor'
         ? this.service.getPending()
         : this.mode === 'followers'
           ? this.service.getFollowers()
-          : this.service.getSent();
+          : this.service.getSent(patientId);
     request$.subscribe({
       next: (list) => {
         this.requests.set(list);

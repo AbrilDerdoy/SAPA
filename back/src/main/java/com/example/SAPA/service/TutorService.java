@@ -617,8 +617,7 @@ public class TutorService {
                 tutor.getLastName(),
                 tutor.getUser().getEmail(),
                 tutor.getBirthDate(),
-                tutor.getPhoneNumber(),
-                tutor.getRelationship()
+                tutor.getPhoneNumber()
         );
     }
 

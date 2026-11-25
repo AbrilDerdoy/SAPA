@@ -208,22 +208,28 @@ public class FollowRequestService {
                         .orElse(null);
             }
 
-            ConversationEntity conversation = tutor != null
-                    ? conversationService.createTutorConversation(
-                            tutor,
-                            request.getDoctor()
-                    )
-                    : conversationService.createConversation(
-                            request.getPatient(),
-                            request.getDoctor()
-                    );
+            ConversationEntity conversation = conversationService.createConversation(
+                    request.getPatient(),
+                    request.getDoctor()
+            );
+            String systemMessage = "Se creó un seguimiento para "
+                    + request.getPatient().getFirstName() + " "
+                    + request.getPatient().getLastName() + ".";
 
             messageService.sendSystemMessage(
                     conversation,
-                    "Se creó un seguimiento para "
-                            + request.getPatient().getFirstName() + " "
-                            + request.getPatient().getLastName() + "."
+                    systemMessage
             );
+
+            if (tutor != null
+                    && !patientAccessService.requiresTutor(request.getPatient())) {
+                ConversationEntity tutorConversation =
+                        conversationService.createTutorConversation(
+                                tutor,
+                                request.getDoctor()
+                        );
+                messageService.sendSystemMessage(tutorConversation, systemMessage);
+            }
 
             notificationService.createNotification(
                     request.getPatient().getUser(),

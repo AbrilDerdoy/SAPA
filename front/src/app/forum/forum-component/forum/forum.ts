@@ -21,6 +21,7 @@ export class Forum implements OnInit {
   private authService = inject(Auth)
   private router = inject(Router)
   error = signal<string>('')
+  isAdmin = this.authService.isAdmin();
 
   // Foro seleccionado para editar.
   selectedForum = signal<ForumResponse | null>(null)

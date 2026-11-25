@@ -50,7 +50,6 @@ export class Registro {
     phoneNumber:'',
     licenseNumber:'',
     speciality:null,
-    relationship:'',
     acceptTerms:false
   });
   readonly fechaMaxima = (() => {
@@ -134,11 +133,6 @@ export class Registro {
       required(ruta.licenseNumber, {message: 'La matricula es obligatoria'});
       required(ruta.speciality, {message: 'La especialidad es obligatoria'});
     }),
-    applyWhen(ruta, ({valueOf}) =>
-      valueOf(ruta.role) === 'ROLE_TUTOR',
-    (ruta) => {
-      required(ruta.relationship, {message: 'El parentesco es obligatorio'});
-    }),
     validate(ruta.acceptTerms, ({value}) =>
       value()
         ? undefined
@@ -167,7 +161,6 @@ export class Registro {
     this.formulario.phoneNumber().markAsTouched();
     this.formulario.licenseNumber().markAsTouched();
     this.formulario.speciality().markAsTouched();
-    this.formulario.relationship().markAsTouched();
     this.formulario.acceptTerms().markAsTouched();
 
     if (this.formulario().invalid()) return;
@@ -183,8 +176,7 @@ export class Registro {
         phoneNumber: datos.phoneNumber.trim() || null,
         birthDate:datos.birthDate,
         licenseNumber: datos.role === 'ROLE_DOCTOR' ? datos.licenseNumber : null,
-        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null,
-        relationship: datos.role === 'ROLE_TUTOR' ? datos.relationship : ''
+        speciality: datos.role === 'ROLE_DOCTOR' ? datos.speciality : null
       }
 
     this.errorRegistro.set(null);
@@ -283,11 +275,7 @@ export class Registro {
     this.modelo.update((datos) => ({...datos, role: 'ROLE_DOCTOR'}));
   }
   cambiarTutor(): void {
-    this.modelo.update((datos) => ({
-      ...datos,
-      role: 'ROLE_TUTOR',
-      relationship: datos.relationship || ''
-    }));
+    this.modelo.update((datos) => ({...datos, role: 'ROLE_TUTOR'}));
   }
 
   seleccionarEspecialidad(evento: Event): void {

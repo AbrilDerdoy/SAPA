@@ -13,7 +13,7 @@ describe('Registro', () => {
   let component: Registro;
   let fixture: ComponentFixture<Registro>;
   const authMock = {
-    register: vi.fn(() => of({})),
+    register: vi.fn((_request: unknown) => of({})),
     guardarDatosUsuario: vi.fn(() => of({
       id: 1,
       username: 'Tutor',
@@ -97,7 +97,7 @@ describe('Registro', () => {
     expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
   });
 
-  it('permite seleccionar tutor y exige el parentesco', () => {
+  it('permite seleccionar tutor sin pedir parentesco', () => {
     const tutorButton: HTMLButtonElement =
       fixture.nativeElement.querySelectorAll('button[type="button"]')[2];
 
@@ -105,7 +105,7 @@ describe('Registro', () => {
     fixture.detectChanges();
 
     expect(component.modelo().role).toBe('ROLE_TUTOR');
-    expect(fixture.nativeElement.textContent).toContain('Parentesco');
+    expect(fixture.nativeElement.textContent).not.toContain('Parentesco');
 
     component.modelo.update((datos) => ({
       ...datos,
@@ -115,12 +115,15 @@ describe('Registro', () => {
       password: 'password-seguro',
       birthDate: '2000-01-01',
       phoneNumber: '12345678',
-      relationship: ''
+      acceptTerms: true
     }));
 
     component.enviar(new Event('submit'));
 
-    expect(component.formulario.relationship().invalid()).toBe(true);
+    expect(authMock.register).toHaveBeenCalledWith(
+      expect.objectContaining({ role: 'ROLE_TUTOR' }),
+    );
+    expect(authMock.register.mock.calls[0][0]).not.toHaveProperty('relationship');
   });
 
   it('allows registration without a phone number', () => {
@@ -135,7 +138,6 @@ describe('Registro', () => {
       password: 'password-seguro',
       birthDate: '2000-01-01',
       phoneNumber: '',
-      relationship: 'Madre',
       acceptTerms: true,
     }));
 
@@ -157,7 +159,6 @@ describe('Registro', () => {
       password: 'password-seguro',
       birthDate: '2000-01-01',
       phoneNumber: '12345678',
-      relationship: 'Madre',
       acceptTerms: false,
     }));
 

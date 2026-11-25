@@ -41,7 +41,6 @@ class UserServiceProfileTest {
                 .lastName("Perez")
                 .birthDate(LocalDate.of(1980, 1, 1))
                 .phoneNumber("123456789")
-                .relationship("Madre")
                 .build();
         when(userRepository.findByEmail(user.getEmail()))
                 .thenReturn(Optional.of(user));

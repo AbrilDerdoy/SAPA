@@ -15,7 +15,6 @@ export interface Tutor {
   email: string;
   birthDate: string;
   phoneNumber: string | null;
-  relationship: string;
 }
 
 export interface TutorPatient {

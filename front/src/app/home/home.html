@@ -1,8 +1,13 @@
 
-<main class="home" [class.home--restricted]="restricted()">
-  <div class="home-layout" [class.home-layout--restricted]="restricted()">
+<main
+  class="home"
+  [class.home--restricted]="restricted()">
+  <div
+    class="home-layout"
+    [class.home-layout--restricted]="restricted()"
+    [class.home-layout--admin]="isAdmin">
 
-    @if (!restricted()) {
+    @if (!restricted() && !isAdmin) {
       <aside class="home-sidebar">
         <app-health-tip-carousel />
       </aside>

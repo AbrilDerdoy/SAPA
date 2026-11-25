@@ -21,6 +21,7 @@ export class Home {
   private readonly questionnaireService = inject(QuestionnaireService);
 
   isPatient = false;
+  isAdmin = false;
   readonly restricted = signal(false);
   readonly hasActiveTutor = signal(false);
 
@@ -34,9 +35,11 @@ export class Home {
       this.auth.sessionVersion();
 
       const patientSession = this.auth.isPatient();
+      const adminSession = this.auth.isAdmin();
       const restricted = this.auth.requiresTutor();
 
       this.isPatient = patientSession;
+      this.isAdmin = adminSession;
       this.restricted.set(restricted);
       this.hasActiveTutor.set(this.auth.hasActiveTutor());
 

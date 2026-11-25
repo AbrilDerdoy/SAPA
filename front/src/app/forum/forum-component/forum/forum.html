@@ -14,7 +14,7 @@
         <button type="button" (click)="loadActiveForums()">Activos</button>
         <button type="button" (click)="loadInactiveForums()">Inactivos</button>
 
-        @if(sesionIniciada){ <button type="button" [routerLink]="['/forums/create']">Crear foro</button> }
+        @if(sesionIniciada && !isAdmin){ <button type="button" [routerLink]="['/forums/create']">Crear foro</button> }
     </div>
 
     <div class="forum-list">

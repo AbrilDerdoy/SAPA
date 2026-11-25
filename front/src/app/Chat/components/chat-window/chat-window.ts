@@ -163,6 +163,8 @@ export class ChatWindow implements OnChanges, OnDestroy {
         this.currentUserRole = 'PATIENT';
       } else if (this.auth.isDoctor()) {
         this.currentUserRole = 'DOCTOR';
+      } else if (this.auth.isTutor()) {
+        this.currentUserRole = 'TUTOR';
       } else {
         this.currentUserRole = '';
       }
@@ -320,16 +322,18 @@ export class ChatWindow implements OnChanges, OnDestroy {
     }
 
     const isPatient = this.auth.isPatient();
+    const isTutor = this.auth.isTutor();
     const isDoctor = this.auth.isDoctor();
+    const isPatientOrTutor = isPatient || isTutor;
 
-    if (!isPatient && !isDoctor) {
+    if (!isPatientOrTutor && !isDoctor) {
       console.error(
         'No se pudo determinar el rol para enviar el contexto del movimiento.'
       );
       return;
     }
 
-    if (isPatient) {
+    if (isPatientOrTutor) {
 
       if (this.referenceSendAttempted) {
         return;
@@ -363,8 +367,8 @@ export class ChatWindow implements OnChanges, OnDestroy {
       }
     }
 
-    const content = isPatient
-      ? 'Quisiera consultar sobre este movimiento de mi ficha médica.'
+    const content = isPatientOrTutor
+      ? 'Se abrió una consulta sobre este movimiento de la ficha médica.'
       : [
           `Movimiento de ficha médica #${movementId}`,
           this.requestedMovementTitle
@@ -381,7 +385,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
     this.chatService.sendMessage(
       conversation.conversationId,
       content,
-      isPatient ? movementId : null
+      isPatientOrTutor ? movementId : null
     ).subscribe({
 
       next: message => {
@@ -395,7 +399,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
         this.addMessage(message);
 
-        if (isPatient) {
+        if (isPatientOrTutor) {
           this.referenceSendAttempted = true;
         } else {
           this.doctorContextSendAttempted = true;
