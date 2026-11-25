@@ -1,5 +1,6 @@
 
 <section class="dpp">
+
     <header class="dpp__header">
         <h1 class="dpp__title">Perfil del médico</h1>
         <p class="dpp__lead">
@@ -33,14 +34,20 @@
         <div class="notice notice--error" role="alert">
             <strong>No pudimos cargar el perfil</strong>
             <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
-            <button type="button" (click)="loadProfile()">Reintentar</button>
+
+            <button type="button" (click)="loadProfile()">
+                Reintentar
+            </button>
         </div>
     }
 
     @if (loadStatus() === 'ready') {
         @if (doctor(); as profile) {
+
             <article class="card">
+
                 <header class="card__hero">
+
                     <div class="card__avatar">
                         @if (photoUrl()) {
                             <img
@@ -53,49 +60,146 @@
                     </div>
 
                     <div class="card__identity">
+
                         <h2 class="card__name">
                             {{ profile.firstName }} {{ profile.lastName }}
                         </h2>
 
                         @if (specialityName()) {
-                            <p class="card__speciality">{{ specialityName() }}</p>
+                            <p class="card__speciality">
+                                {{ specialityName() }}
+                            </p>
                         }
 
                         <p class="card__license">
                             Matrícula {{ profile.licenseNumber }}
                         </p>
+
                     </div>
+
                 </header>
 
+                @if (showFollowActions()) {
+
+                    <section class="card__section follow-section">
+
+                        <h3 class="card__heading">
+                            Seguimiento profesional
+                        </h3>
+
+                        @if (followStatus() === 'loading') {
+                            <p class="card__empty">
+                                Consultando estado del seguimiento...
+                            </p>
+                        }
+
+                        @if (followStatus() === 'none') {
+                            <p class="card__bio">
+                                Para comunicarte con este médico necesitás enviarle una solicitud de seguimiento y esperar su aprobación.
+                            </p>
+
+                            <button
+                                type="button"
+                                class="follow-button"
+                                (click)="requestFollow()"
+                                [disabled]="sendingFollowRequest()">
+
+                                {{ sendingFollowRequest()
+                                    ? 'Enviando solicitud...'
+                                    : 'Seguir médico' }}
+
+                            </button>
+                        }
+
+                        @if (followStatus() === 'pending') {
+                            <p class="follow-status follow-status--pending">
+                                Tu solicitud está pendiente de aprobación.
+                            </p>
+                        }
+
+                        @if (followStatus() === 'approved') {
+                            <p class="follow-status follow-status--approved">
+                                Este médico ya aprobó tu seguimiento. Ya podés acceder a su chat.
+                            </p>
+                        }
+
+                        @if (followStatus() === 'error') {
+                            <p class="card__empty">
+                                No se pudo consultar el estado del seguimiento.
+                            </p>
+
+                            <button
+                                type="button"
+                                class="follow-button"
+                                (click)="requestFollow()"
+                                [disabled]="sendingFollowRequest()">
+                                Intentar enviar solicitud
+                            </button>
+                        }
+
+                        @if (followMessage()) {
+                            <p
+                                class="follow-feedback"
+                                [class.follow-feedback--error]="followError()"
+                                role="status">
+                                {{ followMessage() }}
+                            </p>
+                        }
+
+                    </section>
+                }
+
                 <section class="card__section">
-                    <h3 class="card__heading">Sobre el médico</h3>
+
+                    <h3 class="card__heading">
+                        Sobre el médico
+                    </h3>
+
                     @if (bio()) {
-                        <p class="card__bio">{{ bio() }}</p>
+                        <p class="card__bio">
+                            {{ bio() }}
+                        </p>
                     } @else {
                         <p class="card__empty">
                             Este médico todavía no agregó una biografía.
                         </p>
                     }
+
                 </section>
 
                 <section class="card__section">
-                    <h3 class="card__heading">Sitio del hospital o consultorio</h3>
+
+                    <h3 class="card__heading">
+                        Sitio del hospital o consultorio
+                    </h3>
+
                     @if (hospitalLink(); as link) {
-                        <a class="card__link" [href]="link" target="_blank" rel="noopener noreferrer">
+                        <a
+                            class="card__link"
+                            [href]="link"
+                            target="_blank"
+                            rel="noopener noreferrer">
+
                             Visitar sitio web
                             <span aria-hidden="true">↗</span>
+
                         </a>
                     } @else {
                         <p class="card__empty">
                             Este médico todavía no registró un sitio web.
                         </p>
                     }
+
                 </section>
 
                 <section class="card__section">
-                    <h3 class="card__heading">Ubicación del hospital o consultorio</h3>
+
+                    <h3 class="card__heading">
+                        Ubicación del hospital o consultorio
+                    </h3>
 
                     @if (hospitalMapUrl(); as mapUrl) {
+
                         <iframe
                             class="card__map"
                             [src]="mapUrl"
@@ -105,26 +209,46 @@
                         </iframe>
 
                         <div class="card__map-meta">
+
                             @if (hospitalAddress()) {
-                                <p class="card__address">{{ hospitalAddress() }}</p>
+                                <p class="card__address">
+                                    {{ hospitalAddress() }}
+                                </p>
                             }
 
                             @if (hospitalMapLink(); as mapLink) {
-                                <a class="card__map-link" [href]="mapLink" target="_blank" rel="noopener noreferrer">
+                                <a
+                                    class="card__map-link"
+                                    [href]="mapLink"
+                                    target="_blank"
+                                    rel="noopener noreferrer">
+
                                     Ver mapa ampliado
                                     <span aria-hidden="true">↗</span>
+
                                 </a>
                             }
+
                         </div>
+
                     } @else if (hospitalAddress()) {
-                        <p class="card__address">{{ hospitalAddress() }}</p>
+
+                        <p class="card__address">
+                            {{ hospitalAddress() }}
+                        </p>
+
                     } @else {
+
                         <p class="card__empty">
                             Este médico todavía no registró una ubicación.
                         </p>
+
                     }
+
                 </section>
+
             </article>
         }
     }
+
 </section>

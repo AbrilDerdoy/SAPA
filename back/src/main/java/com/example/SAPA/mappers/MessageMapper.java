@@ -1,3 +1,4 @@
+
 package com.example.SAPA.mappers;
 
 import com.example.SAPA.DTOs.ChatDTO;
@@ -13,5 +14,16 @@ public interface MessageMapper {
     @Mapping(source = "message.sender.id", target = "senderId")
     @Mapping(source = "senderName", target = "senderName")
     @Mapping(source = "message.attatchments", target = "attachments")
-    ChatDTO.MessageResponse toResponse(MessageEntity message, String senderName);
+    @Mapping(
+            source = "message.medicalRecordMovement.id",
+            target = "medicalRecordMovementId"
+    )
+    @Mapping(
+            source = "message.medicalRecordMovement.title",
+            target = "medicalRecordMovementTitle"
+    )
+    ChatDTO.MessageResponse toResponse(
+            MessageEntity message,
+            String senderName
+    );
 }

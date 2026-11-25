@@ -1,3 +1,4 @@
+
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.Response.NotificationResponseDTO;
@@ -18,21 +19,37 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<List<NotificationResponseDTO>> getMyNotifications() {
-        return ResponseEntity.ok(notificationService.getMyNotifications());
+        return ResponseEntity.ok(
+                notificationService.getMyNotifications()
+        );
     }
 
     @GetMapping("/unreaded")
     public ResponseEntity<List<NotificationResponseDTO>> getUnreadNotifications() {
-        return ResponseEntity.ok(notificationService.getUnreadNotifications());
+        return ResponseEntity.ok(
+                notificationService.getUnreadNotifications()
+        );
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<NotificationResponseDTO> markAsRead(@PathVariable Long id) {
-        return ResponseEntity.ok(notificationService.markAsRead(id));
+    public ResponseEntity<NotificationResponseDTO> markAsRead(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(
+                notificationService.markAsRead(id)
+        );
+    }
+
+    @PatchMapping("/read-all")
+    public ResponseEntity<Void> markAllAsRead() {
+        notificationService.markAllAsRead();
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNotification(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteNotification(
+            @PathVariable Long id
+    ) {
         notificationService.deleteNotification(id);
         return ResponseEntity.noContent().build();
     }

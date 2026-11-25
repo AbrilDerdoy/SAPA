@@ -1,0 +1,295 @@
+
+<main class="history-page">
+
+  <button
+    type="button"
+    class="back-link"
+    (click)="volver()">
+    ← Volver a la ficha médica
+  </button>
+
+  <header class="page-header">
+    <div>
+      <h1>Historial médico</h1>
+      <p>
+        Movimientos, correcciones y retiros registrados en la ficha.
+      </p>
+    </div>
+  </header>
+
+  <section class="filters-card">
+
+    <h2>Filtrar historial</h2>
+
+    <div class="filters-grid">
+
+      <label>
+        Tipo de movimiento
+
+        <select
+          [ngModel]="type()"
+          (ngModelChange)="type.set($event)">
+
+          <option value="">Todos los tipos</option>
+          <option value="MEDICATION">Medicación</option>
+          <option value="TREATMENT">Tratamiento</option>
+          <option value="WEIGHT">Peso</option>
+          <option value="OBSERVATION">Observación</option>
+          <option value="OTHER">Otro</option>
+
+        </select>
+      </label>
+
+      <label>
+        Médico
+
+        <select
+          [ngModel]="doctorId()"
+          (ngModelChange)="doctorId.set($event)">
+
+          <option value="">Todos los médicos</option>
+
+          @for (doctor of doctors(); track doctor.id) {
+            <option [value]="doctor.id">
+              {{ doctor.name }}
+            </option>
+          }
+
+        </select>
+      </label>
+
+      <label>
+        Desde
+
+        <input
+          type="date"
+          [ngModel]="fromDate()"
+          (ngModelChange)="fromDate.set($event)">
+      </label>
+
+      <label>
+        Hasta
+
+        <input
+          type="date"
+          [ngModel]="toDate()"
+          (ngModelChange)="toDate.set($event)">
+      </label>
+
+    </div>
+
+    <div class="filter-actions">
+
+      <button
+        type="button"
+        class="primary-button"
+        (click)="search()"
+        [disabled]="loading()">
+        Aplicar filtros
+      </button>
+
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="clearFilters()"
+        [disabled]="loading()">
+        Limpiar
+      </button>
+
+    </div>
+
+  </section>
+
+  <section class="history-results">
+
+    <div class="results-heading">
+      <h2>Movimientos registrados</h2>
+      <span>{{ movements().length }} resultados</span>
+    </div>
+
+    @if (loading()) {
+
+      <p class="state-message">Cargando historial...</p>
+
+    } @else if (error()) {
+
+      <div class="error-state">
+        <p>{{ error() }}</p>
+
+        <button
+          type="button"
+          (click)="search()">
+          Reintentar
+        </button>
+      </div>
+
+    } @else if (movements().length === 0) {
+
+      <p class="state-message">
+        No hay movimientos que coincidan con los filtros.
+      </p>
+
+    } @else {
+
+      <div class="history-list">
+
+        @for (movement of movements(); track movement.id) {
+
+          <article
+            class="history-item"
+            [class.retired]="movement.deleted">
+
+            <div class="item-heading">
+
+              <span class="type-chip">
+                {{ movement.type }}
+              </span>
+
+              <time>
+                {{ movement.createdAt | date:'dd/MM/yyyy HH:mm' }}
+              </time>
+
+            </div>
+
+            <div class="item-title-row">
+
+              <h3>{{ movement.title }}</h3>
+
+              @if (movement.deleted) {
+                <span class="retired-chip">
+                  Retirado
+                </span>
+              }
+
+            </div>
+
+            <p class="justification">
+              {{ movement.comment }}
+            </p>
+
+            <p class="author">
+              Médico:
+              <strong>{{ movement.doctorName }}</strong>
+            </p>
+
+            @if (movement.previousVersionId || movement.supersededById) {
+              <p class="version-info">
+                Versión anterior:
+                {{ movement.previousVersionId ?? '—' }}
+
+                · Reemplazado por:
+                {{ movement.supersededById ?? '—' }}
+              </p>
+            }
+
+            @if (movement.deletedAt) {
+              <p class="version-info">
+                Retirado:
+                {{ movement.deletedAt | date:'dd/MM/yyyy HH:mm' }}
+              </p>
+            }
+
+            @if (movement.attachments.length) {
+
+              <div class="attachments">
+
+                @for (attachment of movement.attachments; track attachment.id) {
+
+                  <a
+                    [href]="'http://localhost:8080' + attachment.fileUrl"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    {{ attachment.fileName }}
+                  </a>
+
+                }
+
+              </div>
+
+            }
+
+            @if (movement.conversationId) {
+
+              <div class="history-actions">
+
+                <button
+                  type="button"
+                  class="chat-link-button"
+                  (click)="irAlChat(movement)">
+                  Ir al chat
+                </button>
+
+              </div>
+
+            }
+
+            @if (
+              followPrompt()?.movementId === movement.id
+            ) {
+
+              <div class="follow-prompt">
+
+                <h4>Seguimiento necesario</h4>
+
+                @if (followPrompt()?.status === 'PENDING') {
+
+                  <p>
+                    Tu solicitud para seguir a
+                    <strong>{{ followPrompt()?.doctorName }}</strong>
+                    está pendiente de aprobación. Cuando la apruebe,
+                    vas a poder comunicarte por el chat.
+                  </p>
+
+                } @else {
+
+                  <p>
+                    Para comunicarte por el chat con
+                    <strong>{{ followPrompt()?.doctorName }}</strong>,
+                    primero necesitás seguir a este médico.
+                  </p>
+
+                  <button
+                    type="button"
+                    class="primary-button"
+                    (click)="requestFollowForMovement()"
+                    [disabled]="followActionLoading()">
+
+                    @if (followActionLoading()) {
+                      Enviando solicitud...
+                    } @else {
+                      Seguir a {{ followPrompt()?.doctorName }}
+                    }
+
+                  </button>
+
+                }
+
+                @if (followActionMessage()) {
+                  <p
+                    [class.error-text]="followActionError()">
+                    {{ followActionMessage() }}
+                  </p>
+                }
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="closeFollowPrompt()">
+                  Cerrar
+                </button>
+
+              </div>
+
+            }
+
+          </article>
+
+        }
+
+      </div>
+
+    }
+
+  </section>
+
+</main>

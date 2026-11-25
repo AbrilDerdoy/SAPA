@@ -2,6 +2,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
 import { DoctorSummary } from '../interfaces/doctor-summary';
 import { DoctorProfile } from '../interfaces/doctor-profile';
 import { PublicDoctorProfile } from '../interfaces/public-doctor-profile';
@@ -20,15 +21,38 @@ export interface ProfilePhotoResponse {
   profileImageUrl: string | null;
 }
 
+export interface FollowRequestDoctorSummary {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
+
+export interface FollowRequestResponse {
+  id: number;
+  patient?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+  } | null;
+  doctorFollower?: FollowRequestDoctorSummary | null;
+  doctor?: FollowRequestDoctorSummary | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISOLVED';
+  requestedAt: string;
+  respondedAt: string | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class DoctorService {
   private readonly http = inject(HttpClient);
-  private readonly auth = inject(Auth);
+  readonly auth = inject(Auth);
 
   private readonly baseUrl = 'http://localhost:8080/doctors';
   private readonly usersUrl = 'http://localhost:8080/users';
+  private readonly followRequestsUrl = 'http://localhost:8080/follow-requests';
 
   readonly myId = signal<number | null>(null);
 
@@ -92,6 +116,19 @@ export class DoctorService {
   getPublicProfile(doctorId: number): Observable<PublicDoctorProfile> {
     return this.http.get<PublicDoctorProfile>(
       `${this.baseUrl}/${doctorId}/profile`
+    );
+  }
+
+  sendFollowRequest(doctorId: number): Observable<FollowRequestResponse> {
+    return this.http.post<FollowRequestResponse>(
+      `${this.followRequestsUrl}/send/${doctorId}`,
+      {}
+    );
+  }
+
+  getSentFollowRequests(): Observable<FollowRequestResponse[]> {
+    return this.http.get<FollowRequestResponse[]>(
+      `${this.followRequestsUrl}/sent`
     );
   }
 }

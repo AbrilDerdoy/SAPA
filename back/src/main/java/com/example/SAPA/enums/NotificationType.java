@@ -1,3 +1,4 @@
+
 package com.example.SAPA.enums;
 
 public enum NotificationType {
@@ -5,5 +6,6 @@ public enum NotificationType {
     MESSAGE,
     REMINDER,
     FOLLOW,
-    QUESTIONNAIRE
+    QUESTIONNAIRE,
+    MEDICAL_RECORD
 }

@@ -1,0 +1,279 @@
+
+<section class="access-card">
+
+  @if (mode === 'doctor') {
+    <div class="access-heading">
+      <h2>Autorización para consultar la ficha</h2>
+      <p>
+        El paciente debe autorizar tu acceso antes de que puedas
+        consultar o modificar su información médica.
+      </p>
+    </div>
+
+    @if (loading()) {
+      <p>Consultando solicitudes...</p>
+    } @else if (hasPendingRequest) {
+      <div class="pending-state">
+        <strong>Solicitud pendiente</strong>
+        <p>Ya enviaste una solicitud. Esperá la respuesta del paciente.</p>
+      </div>
+    } @else if (
+      requests().some(request => request.status === 'APPROVED')
+    ) {
+      <div class="pending-state">
+        <strong>Acceso autorizado</strong>
+        <p>El paciente ya te concedió acceso a su ficha médica.</p>
+      </div>
+    } @else {
+      <button
+        type="button"
+        [disabled]="sending()"
+        (click)="sendRequest()">
+        {{ sending() ? 'Enviando...' : 'Solicitar autorización' }}
+      </button>
+    }
+
+  } @else {
+    <div class="access-heading">
+      <h2>Solicitudes de acceso a tu ficha</h2>
+      <p>
+        Revisá quién solicita consultar tu información médica.
+        Solo vos podés autorizar el acceso.
+      </p>
+    </div>
+
+    <div class="privacy-information">
+      <strong>Protección de tus datos personales</strong>
+      <p>
+        Al aceptar, autorizás al médico a consultar y modificar tu
+        ficha médica. Podés revocar el permiso posteriormente.
+      </p>
+    </div>
+
+    @if (loading()) {
+      <p>Cargando autorizaciones...</p>
+    } @else {
+
+      @if (requests().length > 0) {
+        <h3>Solicitudes pendientes</h3>
+
+        <div class="request-list">
+          @for (request of requests(); track request.id) {
+            <article class="request-item">
+              <div class="request-info">
+                <h3>{{ request.doctorName }}</h3>
+                <p>
+                  Solicita autorización para consultar tu ficha médica.
+                </p>
+                <small>
+                  {{ request.requestedAt | date:'dd/MM/yyyy HH:mm' }}
+                </small>
+              </div>
+
+              <div class="request-actions">
+                <button
+                  type="button"
+                  class="approve"
+                  [disabled]="processingId() !== null"
+                  (click)="approve(request)">
+                  Aceptar
+                </button>
+
+                <button
+                  type="button"
+                  class="reject"
+                  [disabled]="processingId() !== null"
+                  (click)="reject(request)">
+                  Rechazar
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <p class="empty-state">No tenés solicitudes pendientes.</p>
+      }
+
+      <div class="approved-section">
+        <h3>Médicos autorizados</h3>
+
+        @if (approvedRequests().length === 0) {
+          <p class="empty-state">
+            Actualmente ningún médico tiene acceso a tu ficha.
+          </p>
+        } @else {
+          <div class="request-list">
+            @for (request of approvedRequests(); track request.id) {
+              <article class="request-item">
+                <div class="request-info">
+                  <h3>{{ request.doctorName }}</h3>
+                  <span class="access-status">Acceso autorizado</span>
+                  <small>
+                    Desde:
+                    {{ request.respondedAt | date:'dd/MM/yyyy HH:mm' }}
+                  </small>
+                </div>
+
+                <button
+                  type="button"
+                  class="revoke"
+                  [disabled]="processingId() !== null"
+                  (click)="openRevokeConfirmation(request)">
+                  Revocar acceso
+                </button>
+              </article>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+
+  @if (success()) {
+    <p class="success-message" role="status">
+      {{ success() }}
+    </p>
+  }
+
+  @if (error()) {
+    <p class="error-message" role="alert">
+      {{ error() }}
+    </p>
+
+    <button type="button" (click)="loadRequests()">
+      Reintentar
+    </button>
+  }
+
+</section>
+
+<!-- Modal de doble confirmación para aceptar -->
+
+@if (confirmationRequest(); as request) {
+  <div
+    class="confirmation-overlay"
+    (click)="cancelApproval()">
+
+    <section
+      class="confirmation-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="approval-title"
+      (click)="$event.stopPropagation()">
+
+      <div class="warning-symbol">!</div>
+
+      <h2 id="approval-title">Confirmación de privacidad</h2>
+
+      <p>
+        Estás por compartir tu información médica con
+        <strong>{{ request.doctorName }}</strong>.
+      </p>
+
+      <div class="warning-message">
+        <strong>Protegé tus datos personales.</strong>
+
+        <p>
+          Tu ficha médica contiene información privada y sensible.
+          Compartila únicamente con profesionales de la salud
+          cuya identidad hayas verificado.
+        </p>
+
+        <p>
+          Al confirmar, este médico podrá consultar y modificar
+          tu ficha mientras mantengas la autorización.
+          Podés revocar el permiso posteriormente.
+        </p>
+      </div>
+
+      <p class="final-question">
+        ¿Confirmás que querés autorizar este acceso?
+      </p>
+
+      <div class="confirmation-actions">
+        <button
+          type="button"
+          class="cancel-button"
+          (click)="cancelApproval()">
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="confirm-button"
+          [disabled]="processingId() !== null"
+          (click)="confirmApproval()">
+          Confirmar autorización
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+<!-- Modal SAPA para revocar -->
+
+@if (revokeConfirmation(); as request) {
+  <div
+    class="confirmation-overlay"
+    (click)="cancelRevoke()">
+
+    <section
+      class="confirmation-dialog revoke-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="revoke-title"
+      (click)="$event.stopPropagation()">
+
+      <div class="warning-symbol">!</div>
+
+      <h2 id="revoke-title">Revocar acceso a tu ficha médica</h2>
+
+      <p>
+        Estás por quitarle el permiso a
+        <strong>{{ request.doctorName }}</strong>.
+      </p>
+
+      <div class="warning-message">
+        <strong>¿Qué sucede si revocás el acceso?</strong>
+
+        <p>
+          El profesional dejará de poder consultar y modificar
+          tu ficha médica inmediatamente.
+        </p>
+
+        <p>
+          Esta acción no elimina los movimientos ni los registros
+          médicos que el profesional haya realizado anteriormente.
+        </p>
+
+        <p>
+          Si en el futuro querés compartir nuevamente tu ficha,
+          el médico deberá enviarte una nueva solicitud.
+        </p>
+      </div>
+
+      <p class="final-question">
+        ¿Estás seguro de que querés revocar esta autorización?
+      </p>
+
+      <div class="confirmation-actions">
+        <button
+          type="button"
+          class="cancel-button"
+          (click)="cancelRevoke()">
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="danger-confirm-button"
+          [disabled]="processingId() !== null"
+          (click)="confirmRevoke()">
+          {{ processingId() === request.id
+            ? 'Revocando...'
+            : 'Sí, revocar acceso' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

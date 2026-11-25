@@ -1,3 +1,4 @@
+
 package com.example.SAPA.DTOs;
 
 import com.example.SAPA.enums.AttachmentType;
@@ -17,7 +18,9 @@ public class ChatDTO {
             String content,
 
             @NotNull(message = "El tipo de mensaje (MessageType) es obligatorio.")
-            MessageType type
+            MessageType type,
+
+            Long medicalRecordMovementId
     ) {}
 
     public record MessageResponse(
@@ -28,7 +31,9 @@ public class ChatDTO {
             String content,
             MessageType type,
             List<AttachmentResponse> attachments,
-            LocalDateTime sentAt
+            LocalDateTime sentAt,
+            Long medicalRecordMovementId,
+            String medicalRecordMovementTitle
     ) {}
 
     public record AttachmentResponse(

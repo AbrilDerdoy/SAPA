@@ -23,6 +23,7 @@ import { PatientQuestionnaires } from './Questionnaire/components/patient-questi
 import { QuestionnaireHistory } from './Questionnaire/components/questionnaire-history/questionnaire-history';
 import { MyMedicalRecord } from './medical-record/components/my-medical-record/my-medical-record';
 import { PatientMedicalRecord } from './medical-record/components/patient-medical-record/patient-medical-record';
+import { MedicalRecordHistory } from './medical-record/components/medical-record-history/medical-record-history';
 import { DoctorProfilePublic } from './Doctor/components/doctor-profile-public/doctor-profile-public';
 import { SharedPost } from './post/post-component/shared-post/shared-post';
 import { NotFound } from './Common/not-found/not-found';
@@ -164,6 +165,11 @@ export const routes: Routes = [
     path: 'medical-record',
     canActivate: [roleGuard(['PATIENT'])],
     component: MyMedicalRecord
+  },
+  {
+    path: 'medical-record-history/:patientId',
+    canActivate: [roleGuard(['PATIENT', 'DOCTOR'])],
+    component: MedicalRecordHistory
   },
   {
     path: 'patient-medical-record/:patientId',

@@ -8,11 +8,12 @@ import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordEntity;
 import com.example.SAPA.Models.MedicalRecord.PatientMedicationEntity;
-import com.example.SAPA.Repositories.FollowRequestRepository;
+import com.example.SAPA.Repositories.MedicalRecordAccessRequestRepository;
 import com.example.SAPA.Repositories.MedicalRecordRepository;
 import com.example.SAPA.Repositories.PatientMedicationRepository;
 import com.example.SAPA.Repositories.PatientRepository;
-import com.example.SAPA.enums.FollowRequestStatus;
+import com.example.SAPA.enums.MedicalRecordAccessStatus;
+import com.example.SAPA.enums.MedicationStatus;
 import com.example.SAPA.mappers.MedicalRecordMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -30,55 +32,56 @@ public class MedicalRecordService {
 
     private final MedicalRecordRepository medicalRecordRepository;
     private final PatientRepository patientRepository;
-    private final FollowRequestRepository followRequestRepository;
+    private final MedicalRecordAccessRequestRepository accessRequestRepository;
     private final MedicalRecordMapper medicalRecordMapper;
     private final UserContextService userContext;
     private final PatientMedicationRepository patientMedicationRepository;
+    private final FdaService fdaService;
+    private final MedicalRecordMovementService movementService;
 
-
-    private MedicalRecordEntity getOrCreateMedicalRecord(PatientEntity patient) {
+    private MedicalRecordEntity getOrCreateMedicalRecord(
+            PatientEntity patient
+    ) {
         if (patient.getMedicalRecord() != null) {
             return patient.getMedicalRecord();
         }
 
-        MedicalRecordEntity record = new MedicalRecordEntity();
-        MedicalRecordEntity saved = medicalRecordRepository.save(record);
+        MedicalRecordEntity record =
+                medicalRecordRepository.save(new MedicalRecordEntity());
 
-        patient.setMedicalRecord(saved);
+        patient.setMedicalRecord(record);
         patientRepository.save(patient);
 
-        return saved;
+        return record;
     }
 
     @Transactional
     public MedicalRecordResponseDTO getMyMedicalRecord() {
         PatientEntity patient = userContext.getAuthenticatedPatient();
         MedicalRecordEntity record = getOrCreateMedicalRecord(patient);
+
         return medicalRecordMapper.toMedicalRecordResponse(record);
     }
 
     @Transactional(readOnly = true)
-    public MedicalRecordResponseDTO getPatientMedicalRecord(Long patientId) {
+    public MedicalRecordResponseDTO getPatientMedicalRecord(
+            Long patientId
+    ) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
 
-        boolean isAssignedDoctor = followRequestRepository.existsByDoctorIdAndPatientIdAndStatus(
-                doctor.getId(),
-                patientId,
-                FollowRequestStatus.APPROVED
-        );
+        validateDoctorPatientAccess(doctor, patientId);
 
-        if (!isAssignedDoctor) {
-            throw new AccessDeniedException("No tienes permiso para ver la ficha médica de este paciente porque no eres su médico asignado.");
-        }
-
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
+        PatientEntity patient = getPatient(patientId);
 
         if (patient.getMedicalRecord() == null) {
-            throw new EntityNotFoundException("El paciente aún no tiene ficha médica.");
+            throw new EntityNotFoundException(
+                    "El paciente aún no tiene ficha médica."
+            );
         }
 
-        return medicalRecordMapper.toMedicalRecordResponse(patient.getMedicalRecord());
+        return medicalRecordMapper.toMedicalRecordResponse(
+                patient.getMedicalRecord()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -97,13 +100,14 @@ public class MedicalRecordService {
     }
 
     @Transactional(readOnly = true)
-    public List<MedicationDetailResponseDTO> getPatientMedications(Long patientId) {
+    public List<MedicationDetailResponseDTO> getPatientMedications(
+            Long patientId
+    ) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
 
-        validateDoctorPatientRelationship(doctor, patientId);
+        validateDoctorPatientAccess(doctor, patientId);
 
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado."));
+        PatientEntity patient = getPatient(patientId);
 
         if (patient.getMedicalRecord() == null) {
             return List.of();
@@ -117,72 +121,132 @@ public class MedicalRecordService {
     }
 
     @Transactional
-    public MedicationDetailResponseDTO addMedication(Long patientId, AddMedicationRequestDTO request) {
+    public MedicationDetailResponseDTO addMedication(
+            Long patientId,
+            AddMedicationRequestDTO request
+    ) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
+        validateDoctorPatientAccess(doctor, patientId);
 
-        validateDoctorPatientRelationship(doctor, patientId);
+        validateJustification(request.justification());
 
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado."));
-
+        PatientEntity patient = getPatient(patientId);
         MedicalRecordEntity record = getOrCreateMedicalRecord(patient);
 
         String normalizedDrugName = request.fdaDrugName().trim();
 
-        if (patientMedicationRepository.existsByMedicalRecordAndFdaDrugNameIgnoreCase(record, normalizedDrugName)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,  "Este medicamento ya está registrado en la ficha médica. Si se encuentra suspendido, podés volver a recetarlo desde la sección «Medicaciones suspendidas».");
+        if (request.startDate().isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "La fecha de inicio no puede ser posterior al día actual."
+            );
         }
 
-        PatientMedicationEntity medication = new PatientMedicationEntity();
+        if (request.endDate() != null
+                && request.endDate().isBefore(request.startDate())) {
+            throw new IllegalArgumentException(
+                    "La fecha de finalización no puede ser anterior "
+                            + "a la fecha de inicio."
+            );
+        }
+
+        // Se conserva la validación existente mediante OpenFDA.
+        if (fdaService.searchForMedicationByName(normalizedDrugName) == null) {
+            throw new IllegalArgumentException(
+                    "El medicamento no existe en los registros de la FDA."
+            );
+        }
+
+        if (patientMedicationRepository
+                .existsByMedicalRecordAndFdaDrugNameIgnoreCase(
+                        record,
+                        normalizedDrugName
+                )) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Este medicamento ya está registrado en la ficha médica. "
+                            + "Si se encuentra suspendido, utilizá la opción "
+                            + "Volver a recetar."
+            );
+        }
+
+        PatientMedicationEntity medication =
+                new PatientMedicationEntity();
+
         medication.setMedicalRecord(record);
         medication.setFdaDrugName(normalizedDrugName);
         medication.setNotes(request.notes());
         medication.setStartDate(request.startDate());
         medication.setEndDate(request.endDate());
+        medication.setStatus(MedicationStatus.PRESCRIBED);
 
-        return toMedicationResponse(patientMedicationRepository.save(medication));
-    }
+        PatientMedicationEntity saved =
+                patientMedicationRepository.save(medication);
 
-    private void validateDoctorPatientRelationship(DoctorEntity doctor, Long patientId) {
-        boolean assigned = followRequestRepository
-                .existsByDoctorIdAndPatientIdAndStatus(
-                        doctor.getId(),
-                        patientId,
-                        FollowRequestStatus.APPROVED
-                );
-
-        if (!assigned) {
-            throw new AccessDeniedException(
-                    "No tienes permiso para gestionar las medicaciones de este paciente."
-            );
-        }
-    }
-
-    private MedicationDetailResponseDTO toMedicationResponse(PatientMedicationEntity medication) {
-        return new MedicationDetailResponseDTO(
-                medication.getId(),
-                medication.getFdaDrugName(),
-                medication.getNotes(),
-                medication.getStartDate(),
-                medication.getEndDate(),
-                medication.getAddedAt(),
-                medication.getStatus()
+        movementService.registerMovement(
+                patientId,
+                "MEDICATION_ADDED",
+                "Medicamento agregado: " + saved.getFdaDrugName(),
+                request.justification()
         );
+
+        return toMedicationResponse(saved);
     }
 
     @Transactional
-    public MedicationDetailResponseDTO updateMedication(Long medicationId, UpdateMedicationRequestDTO request) {
+    public MedicationDetailResponseDTO updateMedication(
+            Long medicationId,
+            UpdateMedicationRequestDTO request
+    ) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
 
-        PatientMedicationEntity medication = patientMedicationRepository.findById(medicationId)
-                .orElseThrow(() -> new EntityNotFoundException("Medicación no encontrada."));
+        PatientMedicationEntity medication =
+                patientMedicationRepository.findById(medicationId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Medicación no encontrada."
+                                ));
 
-        Long patientId = patientRepository
-                .findByMedicalRecordId(medication.getMedicalRecord().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado."))
-                .getId();
+        PatientEntity patient = patientRepository
+                .findByMedicalRecordId(
+                        medication.getMedicalRecord().getId()
+                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Paciente no encontrado."
+                        ));
 
-        validateDoctorPatientRelationship(doctor, patientId);
+        validateDoctorPatientAccess(doctor, patient.getId());
+        validateJustification(request.justification());
+
+        boolean wasSuspended =
+                medication.getStatus() == MedicationStatus.SUSPENDED;
+
+        boolean isBeingReprescribed =
+                wasSuspended
+                        && request.status() == MedicationStatus.PRESCRIBED;
+
+        LocalDate startDate = request.startDate() != null
+                ? request.startDate()
+                : medication.getStartDate();
+
+        LocalDate endDate = request.endDate() != null
+                ? request.endDate()
+                : medication.getEndDate();
+
+        if (startDate != null && startDate.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "La fecha de inicio no puede ser posterior al día actual."
+            );
+        }
+
+        if (startDate != null
+                && endDate != null
+                && endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException(
+                    "La fecha de finalización no puede ser anterior "
+                            + "a la fecha de inicio."
+            );
+        }
 
         if (request.notes() != null) {
             medication.setNotes(request.notes());
@@ -196,35 +260,127 @@ public class MedicalRecordService {
             medication.setEndDate(request.endDate());
         }
 
-        if (medication.getEndDate() != null &&
-                medication.getEndDate().isBefore(medication.getStartDate())) {
-            throw new IllegalArgumentException(
-                    "La fecha de finalización no puede ser anterior a la fecha de inicio."
-            );
-        }
-
         if (request.status() != null) {
             medication.setStatus(request.status());
         }
 
-        return toMedicationResponse(patientMedicationRepository.save(medication));
+        PatientMedicationEntity saved =
+                patientMedicationRepository.save(medication);
+
+        boolean suspended =
+                saved.getStatus() == MedicationStatus.SUSPENDED;
+
+        movementService.registerMovement(
+                patient.getId(),
+                suspended
+                        ? "MEDICATION_SUSPENDED"
+                        : (isBeingReprescribed
+                            ? "MEDICATION_REPRESCRIBED"
+                            : "MEDICATION_UPDATED"),
+                (suspended
+                        ? "Medicación suspendida: "
+                        : (isBeingReprescribed
+                            ? "Medicación vuelta a recetar: "
+                            : "Medicación modificada: "))
+                        + saved.getFdaDrugName(),
+                request.justification()
+        );
+
+        return toMedicationResponse(saved);
     }
 
     @Transactional
-    public void deleteMedication(Long medicationId) {
+    public void deleteMedication(
+            Long medicationId,
+            String justification
+    ) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
 
-        PatientMedicationEntity medication = patientMedicationRepository.findById(medicationId)
-                .orElseThrow(() -> new EntityNotFoundException("Medicación no encontrada."));
+        PatientMedicationEntity medication =
+                patientMedicationRepository.findById(medicationId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Medicación no encontrada."
+                                ));
 
-        Long patientId = patientRepository
-                .findByMedicalRecordId(medication.getMedicalRecord().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado."))
-                .getId();
+        PatientEntity patient = patientRepository
+                .findByMedicalRecordId(
+                        medication.getMedicalRecord().getId()
+                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Paciente no encontrado."
+                        ));
 
-        validateDoctorPatientRelationship(doctor, patientId);
+        validateDoctorPatientAccess(doctor, patient.getId());
+        validateJustification(justification);
 
-        patientMedicationRepository.delete(medication);
+        if (medication.getStatus() == MedicationStatus.SUSPENDED) {
+            throw new IllegalArgumentException(
+                    "La medicación ya se encuentra suspendida."
+            );
+        }
+
+        medication.setStatus(MedicationStatus.SUSPENDED);
+
+        PatientMedicationEntity saved =
+                patientMedicationRepository.save(medication);
+
+        movementService.registerMovement(
+                patient.getId(),
+                "MEDICATION_SUSPENDED",
+                "Medicación suspendida: " + saved.getFdaDrugName(),
+                justification
+        );
     }
 
+    private PatientEntity getPatient(Long patientId) {
+        return patientRepository.findById(patientId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Paciente no encontrado con id: " + patientId
+                        ));
+    }
+
+    private void validateDoctorPatientAccess(
+            DoctorEntity doctor,
+            Long patientId
+    ) {
+        PatientEntity patient = getPatient(patientId);
+
+        boolean authorized =
+                accessRequestRepository.existsByPatientAndDoctorAndStatus(
+                        patient,
+                        doctor,
+                        MedicalRecordAccessStatus.APPROVED
+                );
+
+        if (!authorized) {
+            throw new AccessDeniedException(
+                    "El paciente no autorizó el acceso a su ficha médica."
+            );
+        }
+    }
+
+    private void validateJustification(String justification) {
+        if (justification == null || justification.isBlank()) {
+            throw new IllegalArgumentException(
+                    "La justificación del movimiento es obligatoria."
+            );
+        }
+    }
+
+    private MedicationDetailResponseDTO toMedicationResponse(
+            PatientMedicationEntity medication
+    ) {
+        return new MedicationDetailResponseDTO(
+                medication.getId(),
+                medication.getFdaDrugName(),
+                medication.getNotes(),
+                medication.getStartDate(),
+                medication.getEndDate(),
+                medication.getAddedAt(),
+                medication.getStatus()
+        );
+    }
 }

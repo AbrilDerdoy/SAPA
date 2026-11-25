@@ -4,7 +4,10 @@ import {
   EventEmitter,
   OnInit,
   OnDestroy,
+  OnChanges,
   Output,
+  Input,
+  SimpleChanges,
   ChangeDetectorRef,
   inject
 } from '@angular/core';
@@ -24,8 +27,7 @@ import { Conversation } from '../../models/conversation.model';
   templateUrl: './conversation-list.html',
   styleUrl: './conversation-list.css'
 })
-export class ConversationList implements OnInit, OnDestroy {
-
+export class ConversationList implements OnInit, OnDestroy, OnChanges {
   private readonly chatService = inject(ChatService);
   private readonly websocket = inject(ChatWebSocketService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -33,6 +35,9 @@ export class ConversationList implements OnInit, OnDestroy {
   private subscription = new Subscription();
 
   @Output() conversationSelected = new EventEmitter<Conversation>();
+
+  @Input() requestedConversationId: number | null = null;
+  @Input() requestedMovementId: number | null = null;
 
   conversations: Conversation[] = [];
   filteredConversations: Conversation[] = [];
@@ -48,6 +53,12 @@ export class ConversationList implements OnInit, OnDestroy {
     this.listenForMessages();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['requestedConversationId']) {
+      this.selectRequestedConversation();
+    }
+  }
+
   loadConversations(): void {
     this.loading = true;
     this.errorMessage = '';
@@ -55,22 +66,42 @@ export class ConversationList implements OnInit, OnDestroy {
 
     this.chatService.getConversations().subscribe({
       next: conversations => {
-        this.conversations = conversations;
+        this.conversations = [...conversations];
         this.sortConversations();
         this.filterConversations();
 
         this.loading = false;
+        this.selectRequestedConversation();
+
         this.cdr.markForCheck();
       },
-
       error: error => {
         console.error('Error al cargar conversaciones:', error);
-
         this.errorMessage = 'No se pudieron cargar las conversaciones.';
         this.loading = false;
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private selectRequestedConversation(): void {
+    if (
+      this.requestedConversationId === null ||
+      this.conversations.length === 0
+    ) {
+      return;
+    }
+
+    const requestedConversation = this.conversations.find(
+      conversation =>
+        conversation.conversationId === this.requestedConversationId
+    );
+
+    if (!requestedConversation) {
+      return;
+    }
+
+    this.selectConversation(requestedConversation);
   }
 
   private listenForMessages(): void {
@@ -113,7 +144,9 @@ export class ConversationList implements OnInit, OnDestroy {
 
     this.filteredConversations = this.conversations.filter(
       conversation =>
-        conversation.otherParticipantName.toLowerCase().includes(search)
+        (conversation.otherParticipantName ?? '')
+          .toLowerCase()
+          .includes(search)
     );
 
     this.cdr.markForCheck();
@@ -122,6 +155,10 @@ export class ConversationList implements OnInit, OnDestroy {
   selectConversation(conversation: Conversation): void {
     this.selectedConversationId = conversation.conversationId;
     this.conversationSelected.emit(conversation);
+  }
+
+  isConversationDisabled(_conversation: Conversation): boolean {
+    return false;
   }
 
   getProfileImageUrl(imageUrl: string): string {

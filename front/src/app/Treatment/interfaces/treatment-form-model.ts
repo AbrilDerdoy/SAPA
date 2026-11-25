@@ -1,4 +1,5 @@
-import { DurationUnit, FrequencyUnit } from "./type";
+
+import { DurationUnit, FrequencyUnit } from './type';
 
 export interface TreatmentFormModel {
   name: string;
@@ -7,4 +8,5 @@ export interface TreatmentFormModel {
   durationUnit: DurationUnit;
   frequencyLength: number;
   frequencyUnit: FrequencyUnit;
+  justification: string;
 }

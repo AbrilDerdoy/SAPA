@@ -1,63 +1,171 @@
-import { HttpClient } from '@angular/common/http';
+
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+
 import { MedicalRecord } from '../interfaces/medical-record';
 import { Medication } from '../interfaces/medication/medication';
 import { AddMedicationRequest } from '../interfaces/medication/add-medication-request';
 import { UpdateMedicationRequest } from '../interfaces/medication/update-medication-request';
 
-@Injectable({
-  providedIn: 'root',
-})
+import {
+  MedicalRecordMovement,
+  MedicalRecordMovementFilters,
+  MedicalRecordMovementRequest,
+} from '../interfaces/medical-record-movement';
+
+@Injectable({ providedIn: 'root' })
 export class MedicalRecordService {
-  private readonly BASE_URL = 'http://localhost:8080/medical-records'
-  private readonly http = inject(HttpClient)
+  private readonly BASE_URL = 'http://localhost:8080/medical-records';
+  private readonly http = inject(HttpClient);
 
-    // Obtener la ficha médica del paciente autenticado.
-  getMyMedicalRecord(): Observable<MedicalRecord>{
-    return this.http.get<MedicalRecord>(`${this.BASE_URL}/my`)
+  getMyMedicalRecord(): Observable<MedicalRecord> {
+    return this.http.get<MedicalRecord>(
+      `${this.BASE_URL}/my`
+    );
   }
 
-    // Obtener la ficha médica de un paciente desde la cuenta del médico.
-  getPatientMedicalRecord(patientId: number): Observable<MedicalRecord>{
-    return this.http.get<MedicalRecord>(`${this.BASE_URL}/patient/${patientId}`)
+  getPatientMedicalRecord(patientId: number): Observable<MedicalRecord> {
+    return this.http.get<MedicalRecord>(
+      `${this.BASE_URL}/patient/${patientId}`
+    );
   }
 
-    // Medicaciones del paciente autenticado
   getMyMedications(): Observable<Medication[]> {
     return this.http.get<Medication[]>(
       `${this.BASE_URL}/my/medications`
     );
   }
 
-    // Medicaciones de un paciente desde la cuenta del médico
   getPatientMedications(patientId: number): Observable<Medication[]> {
     return this.http.get<Medication[]>(
       `${this.BASE_URL}/patient/${patientId}/medications`
     );
   }
 
-    // Agregar medicación
-  addMedication(patientId: number, medication: AddMedicationRequest): Observable<Medication> {
+  addMedication(
+    patientId: number,
+    medication: AddMedicationRequest
+  ): Observable<Medication> {
     return this.http.post<Medication>(
       `${this.BASE_URL}/patient/${patientId}/medications`,
       medication
     );
   }
 
-    // Modificar medicación
-  updateMedication(medicationId: number, medication: UpdateMedicationRequest): Observable<Medication> {
+  updateMedication(
+    medicationId: number,
+    medication: UpdateMedicationRequest
+  ): Observable<Medication> {
     return this.http.put<Medication>(
       `${this.BASE_URL}/medications/${medicationId}`,
       medication
     );
   }
 
-    // Eliminar medicación
-  deleteMedication(medicationId: number): Observable<void> {
+  deleteMedication(
+    medicationId: number,
+    justification: string
+  ): Observable<void> {
+    const params = new HttpParams()
+      .set('justification', justification);
+
     return this.http.delete<void>(
-      `${this.BASE_URL}/medications/${medicationId}`
+      `${this.BASE_URL}/medications/${medicationId}`,
+      { params }
     );
   }
-  
+
+  getRecentMovements(
+    patientId: number
+  ): Observable<MedicalRecordMovement[]> {
+    return this.http.get<MedicalRecordMovement[]>(
+      `${this.BASE_URL}/patient/${patientId}/movements/recent`
+    );
+  }
+
+  getAllMovements(
+    patientId: number
+  ): Observable<MedicalRecordMovement[]> {
+    // Sin filtros se devuelve también el historial anterior y retirado.
+    return this.filterMovements(patientId, {});
+  }
+
+  filterMovements(
+    patientId: number,
+    filters: MedicalRecordMovementFilters
+  ): Observable<MedicalRecordMovement[]> {
+    let params = new HttpParams();
+
+    if (filters.doctorId != null) {
+      params = params.set('doctorId', filters.doctorId);
+    }
+
+    if (filters.type?.trim()) {
+      params = params.set('type', filters.type.trim());
+    }
+
+    if (filters.fromDate) {
+      params = params.set('fromDate', filters.fromDate);
+    }
+
+    if (filters.toDate) {
+      params = params.set('toDate', filters.toDate);
+    }
+
+    return this.http.get<MedicalRecordMovement[]>(
+      `${this.BASE_URL}/patient/${patientId}/movements/filter`,
+      { params }
+    );
+  }
+
+  addMovement(
+    patientId: number,
+    request: MedicalRecordMovementRequest
+  ): Observable<MedicalRecordMovement> {
+    return this.http.post<MedicalRecordMovement>(
+      `${this.BASE_URL}/patient/${patientId}/movements`,
+      request
+    );
+  }
+
+  updateMovement(
+    patientId: number,
+    movementId: number,
+    request: MedicalRecordMovementRequest
+  ): Observable<MedicalRecordMovement> {
+    return this.http.put<MedicalRecordMovement>(
+      `${this.BASE_URL}/patient/${patientId}/movements/${movementId}`,
+      request
+    );
+  }
+
+  retireMovement(
+    patientId: number,
+    movementId: number,
+    justification: string
+  ): Observable<MedicalRecordMovement> {
+    const params = new HttpParams()
+      .set('justification', justification);
+
+    return this.http.patch<MedicalRecordMovement>(
+      `${this.BASE_URL}/patient/${patientId}/movements/${movementId}/retire`,
+      null,
+      { params }
+    );
+  }
+
+  addMovementImage(
+    patientId: number,
+    movementId: number,
+    file: File
+  ): Observable<MedicalRecordMovement> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<MedicalRecordMovement>(
+      `${this.BASE_URL}/patient/${patientId}/movements/${movementId}/attachments`,
+      formData
+    );
+  }
 }

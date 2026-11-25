@@ -1,0 +1,114 @@
+
+<section class="movements-card">
+
+  <header class="movements-header">
+
+    <div>
+      <h2>Movimientos recientes</h2>
+      <p>
+        Las últimas tres actualizaciones registradas en la ficha médica.
+      </p>
+    </div>
+
+    <a [routerLink]="['/medical-record-history', patientId]">
+      Ver historial completo
+    </a>
+
+  </header>
+
+  @if (cargando()) {
+
+    <p class="state-message">Cargando movimientos...</p>
+
+  } @else if (error()) {
+
+    <div class="error-message">
+      <p>{{ error() }}</p>
+
+      <button
+        type="button"
+        (click)="cargarMovimientos()">
+        Reintentar
+      </button>
+    </div>
+
+  } @else if (movimientos().length === 0) {
+
+    <p class="state-message">
+      Todavía no hay movimientos registrados.
+    </p>
+
+  } @else {
+
+    <div class="movements-list">
+
+      @for (movimiento of movimientos(); track movimiento.id) {
+
+        <article class="movement-item">
+
+          <div class="movement-top">
+
+            <span class="movement-type">
+              {{ movimiento.type }}
+            </span>
+
+            <time>
+              {{ movimiento.createdAt | date:'dd/MM/yyyy HH:mm' }}
+            </time>
+
+          </div>
+
+          <h3>{{ movimiento.title }}</h3>
+
+          <p class="movement-description">
+            {{ movimiento.comment }}
+          </p>
+
+          <p class="movement-author">
+            Registrado por:
+            <strong>{{ movimiento.doctorName }}</strong>
+          </p>
+
+          @if (movimiento.attachments.length) {
+
+            <div class="movement-attachments">
+
+              @for (archivo of movimiento.attachments; track archivo.id) {
+
+                <a
+                  [href]="'http://localhost:8080' + archivo.fileUrl"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  {{ archivo.fileName }}
+                </a>
+
+              }
+
+            </div>
+
+          }
+
+          @if (auth.isDoctor() || movimiento.conversationId) {
+
+            <div class="movement-actions">
+
+              <button
+                type="button"
+                class="chat-link"
+                (click)="irAlChat(movimiento)">
+                Ir al chat
+              </button>
+
+            </div>
+
+          }
+
+        </article>
+
+      }
+
+    </div>
+
+  }
+
+</section>

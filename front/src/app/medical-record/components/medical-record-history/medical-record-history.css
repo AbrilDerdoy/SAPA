@@ -1,0 +1,276 @@
+
+.history-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 22px 48px;
+  color: var(--text);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.page-header {
+  margin-bottom: 22px;
+}
+
+.page-header h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.filters-card,
+.history-results {
+  padding: 22px;
+  margin-bottom: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.filters-card h2,
+.results-heading h2 {
+  margin: 0 0 16px;
+  font-size: 19px;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.filters-grid label {
+  display: grid;
+  gap: 7px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filters-grid input,
+.filters-grid select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--text);
+  font: inherit;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.filter-actions button,
+.error-state button {
+  padding: 9px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary-button {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.results-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.results-heading span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.history-list {
+  display: grid;
+  gap: 13px;
+}
+
+.history-item {
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+
+.history-item.retired {
+  border-style: dashed;
+  opacity: .88;
+}
+
+.item-heading,
+.item-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.item-heading {
+  margin-bottom: 10px;
+}
+
+.type-chip {
+  padding: 5px 10px;
+  border-radius: 18px;
+  background: var(--tone-teal-bg);
+  color: var(--tone-teal-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.item-heading time,
+.author,
+.version-info {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.item-title-row h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.retired-chip {
+  padding: 4px 9px;
+  border-radius: 15px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.justification {
+  white-space: pre-line;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.author {
+  margin-bottom: 5px;
+}
+
+.version-info {
+  margin: 5px 0;
+}
+
+.attachments {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.attachments a {
+  color: var(--primary);
+}
+
+.history-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.chat-link-button {
+  padding: 9px 15px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-link-button:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.state-message {
+  color: var(--text-muted);
+}
+
+.error-state {
+  color: var(--danger-strong);
+}
+
+.error-state button {
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+@media (max-width: 800px) {
+  .filters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .history-page {
+    padding: 20px 14px;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-card,
+  .history-results {
+    padding: 16px;
+  }
+
+  .results-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-actions {
+    justify-content: stretch;
+  }
+
+  .chat-link-button {
+    width: 100%;
+  }
+}

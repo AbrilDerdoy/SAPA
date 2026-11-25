@@ -1,9 +1,11 @@
+
 export type NotificationType =
   | 'SYSTEM'
   | 'MESSAGE'
   | 'REMINDER'
   | 'FOLLOW'
-  | 'QUESTIONNAIRE';
+  | 'QUESTIONNAIRE'
+  | 'MEDICAL_RECORD';
 
 export interface NotificationResponse {
   notificationId: number;

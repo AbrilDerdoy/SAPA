@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { NotificationResponse } from '../../models/notification-response';
 import { NotificationRealtimeService } from '../../services/notification-realtime.service';
 import { NotificationService } from '../../services/notification.service';
@@ -20,7 +21,10 @@ import { NotificationService } from '../../services/notification.service';
 function readRole(): string {
   try {
     const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
-    return String(usuario.role ?? '').toUpperCase().replace('ROLE_', '');
+
+    return String(usuario.role ?? '')
+      .toUpperCase()
+      .replace('ROLE_', '');
   } catch {
     return '';
   }
@@ -28,6 +32,7 @@ function readRole(): string {
 
 @Component({
   selector: 'app-notification-menu',
+  standalone: true,
   imports: [DatePipe, RouterLink],
   templateUrl: './notification-menu.html',
   styleUrl: './notification-menu.css',
@@ -51,7 +56,10 @@ export class NotificationMenu implements OnDestroy, OnInit {
   );
 
   readonly unreadCount = computed(
-    () => this.notifications().filter((notification) => !notification.readed).length,
+    () =>
+      this.notifications().filter(
+        (notification) => !notification.readed,
+      ).length,
   );
 
   ngOnInit(): void {
@@ -59,7 +67,9 @@ export class NotificationMenu implements OnDestroy, OnInit {
 
     this.notificationRealtime.notifications$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((notification) => this.upsertNotification(notification));
+      .subscribe((notification) => {
+        this.upsertNotification(notification);
+      });
 
     void this.notificationRealtime.connect();
   }
@@ -106,7 +116,7 @@ export class NotificationMenu implements OnDestroy, OnInit {
     this.notificationService.getMyNotifications().subscribe({
       next: (notifications) => {
         this.notifications.set(
-          [...notifications].sort(
+          [...(notifications ?? [])].sort(
             (left, right) =>
               new Date(right.createdAt).getTime() -
               new Date(left.createdAt).getTime(),
@@ -118,7 +128,9 @@ export class NotificationMenu implements OnDestroy, OnInit {
         this.errorMessage.set('No se pudieron cargar las notificaciones.');
         this.loading.set(false);
       },
-      complete: () => this.loading.set(false),
+      complete: () => {
+        this.loading.set(false);
+      },
     });
   }
 
@@ -141,9 +153,53 @@ export class NotificationMenu implements OnDestroy, OnInit {
       return;
     }
 
-    const destination = this.getNotificationDestination(notification);
+    void this.router.navigate(
+      this.getNotificationDestination(notification),
+    );
+  }
 
-    void this.router.navigate(destination);
+  private getNotificationDestination(
+    notification: NotificationResponse,
+  ): string[] {
+    const role = readRole();
+
+    switch (notification.type) {
+      case 'MEDICAL_RECORD':
+        return role === 'DOCTOR'
+          ? ['/mis-pacientes']
+          : ['/medical-record'];
+
+      case 'MESSAGE':
+        return ['/chat'];
+
+      case 'FOLLOW':
+        if (notification.title.toLowerCase().includes('recibida')) {
+          return role === 'DOCTOR'
+            ? ['/solicitudes']
+            : ['/mis-solicitudes'];
+        }
+
+        return ['/mis-solicitudes'];
+
+      case 'QUESTIONNAIRE':
+        if (
+          notification.title.toLowerCase().includes('completado') &&
+          role === 'DOCTOR'
+        ) {
+          return ['/historial-cuestionarios-pacientes'];
+        }
+
+        return role === 'DOCTOR'
+          ? ['/gestionar-cuestionarios']
+          : ['/mis-cuestionarios'];
+
+      case 'REMINDER':
+        return ['/mis-cuestionarios'];
+
+      case 'SYSTEM':
+      default:
+        return ['/home'];
+    }
   }
 
   markAsRead(notification: NotificationResponse): void {
@@ -160,23 +216,34 @@ export class NotificationMenu implements OnDestroy, OnInit {
       (ids) => new Set(ids).add(notification.notificationId),
     );
 
-    this.notificationService.markAsRead(notification.notificationId).subscribe({
-      next: (updatedNotification) => {
-        this.notifications.update((notifications) =>
-          notifications.map((item) =>
-            item.notificationId === updatedNotification.notificationId
-              ? updatedNotification
-              : item,
-          ),
-        );
-      },
-      error: (error: unknown) => {
-        console.error('Error al marcar la notificación como leída:', error);
-        this.errorMessage.set('No se pudo marcar la notificación como leída.');
-        this.stopProcessing(notification.notificationId);
-      },
-      complete: () => this.stopProcessing(notification.notificationId),
-    });
+    this.notificationService
+      .markAsRead(notification.notificationId)
+      .subscribe({
+        next: (updatedNotification) => {
+          this.notifications.update((notifications) =>
+            notifications.map((item) =>
+              item.notificationId === updatedNotification.notificationId
+                ? updatedNotification
+                : item,
+            ),
+          );
+        },
+        error: (error: unknown) => {
+          console.error(
+            'Error al marcar la notificación como leída:',
+            error,
+          );
+
+          this.errorMessage.set(
+            'No se pudo marcar la notificación como leída.',
+          );
+
+          this.stopProcessing(notification.notificationId);
+        },
+        complete: () => {
+          this.stopProcessing(notification.notificationId);
+        },
+      });
   }
 
   markAllAsRead(): void {
@@ -215,47 +282,10 @@ export class NotificationMenu implements OnDestroy, OnInit {
 
         this.markAllLoading.set(false);
       },
-      complete: () => this.markAllLoading.set(false),
+      complete: () => {
+        this.markAllLoading.set(false);
+      },
     });
-  }
-
-  private getNotificationDestination(
-    notification: NotificationResponse,
-  ): string[] {
-    const role = readRole();
-
-    switch (notification.type) {
-      case 'MESSAGE':
-        return ['/chat'];
-
-      case 'FOLLOW':
-        if (notification.title.toLowerCase().includes('recibida')) {
-          return role === 'DOCTOR'
-            ? ['/solicitudes']
-            : ['/mis-solicitudes'];
-        }
-
-        return ['/mis-solicitudes'];
-
-      case 'QUESTIONNAIRE':
-        if (
-          notification.title.toLowerCase().includes('completado') &&
-          role === 'DOCTOR'
-        ) {
-          return ['/historial-cuestionarios-pacientes'];
-        }
-
-        return role === 'DOCTOR'
-          ? ['/gestionar-cuestionarios']
-          : ['/mis-cuestionarios'];
-
-      case 'REMINDER':
-        return ['/mis-cuestionarios'];
-
-      case 'SYSTEM':
-      default:
-        return ['/home'];
-    }
   }
 
   private stopProcessing(notificationId: number): void {
@@ -272,7 +302,10 @@ export class NotificationMenu implements OnDestroy, OnInit {
         notifications.map((item) => [item.notificationId, item]),
       );
 
-      updatedNotifications.set(notification.notificationId, notification);
+      updatedNotifications.set(
+        notification.notificationId,
+        notification,
+      );
 
       return [...updatedNotifications.values()].sort(
         (left, right) =>
