@@ -41,6 +41,15 @@ export class Forum implements OnInit {
     return this.usuarioId === forum.createdById
   }
 
+  esAdmin(): boolean {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+      return usuario.role === 'ADMIN'
+    } catch {
+      return false
+    }
+  }
+
   // Listas.
   forums = signal<ForumResponse[]>([])
   filteredForums = signal<ForumResponse[]>([])
@@ -162,6 +171,10 @@ export class Forum implements OnInit {
   }
 
   navigateToEditForum(forum: ForumResponse): void {
-  this.router.navigate(['/forums/update', forum.title])
-}
+    this.router.navigate(['/forums/update', forum.title])
+  }
+
+  puedeReportar(forum: ForumResponse): boolean {
+    return !this.esAdmin() && !this.esPropietario(forum);
+  }
 }

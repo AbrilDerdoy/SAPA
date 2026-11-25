@@ -3,6 +3,7 @@ package com.example.SAPA.service;
 import com.example.SAPA.DTOs.Request.CreateReportRequestDTO;
 import com.example.SAPA.DTOs.Response.ReportResponseDTO;
 import com.example.SAPA.Models.Entities.UserEntity;
+import com.example.SAPA.Models.Forum.ForumEntity;
 import com.example.SAPA.Models.Forum.PostEntity;
 import com.example.SAPA.Models.ReportEntity;
 import com.example.SAPA.Repositories.ForumRepository;
@@ -71,15 +72,22 @@ public class ReportService {
     private void validateContentExists(ReportedContentType type, Long id, UserEntity user) throws AccessDeniedException {
         if (type == ReportedContentType.POST) {
             PostEntity post = postRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("La publicación reportada no existe."));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "La publicación reportada no existe."));
 
             if (post.getAuthor().getId().equals(user.getId())) {
-                throw new AccessDeniedException("No podés reportar tu propia publicación.");
+                throw new AccessDeniedException(
+                        "No podés reportar tu propia publicación.");
             }
 
         } else if (type == ReportedContentType.FORUM) {
-            if (!forumRepository.existsById(id)) {
-                throw new EntityNotFoundException("El foro reportado no existe.");
+            ForumEntity forum = forumRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "El foro reportado no existe."));
+
+            if (forum.getCreatedBy().getId().equals(user.getId())) {
+                throw new AccessDeniedException(
+                        "No podés reportar tu propio foro.");
             }
         }
     }
@@ -112,6 +120,22 @@ public class ReportService {
         report.setReviewed(true);
         ReportEntity saved = reportRepository.save(report);
         return reportMapper.toResponse(saved, userContext.resolveName(saved.getReportedBy()));
+    }
+
+    @Transactional
+    public ReportResponseDTO markAsPending(Long reportId) {
+        ReportEntity report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Reporte no encontrado con id: " + reportId));
+
+        report.setReviewed(false);
+
+        ReportEntity saved = reportRepository.save(report);
+
+        return reportMapper.toResponse(
+                saved,
+                userContext.resolveName(saved.getReportedBy())
+        );
     }
 
     private void notifyAdmins(ReportEntity report) {
@@ -160,6 +184,32 @@ public class ReportService {
         reportRepository.deleteAllByContentTypeAndContentId(
                 ReportedContentType.POST,
                 postId
+        );
+    }
+
+    @Transactional
+    public void deleteReportedForum(Long reportId) {
+        ReportEntity report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Reporte no encontrado con id: " + reportId));
+
+        if (report.getContentType() != ReportedContentType.FORUM) {
+            throw new IllegalArgumentException(
+                    "Este reporte no corresponde a un foro.");
+        }
+
+        Long forumId = report.getContentId();
+
+        ForumEntity forum = forumRepository.findById(forumId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "El foro reportado no existe."));
+
+        forum.setActive(false);
+        forumRepository.save(forum);
+
+        reportRepository.deleteAllByContentTypeAndContentId(
+                ReportedContentType.FORUM,
+                forumId
         );
     }
 }

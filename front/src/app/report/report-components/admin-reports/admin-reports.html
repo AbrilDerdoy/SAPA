@@ -50,11 +50,6 @@
             </div>
 
             <p>
-                <strong>Contenido ID:</strong>
-                {{ report.contentId }}
-            </p>
-
-            <p>
                 <strong>Reportado por:</strong>
                 {{ report.reportedByName }}
             </p>
@@ -74,12 +69,20 @@
                     Marcar como revisado
                 </button>
                 } @else {
-                <span class="reviewed-label">Revisado</span>
+                <button type="button" class="review-button" (click)="markAsPending(report.reportId)">
+                    Quitar revisión
+                </button>
                 }
 
-                @if (!report.reviewed && report.contentType === 'POST') {
+                @if (report.contentType === 'POST') {
                 <button type="button" class="delete-content-button" (click)="deleteReportedPost(report)">
                     Eliminar publicación
+                </button>
+                }
+
+                @if (report.contentType === 'FORUM') {
+                <button type="button" class="delete-content-button" (click)="deleteReportedForum(report)">
+                    Eliminar foro
                 </button>
                 }
             </div>

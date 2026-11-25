@@ -1,4 +1,4 @@
-import { afterNextRender, Component, inject, Injector, input, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, inject, Injector, input, signal } from '@angular/core';
 import { PostService } from '../../post-service/post-service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { PostResponse } from '../../post-DTOs/post-response';
@@ -9,7 +9,7 @@ import { SavedPostService } from '../../../saved-post/saved-post-service/saved-p
 import { PostForm } from '../post-form/post-form';
 import { PostAttachments } from '../post-attachments/post-attachments';
 import { DatePipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PostComment } from '../../../post-comment/post-comment-component/post-comment/post-comment';
 import { ReportedContentType } from '../../../report/report-DTOs/reported-content-type.type';
 import { ContentMenu } from '../../../content-menu/content-menu-component/content-menu/content-menu';
@@ -28,6 +28,7 @@ export class Post {
   private savedPostService = inject(SavedPostService)
   private injector = inject(Injector)
   private route = inject(ActivatedRoute)
+  private router = inject(Router)
 
   error = signal('')
 
@@ -110,6 +111,10 @@ export class Post {
 
   esPropietario(post: PostResponse): boolean {
     return this.usuarioId === post.authorId
+  }
+
+  esPropietarioForo(): boolean {
+    return this.usuarioId === this.forum()?.createdById
   }
 
   loadPosts(): void {
@@ -321,5 +326,37 @@ export class Post {
     } catch {
       return false
     }
+  }
+
+  puedeReportarForo(): boolean {
+    return !this.esAdmin() && !this.esPropietarioForo()
+  }
+
+  openForumReportModal(): void {
+    const forumId = this.forum()?.forumId
+    if (forumId == null) return
+
+    this.reportContentId.set(forumId)
+    this.reportContentType.set('FORUM')
+    this.showReportModal.set(true)
+  }
+
+  editForum(): void {
+    const forum = this.forum()
+    if (!forum) return
+
+    this.router.navigate(['/forums/update', forum.title])
+  }
+
+  deleteForum(): void {
+    const forum = this.forum()
+    if (!forum) return
+
+    if (!confirm('¿Estás segura de que querés eliminar este foro?')) return
+
+    this.forumService.deleteForum(forum.forumId).subscribe({
+      next: () => this.router.navigate(['/forums']),
+      error: () => this.error.set('Error al eliminar el foro.')
+    })
   }
 }
