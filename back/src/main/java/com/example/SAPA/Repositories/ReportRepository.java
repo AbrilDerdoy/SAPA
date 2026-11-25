@@ -16,6 +16,7 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
 
     List<ReportEntity> findAllByOrderByCreatedAtDesc();
 
-    boolean existsByReportedByIdAndContentTypeAndContentId(Long reportedById, ReportedContentType contentType,
-                                                           Long contentId);
+    boolean existsByReportedByIdAndContentTypeAndContentId(Long reportedById, ReportedContentType contentType, Long contentId);
+
+    void deleteAllByContentTypeAndContentId(ReportedContentType contentType, Long contentId);
 }

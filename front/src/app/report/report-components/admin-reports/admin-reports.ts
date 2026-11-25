@@ -15,7 +15,6 @@ import { ForumService } from '../../../forum/forum-service/forum-service';
 export class AdminReports implements OnInit {
   private reportService = inject(ReportService)
   private readonly router = inject(Router)
-  private readonly postService = inject(PostService)
   private readonly forumService = inject(ForumService)
 
   title = input('Reportes pendientes')
@@ -122,6 +121,25 @@ export class AdminReports implements OnInit {
         this.error.set('No se pudo encontrar el foro reportado.');
       }
     });
+  }
+
+  deleteReportedPost(report: ReportResponse): void {
+    if (report.contentType !== 'POST' || report.reviewed) return
+
+    const confirmed = window.confirm(
+      '¿Estás segura de que querés eliminar esta publicación? Dejará de estar visible para los usuarios.'
+    )
+
+    if (!confirmed) return
+
+    this.reportService.deleteReportedPost(report.reportId).subscribe({
+      next: () => {
+        this.loadReports()
+      },
+      error: () => {
+        this.error.set('No se pudo eliminar la publicación reportada.')
+      }
+    })
   }
 
 }

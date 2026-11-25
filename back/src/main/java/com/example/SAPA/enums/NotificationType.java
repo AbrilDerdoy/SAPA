@@ -6,6 +6,6 @@ public enum NotificationType {
     REMINDER,
     FOLLOW,
     QUESTIONNAIRE,
-    MEDICAL_REPORT,
+    MEDICAL_RECORD,
     REPORT
 }

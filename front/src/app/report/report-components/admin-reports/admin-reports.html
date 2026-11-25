@@ -76,6 +76,12 @@
                 } @else {
                 <span class="reviewed-label">Revisado</span>
                 }
+
+                @if (!report.reviewed && report.contentType === 'POST') {
+                <button type="button" class="delete-content-button" (click)="deleteReportedPost(report)">
+                    Eliminar publicación
+                </button>
+                }
             </div>
 
         </article>

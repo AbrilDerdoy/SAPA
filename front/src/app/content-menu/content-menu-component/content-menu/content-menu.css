@@ -1,8 +1,9 @@
 .content-menu {
-    position: absolute;
-    top: 8px;
-    right: 8px;
+    position: relative;
+    top: auto;
+    right: auto;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .menu-toggle {
@@ -84,11 +85,6 @@
 }
 
 @media (max-width: 480px) {
-    .content-menu {
-        top: 6px;
-        right: 6px;
-    }
-
     .content-menu-dropdown {
         min-width: 130px;
     }

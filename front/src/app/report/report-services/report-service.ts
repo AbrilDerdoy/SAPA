@@ -31,4 +31,9 @@ export class ReportService {
   markAsReviewed(reportId: number): Observable<ReportResponse> {
     return this.http.patch<ReportResponse>(`${this.BASE_URL}/${reportId}/review`, null)
   }
+
+  // Eliminar una publicación reportada (moderación ADMIN).
+  deleteReportedPost(reportId: number): Observable<void> {
+    return this.http.patch<void>(`${this.BASE_URL}/${reportId}/delete-post`, null)
+  }
 }

@@ -1,4 +1,4 @@
-import { afterNextRender, Component, ElementRef, inject, Injector, input, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, inject, Injector, input, signal, viewChild } from '@angular/core';
 import { PostService } from '../../post-service/post-service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { PostResponse } from '../../post-DTOs/post-response';
@@ -302,5 +302,24 @@ export class Post {
 
   closeReportModal(): void {
     this.showReportModal.set(false)
+  }
+
+  esAdmin(): boolean {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+      return usuario.role === 'ADMIN'
+    } catch {
+      return false
+    }
+  }
+
+  puedeReportar(post: PostResponse): boolean {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+
+      return usuario.role !== 'ADMIN' && usuario.id !== post.authorId
+    } catch {
+      return false
+    }
   }
 }

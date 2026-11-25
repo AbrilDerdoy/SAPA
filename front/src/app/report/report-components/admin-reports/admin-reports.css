@@ -206,6 +206,21 @@
   outline-offset: 3px;
 }
 
+.delete-content-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.delete-content-button:hover {
+  background: #bb2d3b;
+}
+
 .empty-state {
   padding: 48px 24px;
   border: 1px dashed var(--border-color, #d5dfdf);
