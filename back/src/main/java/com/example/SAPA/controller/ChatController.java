@@ -1,4 +1,3 @@
-
 package com.example.SAPA.controller;
 
 import com.example.SAPA.DTOs.ChatDTO;
@@ -32,13 +31,41 @@ public class ChatController {
             ChatDTO.SendMessageRequest request,
             Principal principal
     ) {
-        messageService.sendMessage(conversationId, request, principal);
+        messageService.sendMessage(
+                conversationId,
+                request,
+                principal
+        );
     }
 
     @GetMapping
     public ResponseEntity<List<ChatDTO.ConversationSummary>> getMyConversations() {
         return ResponseEntity.ok(
                 conversationService.getMyConversations()
+        );
+    }
+
+    @GetMapping("/doctor/{doctorId}")
+    public ResponseEntity<ChatDTO.ConversationSummary> getDoctorConversation(
+            @PathVariable Long doctorId
+    ) {
+        return ResponseEntity.ok(
+                conversationService.getDoctorConversation(doctorId)
+        );
+    }
+
+    @PostMapping("/{id}/messages")
+    public ResponseEntity<ChatDTO.MessageResponse> sendMessageHttp(
+            @PathVariable Long id,
+            @RequestBody ChatDTO.SendMessageRequest request,
+            Principal principal
+    ) {
+        return ResponseEntity.ok(
+                messageService.sendMessage(
+                        id,
+                        request,
+                        principal
+                )
         );
     }
 
@@ -57,7 +84,10 @@ public class ChatController {
             Principal principal
     ) {
         return ResponseEntity.ok(
-                conversationService.getOtherParticipantPresence(id, principal)
+                conversationService.getOtherParticipantPresence(
+                        id,
+                        principal
+                )
         );
     }
 

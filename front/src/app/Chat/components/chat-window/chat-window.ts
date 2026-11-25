@@ -16,6 +16,7 @@ import { Conversation } from '../../models/conversation.model';
 import { Message } from '../../models/message.model';
 import { ChatService } from '../../services/chat.service';
 import { ChatWebSocketService } from '../../services/chat-websocket.service';
+import { Auth } from '../../../Usuario/services/Auth/auth';
 
 @Component({
   selector: 'app-chat-window',
@@ -27,28 +28,34 @@ import { ChatWebSocketService } from '../../services/chat-websocket.service';
 export class ChatWindow implements OnChanges, OnDestroy {
 
   @Input() conversation: Conversation | null = null;
+  @Input() requestedMovementId: number | null = null;
+  @Input() requestedMovementTitle = '';
+  @Input() requestedMovementComment = '';
 
   private readonly chatService = inject(ChatService);
   private readonly websocket = inject(ChatWebSocketService);
+  private readonly auth = inject(Auth);
   private readonly cdr = inject(ChangeDetectorRef);
 
   private subscriptions = new Subscription();
 
   private historyRequestId = 0;
   private presenceRequestId = 0;
+  private presenceUserId: number | null = null;
+  private previousConversationId: number | null = null;
+
+  private historyLoaded = false;
+  private referenceSendAttempted = false;
+  private doctorContextSendAttempted = false;
+  private automaticMessageSending = false;
 
   messages: Message[] = [];
-
   newMessage = '';
-
   currentUserId = 0;
+  currentUserRole = '';
 
-  // Conexión propia: se utiliza para habilitar el envío.
   isConnected = false;
-
-  // Presencia del otro participante.
   otherParticipantOnline = false;
-
   loading = false;
   errorMessage = '';
 
@@ -60,12 +67,11 @@ export class ChatWindow implements OnChanges, OnDestroy {
       this.websocket.incomingMessages$.subscribe(message => {
 
         if (
-          this.conversation?.conversationId === message.conversationId
+          this.conversation?.conversationId ===
+          message.conversationId
         ) {
-
           this.addMessage(message);
           this.updateLastMessage(message.content);
-
           this.cdr.markForCheck();
         }
       })
@@ -73,9 +79,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
     this.subscriptions.add(
       this.websocket.connectionStatus$.subscribe(status => {
-
         this.isConnected = status;
-
         this.cdr.markForCheck();
       })
     );
@@ -87,44 +91,59 @@ export class ChatWindow implements OnChanges, OnDestroy {
           this.conversation &&
           this.presenceUserId === update.userId
         ) {
-
           this.otherParticipantOnline = update.online;
-
           this.cdr.markForCheck();
         }
       })
     );
   }
 
-  private presenceUserId: number | null = null;
-
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (!changes['conversation']) {
-      return;
+    const currentConversationId =
+      this.conversation?.conversationId ?? null;
+
+    if (changes['conversation']) {
+
+      if (currentConversationId !== this.previousConversationId) {
+
+        this.historyRequestId++;
+        this.presenceRequestId++;
+
+        this.messages = [];
+        this.newMessage = '';
+        this.loading = false;
+        this.errorMessage = '';
+
+        this.otherParticipantOnline = false;
+        this.presenceUserId = null;
+
+        this.historyLoaded = false;
+        this.referenceSendAttempted = false;
+        this.doctorContextSendAttempted = false;
+        this.automaticMessageSending = false;
+
+        this.previousConversationId = currentConversationId;
+
+        if (this.conversation) {
+          this.loadMessages();
+          this.loadOtherParticipantPresence();
+        } else {
+          this.websocket.disconnect();
+        }
+      }
     }
 
-    if (this.conversation) {
+    if (changes['requestedMovementId']) {
 
-      this.messages = [];
-      this.otherParticipantOnline = false;
-      this.presenceUserId = null;
+      this.historyLoaded = false;
+      this.referenceSendAttempted = false;
+      this.doctorContextSendAttempted = false;
+      this.automaticMessageSending = false;
 
-      this.loadMessages();
-      this.loadOtherParticipantPresence();
-
-    } else {
-
-      this.historyRequestId++;
-      this.presenceRequestId++;
-
-      this.messages = [];
-      this.loading = false;
-
-      this.otherParticipantOnline = false;
-      this.presenceUserId = null;
-
-      this.websocket.disconnect();
+      if (this.conversation) {
+        this.loadMessages();
+      }
     }
 
     this.cdr.markForCheck();
@@ -132,20 +151,25 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
   private loadCurrentUser(): void {
 
-    const storedUser = localStorage.getItem('usuario');
-
-    if (!storedUser) {
-      return;
-    }
-
     try {
+      const storedUser = localStorage.getItem('usuario');
+      const user = storedUser
+        ? JSON.parse(storedUser)
+        : {};
 
-      const user = JSON.parse(storedUser);
+      this.currentUserId = Number(user.id) || 0;
 
-      this.currentUserId = Number(user.id);
+      if (this.auth.isPatient()) {
+        this.currentUserRole = 'PATIENT';
+      } else if (this.auth.isDoctor()) {
+        this.currentUserRole = 'DOCTOR';
+      } else {
+        this.currentUserRole = '';
+      }
 
     } catch {
       this.currentUserId = 0;
+      this.currentUserRole = '';
     }
   }
 
@@ -155,7 +179,9 @@ export class ChatWindow implements OnChanges, OnDestroy {
       return;
     }
 
-    const conversationId = this.conversation.conversationId;
+    const conversationId =
+      this.conversation.conversationId;
+
     const requestId = ++this.presenceRequestId;
 
     this.chatService.getPresence(conversationId).subscribe({
@@ -172,7 +198,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
         this.presenceUserId = presence.userId;
         this.otherParticipantOnline = presence.online;
 
-        this.websocket.connectToConversation(
+        void this.websocket.connectToConversation(
           conversationId,
           presence.userId
         );
@@ -193,9 +219,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
 
         this.otherParticipantOnline = false;
 
-        // Se mantiene la conexión del chat aunque falle
-        // la consulta inicial de presencia.
-        this.websocket.connectToConversation(
+        void this.websocket.connectToConversation(
           conversationId,
           0
         );
@@ -211,11 +235,14 @@ export class ChatWindow implements OnChanges, OnDestroy {
       return;
     }
 
-    const conversationId = this.conversation.conversationId;
+    const conversationId =
+      this.conversation.conversationId;
+
     const requestId = ++this.historyRequestId;
 
     this.loading = true;
     this.errorMessage = '';
+    this.historyLoaded = false;
 
     this.cdr.markForCheck();
 
@@ -230,14 +257,13 @@ export class ChatWindow implements OnChanges, OnDestroy {
           return;
         }
 
-        const combinedMessages = [
-          ...history,
-          ...this.messages
-        ];
-
         const uniqueMessages = new Map<number, Message>();
 
-        for (const message of combinedMessages) {
+        for (const message of history) {
+          uniqueMessages.set(message.messageId, message);
+        }
+
+        for (const message of this.messages) {
           uniqueMessages.set(message.messageId, message);
         }
 
@@ -250,6 +276,10 @@ export class ChatWindow implements OnChanges, OnDestroy {
         );
 
         this.loading = false;
+        this.historyLoaded = true;
+
+        this.loadCurrentUser();
+        this.sendMovementReferenceIfNeeded();
 
         this.cdr.markForCheck();
       },
@@ -265,8 +295,128 @@ export class ChatWindow implements OnChanges, OnDestroy {
           error
         );
 
-        this.errorMessage = 'No se pudo cargar el historial.';
+        this.errorMessage =
+          'No se pudo cargar el historial.';
+
         this.loading = false;
+
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private sendMovementReferenceIfNeeded(): void {
+
+    const movementId = this.requestedMovementId;
+    const conversation = this.conversation;
+
+    if (
+      movementId === null ||
+      !conversation ||
+      !this.historyLoaded ||
+      this.automaticMessageSending
+    ) {
+      return;
+    }
+
+    const isPatient = this.auth.isPatient();
+    const isDoctor = this.auth.isDoctor();
+
+    if (!isPatient && !isDoctor) {
+      console.error(
+        'No se pudo determinar el rol para enviar el contexto del movimiento.'
+      );
+      return;
+    }
+
+    if (isPatient) {
+
+      if (this.referenceSendAttempted) {
+        return;
+      }
+
+      const alreadySent = this.messages.some(
+        message =>
+          Number(message.medicalRecordMovementId) === movementId
+      );
+
+      if (alreadySent) {
+        this.referenceSendAttempted = true;
+        return;
+      }
+
+    } else {
+
+      if (this.doctorContextSendAttempted) {
+        return;
+      }
+
+      const alreadySent = this.messages.some(message =>
+        message.content.includes(
+          `Movimiento de ficha médica #${movementId}`
+        )
+      );
+
+      if (alreadySent) {
+        this.doctorContextSendAttempted = true;
+        return;
+      }
+    }
+
+    const content = isPatient
+      ? 'Quisiera consultar sobre este movimiento de mi ficha médica.'
+      : [
+          `Movimiento de ficha médica #${movementId}`,
+          this.requestedMovementTitle
+            ? `Título: ${this.requestedMovementTitle}`
+            : '',
+          this.requestedMovementComment
+            ? `Comentario: ${this.requestedMovementComment}`
+            : ''
+        ].filter(Boolean).join('\n');
+
+    this.automaticMessageSending = true;
+    this.errorMessage = '';
+
+    this.chatService.sendMessage(
+      conversation.conversationId,
+      content,
+      isPatient ? movementId : null
+    ).subscribe({
+
+      next: message => {
+
+        if (
+          this.conversation?.conversationId !==
+          conversation.conversationId
+        ) {
+          return;
+        }
+
+        this.addMessage(message);
+
+        if (isPatient) {
+          this.referenceSendAttempted = true;
+        } else {
+          this.doctorContextSendAttempted = true;
+        }
+
+        this.automaticMessageSending = false;
+        this.cdr.markForCheck();
+      },
+
+      error: error => {
+
+        console.error(
+          'No se pudo enviar automáticamente el contexto del movimiento:',
+          error
+        );
+
+        this.automaticMessageSending = false;
+
+        this.errorMessage =
+          error.error?.message ??
+          'No se pudo enviar automáticamente la referencia del movimiento.';
 
         this.cdr.markForCheck();
       }
@@ -301,11 +451,10 @@ export class ChatWindow implements OnChanges, OnDestroy {
     }
 
     if (!this.isConnected) {
-
-      this.errorMessage = 'Esperando conexión con el chat...';
+      this.errorMessage =
+        'Esperando conexión con el chat...';
 
       this.cdr.markForCheck();
-
       return;
     }
 
@@ -315,13 +464,11 @@ export class ChatWindow implements OnChanges, OnDestroy {
     );
 
     if (sent) {
-
       this.newMessage = '';
       this.errorMessage = '';
-
     } else {
-
-      this.errorMessage = 'No se pudo enviar el mensaje.';
+      this.errorMessage =
+        'No se pudo enviar el mensaje.';
     }
 
     this.cdr.markForCheck();
@@ -338,7 +485,6 @@ export class ChatWindow implements OnChanges, OnDestroy {
     }
 
     event.preventDefault();
-
     this.sendMessage();
   }
 
@@ -351,7 +497,8 @@ export class ChatWindow implements OnChanges, OnDestroy {
       return;
     }
 
-    const conversationId = this.conversation.conversationId;
+    const conversationId =
+      this.conversation.conversationId;
 
     const validType =
       file.type.startsWith('image/') ||
@@ -363,9 +510,7 @@ export class ChatWindow implements OnChanges, OnDestroy {
         'Solo se permiten imágenes y archivos PDF.';
 
       input.value = '';
-
       this.cdr.markForCheck();
-
       return;
     }
 
@@ -388,7 +533,6 @@ export class ChatWindow implements OnChanges, OnDestroy {
         this.updateLastMessage(file.name);
 
         input.value = '';
-
         this.cdr.markForCheck();
       },
 
@@ -399,10 +543,10 @@ export class ChatWindow implements OnChanges, OnDestroy {
           error
         );
 
-        this.errorMessage = 'No se pudo adjuntar el archivo.';
+        this.errorMessage =
+          'No se pudo adjuntar el archivo.';
 
         input.value = '';
-
         this.cdr.markForCheck();
       }
     });
@@ -445,7 +589,6 @@ export class ChatWindow implements OnChanges, OnDestroy {
     }
 
     this.conversation.lastMessage = content;
-
     this.conversation.lastMessageAt =
       new Date().toISOString();
   }
@@ -456,7 +599,6 @@ export class ChatWindow implements OnChanges, OnDestroy {
     this.presenceRequestId++;
 
     this.subscriptions.unsubscribe();
-
     this.websocket.disconnect();
   }
 }

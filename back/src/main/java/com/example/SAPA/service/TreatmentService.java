@@ -10,8 +10,15 @@ import com.example.SAPA.Models.MedicalRecord.DurationEntity;
 import com.example.SAPA.Models.MedicalRecord.FrequencyEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordEntity;
 import com.example.SAPA.Models.MedicalRecord.TreatmentEntity;
-import com.example.SAPA.Repositories.*;
-import com.example.SAPA.enums.FollowRequestStatus;
+import com.example.SAPA.Repositories.DurationRepository;
+import com.example.SAPA.Repositories.FrequencyRepository;
+import com.example.SAPA.Repositories.MedicalRecordAccessRequestRepository;
+import com.example.SAPA.Repositories.MedicalRecordRepository;
+import com.example.SAPA.Repositories.PatientRepository;
+import com.example.SAPA.Repositories.TreatmentRepository;
+import com.example.SAPA.enums.MedicalRecordAccessStatus;
+import com.example.SAPA.enums.TreatmentStatus;
+import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.mappers.TreatmentMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +26,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,56 +36,63 @@ public class TreatmentService {
     private final DurationRepository durationRepository;
     private final FrequencyRepository frequencyRepository;
     private final MedicalRecordRepository medicalRecordRepository;
-    private final FollowRequestRepository followRequestRepository;
+    private final MedicalRecordAccessRequestRepository accessRequestRepository;
     private final PatientRepository patientRepository;
-    private final DoctorRepository doctorRepository;
     private final UserContextService userContext;
     private final PatientAccessService patientAccess;
     private final TreatmentMapper treatmentMapper;
-
+    private final MedicalRecordMovementService movementService;
 
     private MedicalRecordEntity getOrCreateMedicalRecord(PatientEntity patient) {
         if (patient.getMedicalRecord() != null) {
             return patient.getMedicalRecord();
         }
 
-        MedicalRecordEntity record = new MedicalRecordEntity();
-        MedicalRecordEntity saved = medicalRecordRepository.save(record);
-        patient.setMedicalRecord(saved);
+        MedicalRecordEntity record = medicalRecordRepository.save(
+                new MedicalRecordEntity()
+        );
+
+        patient.setMedicalRecord(record);
         patientRepository.save(patient);
-        return saved;
+
+        return record;
     }
 
+    private DurationEntity buildDuration(TreatmentDurationDTO request) {
+        if (request == null) {
+            return null;
+        }
 
-    private DurationEntity buildDuration(TreatmentDurationDTO durationRequest) {
         DurationEntity duration = new DurationEntity();
-
-        duration.setLength(durationRequest.length());
-        duration.setDurationUnit(durationRequest.unit());
+        duration.setLength(request.length());
+        duration.setDurationUnit(request.unit());
 
         return durationRepository.save(duration);
     }
 
-    private FrequencyEntity buildFrequency(TreatmentFrequencyDTO frequencyRequest) {
-        FrequencyEntity frequency = new FrequencyEntity();
+    private FrequencyEntity buildFrequency(TreatmentFrequencyDTO request) {
+        if (request == null) {
+            return null;
+        }
 
-        frequency.setLength(frequencyRequest.length());
-        frequency.setFrequencyUnit(frequencyRequest.unit());
+        FrequencyEntity frequency = new FrequencyEntity();
+        frequency.setLength(request.length());
+        frequency.setFrequencyUnit(request.unit());
 
         return frequencyRepository.save(frequency);
     }
 
-
     @Transactional
-    public TreatmentResponseDTO createTreatment(Long patientId, TreatmentRequestDTO request) {
-
-        validatePatientAccess(patientId);
-
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
+    public TreatmentResponseDTO createTreatment(
+            Long patientId,
+            TreatmentRequestDTO request
+    ) {
+        DoctorEntity doctor = userContext.getAuthenticatedDoctor();
+        PatientEntity patient = getPatient(patientId);
+        validateDoctorAccess(doctor, patient);
+        validateJustification(request.justification());
 
         MedicalRecordEntity record = getOrCreateMedicalRecord(patient);
-
         DurationEntity duration = buildDuration(request.duration());
         FrequencyEntity frequency = buildFrequency(request.frequency());
 
@@ -89,82 +102,97 @@ public class TreatmentService {
                 .duration(duration)
                 .frequency(frequency)
                 .medicalRecord(record)
+                .status(TreatmentStatus.ACTIVE)
                 .build();
 
         TreatmentEntity saved = treatmentRepository.save(treatment);
 
-        if (record.getTreatments() == null) {
-            record.setTreatments(new ArrayList<>());
-        }
-        record.getTreatments().add(saved);
+        movementService.registerMovement(
+                patient.getId(),
+                "TREATMENT_ADDED",
+                "Tratamiento agregado: " + saved.getName(),
+                request.justification()
+        );
 
         return treatmentMapper.toTreatmentResponse(saved);
     }
 
     @Transactional
-    public TreatmentResponseDTO updateTreatment(Long treatmentId, TreatmentRequestDTO request) {
+    public TreatmentResponseDTO updateTreatment(
+            Long treatmentId,
+            TreatmentRequestDTO request
+    ) {
+        DoctorEntity doctor = userContext.getAuthenticatedDoctor();
+        TreatmentEntity treatment = getTreatment(treatmentId);
+        PatientEntity patient = getPatientByTreatment(treatment);
 
-        TreatmentEntity treatment = treatmentRepository.findById(treatmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Tratamiento no encontrado con id: " + treatmentId));
+        validateDoctorAccess(doctor, patient);
+        validateJustification(request.justification());
 
-        PatientEntity patient = patientRepository.findByMedicalRecordId(treatment.getMedicalRecord().getId())
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el paciente asociado a este tratamiento."));
-
-        validatePatientAccess(patient.getId());
+        if (treatment.getStatus() == TreatmentStatus.SUSPENDED
+                || treatment.getStatus() == TreatmentStatus.FINISHED) {
+            throw new IllegalArgumentException(
+                    "No se puede modificar un tratamiento suspendido o finalizado."
+            );
+        }
 
         if (request.duration() != null) {
-            DurationEntity duration = treatment.getDuration() != null ? treatment.getDuration() : new DurationEntity();
-            duration.setLength(request.duration().length());
-            duration.setDurationUnit(request.duration().unit());
-            treatment.setDuration(durationRepository.save(duration));
+            treatment.setDuration(buildDuration(request.duration()));
         }
 
         if (request.frequency() != null) {
-            FrequencyEntity frequency = treatment.getFrequency() != null ? treatment.getFrequency() : new FrequencyEntity();
-            frequency.setLength(request.frequency().length());
-            frequency.setFrequencyUnit(request.frequency().unit());
-            treatment.setFrequency(frequencyRepository.save(frequency));
+            treatment.setFrequency(buildFrequency(request.frequency()));
         }
 
-        if (request.name() != null && !request.name().isBlank()) treatment.setName(request.name());
-        if (request.description() != null && !request.description().isBlank()) treatment.setDescription(request.description());
+        if (request.name() != null && !request.name().isBlank()) {
+            treatment.setName(request.name());
+        }
 
-        TreatmentEntity updatedTreatment = treatmentRepository.save(treatment);
-        return treatmentMapper.toTreatmentResponse(updatedTreatment);
+        if (request.description() != null && !request.description().isBlank()) {
+            treatment.setDescription(request.description());
+        }
+
+        TreatmentEntity updated = treatmentRepository.save(treatment);
+
+        movementService.registerMovement(
+                patient.getId(),
+                "TREATMENT_UPDATED",
+                "Tratamiento modificado: " + updated.getName(),
+                request.justification()
+        );
+
+        return treatmentMapper.toTreatmentResponse(updated);
     }
 
     @Transactional
-    public void deleteTreatment(Long treatmentId) {
+    public void deleteTreatment(Long treatmentId, String justification) {
         DoctorEntity doctor = userContext.getAuthenticatedDoctor();
+        TreatmentEntity treatment = getTreatment(treatmentId);
+        PatientEntity patient = getPatientByTreatment(treatment);
 
-        TreatmentEntity treatment = treatmentRepository.findById(treatmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Tratamiento no encontrado con id: " + treatmentId));
+        validateDoctorAccess(doctor, patient);
+        validateJustification(justification);
 
-        MedicalRecordEntity record = treatment.getMedicalRecord();
-
-        PatientEntity patient = patientRepository.findByMedicalRecordId(record.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Paciente asociado a la ficha médica no encontrado"));
-
-        boolean isAssignedDoctor = followRequestRepository.existsByDoctorIdAndPatientIdAndStatus(
-                doctor.getId(),
-                patient.getId(),
-                FollowRequestStatus.APPROVED
-        );
-
-        if (!isAssignedDoctor) {
-            throw new AccessDeniedException("No tienes permiso para eliminar tratamientos de este paciente porque no eres su médico asignado.");
+        if (treatment.getStatus() == TreatmentStatus.SUSPENDED) {
+            throw new IllegalArgumentException(
+                    "El tratamiento ya se encuentra suspendido."
+            );
         }
 
-        treatmentRepository.delete(treatment);
+        treatment.setStatus(TreatmentStatus.SUSPENDED);
+        treatmentRepository.save(treatment);
+
+        movementService.registerMovement(
+                patient.getId(),
+                "TREATMENT_SUSPENDED",
+                "Tratamiento suspendido: " + treatment.getName(),
+                justification
+        );
     }
 
     @Transactional(readOnly = true)
     public List<TreatmentResponseDTO> getTreatments(Long patientId) {
-
-        validatePatientAccess(patientId);
-
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
+        PatientEntity patient = validateAndGetPatientAccess(patientId);
 
         if (patient.getMedicalRecord() == null) {
             return List.of();
@@ -177,26 +205,91 @@ public class TreatmentService {
     }
 
     @Transactional(readOnly = true)
-    public List<TreatmentResponseDTO> filterTreatments(Long patientId, String name) {
-
-        validatePatientAccess(patientId);
-
-        PatientEntity patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
+    public List<TreatmentResponseDTO> filterTreatments(
+            Long patientId,
+            String name
+    ) {
+        PatientEntity patient = validateAndGetPatientAccess(patientId);
 
         if (patient.getMedicalRecord() == null) {
             return List.of();
         }
 
         return treatmentRepository
-                .findByMedicalRecordAndNameContainingIgnoreCase(patient.getMedicalRecord(), name)
+                .findByMedicalRecordAndNameContainingIgnoreCase(
+                        patient.getMedicalRecord(),
+                        name
+                )
                 .stream()
                 .map(treatmentMapper::toTreatmentResponse)
                 .toList();
     }
 
+    private PatientEntity validateAndGetPatientAccess(Long patientId) {
+        UserCategory role = userContext.getAuthenticatedUser().getRole();
 
-    private void validatePatientAccess(Long patientId) {
-        patientAccess.resolveClinical(patientId);
+        if (role == UserCategory.DOCTOR) {
+            DoctorEntity doctor = userContext.getAuthenticatedDoctor();
+            PatientEntity patient = getPatient(patientId);
+            validateDoctorAccess(doctor, patient);
+            return patient;
+        }
+
+        if (role == UserCategory.PATIENT || role == UserCategory.TUTOR) {
+            return patientAccess.resolveClinical(patientId);
+        }
+
+        throw new AccessDeniedException("Rol no autorizado.");
+    }
+
+    private PatientEntity getPatient(Long patientId) {
+        return patientRepository.findById(patientId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Paciente no encontrado con id: " + patientId
+                        ));
+    }
+
+    private PatientEntity getPatientByTreatment(TreatmentEntity treatment) {
+        return patientRepository
+                .findByMedicalRecordId(treatment.getMedicalRecord().getId())
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "No se encontró el paciente asociado al tratamiento."
+                        ));
+    }
+
+    private TreatmentEntity getTreatment(Long treatmentId) {
+        return treatmentRepository.findById(treatmentId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Tratamiento no encontrado con id: " + treatmentId
+                        ));
+    }
+
+    private void validateDoctorAccess(
+            DoctorEntity doctor,
+            PatientEntity patient
+    ) {
+        boolean authorized = accessRequestRepository
+                .existsByPatientAndDoctorAndStatus(
+                        patient,
+                        doctor,
+                        MedicalRecordAccessStatus.APPROVED
+                );
+
+        if (!authorized) {
+            throw new AccessDeniedException(
+                    "El paciente no autorizó el acceso a su ficha médica."
+            );
+        }
+    }
+
+    private void validateJustification(String justification) {
+        if (justification == null || justification.isBlank()) {
+            throw new IllegalArgumentException(
+                    "La justificación del movimiento es obligatoria."
+            );
+        }
     }
 }

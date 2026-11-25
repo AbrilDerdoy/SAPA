@@ -24,13 +24,13 @@ import { PatientQuestionnaires } from './Questionnaire/components/patient-questi
 import { QuestionnaireHistory } from './Questionnaire/components/questionnaire-history/questionnaire-history';
 import { MyMedicalRecord } from './medical-record/components/my-medical-record/my-medical-record';
 import { PatientMedicalRecord } from './medical-record/components/patient-medical-record/patient-medical-record';
+import { MedicalRecordHistory } from './medical-record/components/medical-record-history/medical-record-history';
 import { DoctorProfilePublic } from './Doctor/components/doctor-profile-public/doctor-profile-public';
-import { SharedPost } from './post/post-component/shared-post/shared-post';
 import { NotFound } from './Common/not-found/not-found';
 import { TerminosYCondiciones } from './Common/terminos-y-condiciones/terminos-y-condiciones';
-
 // Historial de notificaciones
 import { NotificationHistory } from './notifications/components/notification-history/notification-history';
+import { AdminReports } from './report/report-components/admin-reports/admin-reports';
 
 export const routes: Routes = [
 
@@ -178,11 +178,8 @@ export const routes: Routes = [
   },
 
   // Administración
-  {
-    path: 'admin',
-    canActivate: [adminGuard],
-    component: PanelAdmin
-  },
+  {path: 'admin/reports', component: AdminReports, canActivate: [roleGuard(['ADMIN'])], data: {title: 'Moderación de contenido'}},
+  {path: 'admin', canActivate: [adminGuard], component: PanelAdmin},
 
   // Doctor
   { path: 'perfil-medico-publico/:doctorId', canActivate: [tutorRequirementGuard], component: DoctorProfilePublic },
@@ -205,6 +202,11 @@ export const routes: Routes = [
     path: 'medical-record',
     canActivate: [roleGuard(['PATIENT', 'TUTOR'])],
     component: MyMedicalRecord
+  },
+  {
+    path: 'medical-record-history/:patientId',
+    canActivate: [roleGuard(['PATIENT', 'DOCTOR', 'TUTOR'])],
+    component: MedicalRecordHistory
   },
   {
     path: 'patient-medical-record/:patientId',

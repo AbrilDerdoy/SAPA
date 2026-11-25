@@ -61,6 +61,8 @@ public class ConversationService {
             DoctorEntity doctorFollower,
             DoctorEntity doctor
     ) {
+        validateApprovedDoctorFollow(doctorFollower, doctor);
+
         return conversationRepository
                 .findByDoctorAndDoctorFollower(doctor, doctorFollower)
                 .orElseGet(() -> {
@@ -122,80 +124,133 @@ public class ConversationService {
         DoctorEntity currentDoctor = authenticatedDoctor;
         TutorEntity currentTutor = authenticatedTutor;
 
-        return conversations.stream().map(conversation -> {
+        return conversations.stream()
+                .filter(conversation -> {
+                    if (conversation.getPatient() != null) {
+                        return true;
+                    }
 
-            List<MessageEntity> messages =
-                    messageRepository.findByConversationOrderBySentAtAsc(conversation);
+                    DoctorEntity follower = conversation.getDoctorFollower();
+                    DoctorEntity followed = conversation.getDoctor();
 
-            UserEntity otherParticipant;
-            String otherName;
+                    return follower != null
+                            && followed != null
+                            && hasApprovedDoctorFollow(follower, followed);
+                })
+                .map(conversation -> {
 
-            if (isPatient) {
+                    List<MessageEntity> messages =
+                            messageRepository.findByConversationOrderBySentAtAsc(conversation);
 
-                otherParticipant = conversation.getDoctor().getUser();
+                    UserEntity otherParticipant;
+                    String otherName;
 
-                otherName = "Dr. "
-                        + conversation.getDoctor().getFirstName()
-                        + " "
-                        + conversation.getDoctor().getLastName();
+                    if (isPatient) {
+                        otherParticipant = conversation.getDoctor().getUser();
+                        otherName = "Dr. "
+                                + conversation.getDoctor().getFirstName()
+                                + " "
+                                + conversation.getDoctor().getLastName();
+                    } else if (currentTutor != null) {
+                        otherParticipant = conversation.getDoctor().getUser();
+                        otherName = "Dr. "
+                                + conversation.getDoctor().getFirstName()
+                                + " "
+                                + conversation.getDoctor().getLastName();
+                    } else if (conversation.getPatient() != null) {
+                        otherParticipant = conversation.getPatient().getUser();
 
-            } else if (currentTutor != null) {
+                        otherName = conversation.getPatient().getFirstName()
+                                + " "
+                                + conversation.getPatient().getLastName();
 
-                otherParticipant = conversation.getDoctor().getUser();
-                otherName = "Dr. "
-                        + conversation.getDoctor().getFirstName()
-                        + " "
-                        + conversation.getDoctor().getLastName();
+                    } else {
+                        DoctorEntity otherDoctor =
+                                conversation.getDoctor().getId().equals(currentDoctor.getId())
+                                        ? conversation.getDoctorFollower()
+                                        : conversation.getDoctor();
 
-            } else if (conversation.getTutor() != null) {
+                        otherParticipant = otherDoctor.getUser();
 
-                otherParticipant = conversation.getTutor().getUser();
-                otherName = conversation.getTutor().getFirstName()
-                        + " "
-                        + conversation.getTutor().getLastName();
+                        otherName = "Dr. "
+                                + otherDoctor.getFirstName()
+                                + " "
+                                + otherDoctor.getLastName();
+                    }
 
-            } else if (conversation.getPatient() != null) {
+                    String lastMessage = messages.isEmpty()
+                            ? "Sin mensajes aún"
+                            : messages.get(messages.size() - 1).getContent();
 
-                otherParticipant = conversation.getPatient().getUser();
+                    java.time.LocalDateTime lastMessageAt = messages.isEmpty()
+                            ? conversation.getCreatedAt()
+                            : messages.get(messages.size() - 1).getSentAt();
 
-                otherName = conversation.getPatient().getFirstName()
-                        + " "
-                        + conversation.getPatient().getLastName();
+                    return new ChatDTO.ConversationSummary(
+                            conversation.getId(),
+                            otherParticipant.getId(),
+                            otherName,
+                            otherParticipant.getProfileImageUrl(),
+                            lastMessage,
+                            lastMessageAt,
+                            conversation.getCreatedAt()
+                    );
+                })
+                .toList();
+    }
 
-            } else {
+    /**
+     * Obtiene o crea la conversación entre el médico autenticado
+     * y el médico que registró el movimiento.
+     *
+     * El acceso se concede únicamente si existe seguimiento aprobado.
+     */
+    @Transactional
+    public ChatDTO.ConversationSummary getDoctorConversation(Long targetDoctorId) {
 
-                DoctorEntity otherDoctor =
-                        conversation.getDoctor().getId().equals(currentDoctor.getId())
-                                ? conversation.getDoctorFollower()
-                                : conversation.getDoctor();
+        DoctorEntity currentDoctor =
+                userContextService.getAuthenticatedDoctor();
 
-                otherParticipant = otherDoctor.getUser();
+        DoctorEntity targetDoctor = doctorRepository.findById(targetDoctorId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "No se encontró el médico que registró el movimiento."
+                ));
 
-                otherName = "Dr. "
-                        + otherDoctor.getFirstName()
-                        + " "
-                        + otherDoctor.getLastName();
-            }
-
-            String lastMessage = messages.isEmpty()
-                    ? "Sin mensajes aún"
-                    : messages.get(messages.size() - 1).getContent();
-
-            java.time.LocalDateTime lastMessageAt = messages.isEmpty()
-                    ? conversation.getCreatedAt()
-                    : messages.get(messages.size() - 1).getSentAt();
-
-            return new ChatDTO.ConversationSummary(
-                    conversation.getId(),
-                    otherParticipant.getId(),
-                    otherName,
-                    otherParticipant.getProfileImageUrl(),
-                    lastMessage,
-                    lastMessageAt,
-                    conversation.getCreatedAt()
+        if (currentDoctor.getId().equals(targetDoctor.getId())) {
+            throw new AccessDeniedException(
+                    "Este movimiento fue registrado por tu propio perfil."
             );
+        }
 
-        }).toList();
+        validateApprovedDoctorFollow(currentDoctor, targetDoctor);
+
+        ConversationEntity conversation = conversationRepository
+                .findByDoctorAndDoctorFollower(targetDoctor, currentDoctor)
+                .orElseGet(() ->
+                        createDoctorConversation(currentDoctor, targetDoctor)
+                );
+
+        List<MessageEntity> messages =
+                messageRepository.findByConversationOrderBySentAtAsc(conversation);
+
+        String lastMessage = messages.isEmpty()
+                ? "Sin mensajes aún"
+                : messages.get(messages.size() - 1).getContent();
+
+        java.time.LocalDateTime lastMessageAt = messages.isEmpty()
+                ? conversation.getCreatedAt()
+                : messages.get(messages.size() - 1).getSentAt();
+
+        return new ChatDTO.ConversationSummary(
+                conversation.getId(),
+                targetDoctor.getUser().getId(),
+                "Dr. " + targetDoctor.getFirstName() + " "
+                        + targetDoctor.getLastName(),
+                targetDoctor.getUser().getProfileImageUrl(),
+                lastMessage,
+                lastMessageAt,
+                conversation.getCreatedAt()
+        );
     }
 
     private void ensureTutorConversations(TutorEntity tutor) {
@@ -294,7 +349,6 @@ public class ConversationService {
         }
 
         if (conversation.getPatient() != null) {
-
             UserEntity patientUser =
                     conversation.getPatient().getUser();
 
@@ -347,5 +401,39 @@ public class ConversationService {
                     "No tenés permiso para acceder a esta conversación"
             );
         }
+
+        if (conversation.getPatient() == null) {
+            validateApprovedDoctorFollow(
+                    conversation.getDoctorFollower(),
+                    conversation.getDoctor()
+            );
+        }
+    }
+
+    private void validateApprovedDoctorFollow(
+            DoctorEntity doctorFollower,
+            DoctorEntity doctor
+    ) {
+
+        if (doctorFollower == null || doctor == null
+                || !hasApprovedDoctorFollow(doctorFollower, doctor)) {
+
+            throw new AccessDeniedException(
+                    "Para acceder a este chat necesitás tener un seguimiento aprobado con este médico."
+            );
+        }
+    }
+
+    private boolean hasApprovedDoctorFollow(
+            DoctorEntity doctorFollower,
+            DoctorEntity doctor
+    ) {
+
+        return followRequestRepository
+                .existsByDoctorFollowerAndDoctorAndStatusIn(
+                        doctorFollower,
+                        doctor,
+                        List.of(FollowRequestStatus.APPROVED)
+                );
     }
 }

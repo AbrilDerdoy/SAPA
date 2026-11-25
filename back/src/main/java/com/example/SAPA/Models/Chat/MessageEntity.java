@@ -1,9 +1,12 @@
+
 package com.example.SAPA.Models.Chat;
 
 import com.example.SAPA.Models.Entities.UserEntity;
+import com.example.SAPA.Models.MedicalRecord.MedicalRecordMovementEntity;
 import com.example.SAPA.enums.MessageType;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +18,10 @@ import java.util.List;
 @Entity
 @Table(name = "message")
 public class MessageEntity {
-    //Entidad de mensaje.
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="message_id")
+    @Column(name = "message_id")
     private Long id;
 
     @ManyToOne
@@ -35,6 +38,10 @@ public class MessageEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MessageType type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "medical_record_movement_id")
+    private MedicalRecordMovementEntity medicalRecordMovement;
 
     @OneToMany(mappedBy = "message")
     @Builder.Default

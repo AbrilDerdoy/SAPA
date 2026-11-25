@@ -1,0 +1,91 @@
+.content-menu {
+    position: relative;
+    top: auto;
+    right: auto;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 5px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.menu-toggle:hover {
+    background: #dce9e7;
+}
+
+.menu-toggle img {
+    width: 19px;
+    height: 19px;
+    object-fit: contain;
+}
+
+.content-menu-dropdown {
+    position: absolute;
+    top: 35px;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    min-width: 145px;
+    padding: 5px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.content-menu-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.report-option {
+    color: #b7791f;
+}
+
+.report-option:hover {
+    background: #fff8e8;
+}
+
+.edit-option {
+    color: #02968c;
+}
+
+.edit-option:hover {
+    background: #ecf8f6;
+}
+
+.delete-option {
+    color: #c0392b;
+}
+
+.delete-option:hover {
+    background: #fbeaea;
+}
+
+@media (max-width: 480px) {
+    .content-menu-dropdown {
+        min-width: 130px;
+    }
+}

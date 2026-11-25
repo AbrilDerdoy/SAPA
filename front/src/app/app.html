@@ -130,7 +130,7 @@
   <router-outlet/>
 </main>
 
-@if (auth.isAuthenticated() && !requiresTutor()) {
+@if (auth.isAuthenticated() && !requiresTutor() && !auth.isAdmin()) {
   <app-chat-bubble/>
 }
 
@@ -152,8 +152,10 @@
     </p>
 
     <p class="footer-contact">
-      Contacto:
-      <a href="mailto:sapabackend@gmail.com">sapabackend@gmail.com</a>
+      <a href="mailto:sapabackend@gmail.com" target="_blank">Contacto</a>
+    </p>
+    <p class="footer-contact">
+      <a routerLink="/terminos-y-condiciones">Terminos y condiciones</a>
     </p>
 
     <span class="footer-copy">

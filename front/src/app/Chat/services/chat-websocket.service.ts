@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import {
   Client,
@@ -204,7 +205,7 @@ export class ChatWebSocketService {
 
   private subscribeToPresence(userId: number): void {
 
-    if (!this.client?.connected) {
+    if (!this.client?.connected || userId <= 0) {
       return;
     }
 
@@ -260,7 +261,8 @@ export class ChatWebSocketService {
 
   sendMessage(
     conversationId: number,
-    content: string
+    content: string,
+    medicalRecordMovementId: number | null = null
   ): boolean {
 
     if (!this.client?.connected) {
@@ -280,7 +282,8 @@ export class ChatWebSocketService {
         destination: `/app/chat/${conversationId}`,
         body: JSON.stringify({
           content: cleanContent,
-          type: 'TEXT'
+          type: 'TEXT',
+          medicalRecordMovementId
         })
       });
 
@@ -298,7 +301,6 @@ export class ChatWebSocketService {
   }
 
   private clearSubscriptions(): void {
-
     this.conversationSubscription = null;
     this.presenceSubscription = null;
   }
@@ -316,7 +318,6 @@ export class ChatWebSocketService {
     this.connectionSubject.next(false);
 
     if (this.client) {
-
       const currentClient = this.client;
       this.client = null;
 

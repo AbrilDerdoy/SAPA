@@ -1,3 +1,4 @@
+
 package com.example.SAPA.DTOs.Request;
 
 import jakarta.validation.constraints.FutureOrPresent;
@@ -21,12 +22,19 @@ public record AddMedicationRequestDTO(
         LocalDate startDate,
 
         @FutureOrPresent(message = "La fecha de finalización debe ser una fecha presente o futura.")
-        LocalDate endDate
+        LocalDate endDate,
+
+        @NotBlank(message = "La justificación del movimiento es obligatoria.")
+        @Size(max = 10000, message = "La justificación no puede superar los 10000 caracteres.")
+        String justification
+
 ) {
 
     public AddMedicationRequestDTO {
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("La fecha de finalización no puede ser anterior a la fecha de inicio.");
+            throw new IllegalArgumentException(
+                    "La fecha de finalización no puede ser anterior a la fecha de inicio."
+            );
         }
     }
 }

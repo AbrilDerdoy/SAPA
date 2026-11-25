@@ -1,14 +1,28 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { Router } from '@angular/router';
-import { NotificationResponse, NotificationType } from '../../models/notification-response';
+
+import {
+  NotificationResponse,
+  NotificationType,
+} from '../../models/notification-response';
+
 import { NotificationService } from '../../services/notification.service';
 
 function readRole(): string {
   try {
     const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
-    return String(usuario.role ?? '').toUpperCase().replace('ROLE_', '');
+
+    return String(usuario.role ?? '')
+      .toUpperCase()
+      .replace('ROLE_', '');
   } catch {
     return '';
   }
@@ -59,7 +73,9 @@ export class NotificationHistory implements OnInit {
         (status === 'UNREAD' && !notification.readed) ||
         (status === 'READ' && notification.readed);
 
-      const notificationDate = this.getLocalDate(notification.createdAt);
+      const notificationDate = this.getLocalDate(
+        notification.createdAt,
+      );
 
       const matchesFrom = !from || notificationDate >= from;
       const matchesTo = !to || notificationDate <= to;
@@ -75,7 +91,10 @@ export class NotificationHistory implements OnInit {
   });
 
   readonly unreadCount = computed(
-    () => this.notifications().filter((notification) => !notification.readed).length,
+    () =>
+      this.notifications().filter(
+        (notification) => !notification.readed,
+      ).length,
   );
 
   ngOnInit(): void {
@@ -98,37 +117,59 @@ export class NotificationHistory implements OnInit {
       },
       error: (error: unknown) => {
         console.error('Error al cargar el historial:', error);
+
         this.errorMessage.set(
           'No se pudo cargar el historial de notificaciones.',
         );
+
         this.loading.set(false);
       },
-      complete: () => this.loading.set(false),
+      complete: () => {
+        this.loading.set(false);
+      },
     });
   }
 
   openNotification(notification: NotificationResponse): void {
     if (!notification.readed) {
-      this.notificationService.markAsRead(notification.notificationId).subscribe({
-        next: () => {
-          this.notifications.update((current) =>
-            current.map((item) =>
-              item.notificationId === notification.notificationId
-                ? { ...item, readed: true }
-                : item,
-            ),
-          );
-        },
-        error: (error: unknown) => {
-          console.error('No se pudo marcar la notificación como leída:', error);
-        },
+      this.notificationService
+        .markAsRead(notification.notificationId)
+        .subscribe({
+          next: () => {
+            this.notifications.update((current) =>
+              current.map((item) =>
+                item.notificationId === notification.notificationId
+                  ? { ...item, readed: true }
+                  : item,
+              ),
+            );
+          },
+          error: (error: unknown) => {
+            console.error(
+              'No se pudo marcar la notificación como leída:',
+              error,
+            );
+          },
+        });
+    }
+
+    if (notification.type === 'MESSAGE') {
+      const contactName = notification.msg
+        .replace(/\s+te envió un mensaje\.?$/i, '')
+        .trim();
+
+      void this.router.navigate(['/chat'], {
+        queryParams: contactName ? { contact: contactName } : {},
       });
+
+      return;
     }
 
     const role = readRole();
-    const destination = this.getNotificationDestination(notification, role);
 
-    void this.router.navigate(destination);
+    void this.router.navigate(
+      this.getNotificationDestination(notification, role),
+    );
   }
 
   private getNotificationDestination(
@@ -136,6 +177,11 @@ export class NotificationHistory implements OnInit {
     role: string,
   ): string[] {
     switch (notification.type) {
+      case 'MEDICAL_RECORD':
+        return role === 'DOCTOR'
+          ? ['/mis-pacientes']
+          : ['/medical-record'];
+
       case 'MESSAGE':
         return ['/chat'];
 
@@ -193,6 +239,9 @@ export class NotificationHistory implements OnInit {
 
       case 'QUESTIONNAIRE':
         return 'Cuestionario';
+
+      case 'MEDICAL_RECORD':
+        return 'Ficha médica';
 
       default:
         return 'Notificación';

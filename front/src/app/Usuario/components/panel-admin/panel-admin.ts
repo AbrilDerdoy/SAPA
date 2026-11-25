@@ -4,23 +4,68 @@ import { form, FormField, required } from '@angular/forms/signals';
 import { FormError } from '../../../Common/form-error/form-error';
 import { SpecialityDTO } from '../../models/SpecialityDTO';
 import { especialidad } from '../../services/Auth/auth';
+import { ReportService } from '../../../report/report-services/report-service';
+import { ReportResponse } from '../../../report/report-DTOs/report-response';
+import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-panel-admin',
-  imports: [FormField,FormError],
+  imports: [FormField, FormError, DatePipe, RouterLink],
   templateUrl: './panel-admin.html',
   styleUrl: './panel-admin.css',
 })
 export class PanelAdmin {
   private readonly userService = inject(UsuarioService);
+  private readonly reportService = inject(ReportService)
 
   pendingDoctors = this.userService.getPendingDoctors();
   specialities = this.userService.specialities;
 
-  cantidadPendientes = computed(()=> this.pendingDoctors.hasValue() ? this.pendingDoctors.value().length : 0);
+  cantidadPendientes = computed(() => this.pendingDoctors.hasValue() ? this.pendingDoctors.value().length : 0);
   readonly accionError = signal<string | null>(null);
   readonly accionMensaje = signal<string | null>(null);
   readonly solicitudesEnProceso = signal<ReadonlySet<number>>(new Set());
+
+  // Reportes
+  readonly reports = signal<ReportResponse[]>([])
+  readonly reportsLoading = signal(false)
+  readonly reportsError = signal<string | null>(null)
+
+  readonly reportTab = signal<'PENDING' | 'REVIEWED'>('PENDING')
+
+  readonly pendingReports = computed(() =>
+    this.reports().filter(report => !report.reviewed)
+  )
+
+  readonly reviewedReports = computed(() =>
+    this.reports().filter(report => report.reviewed)
+  )
+
+  readonly displayedReports = computed(() =>
+    this.reportTab() === 'PENDING'
+      ? this.pendingReports()
+      : this.reviewedReports()
+  )
+
+  readonly cantidadReportes = computed(
+    () => this.pendingReports().length
+  )
+
+  readonly recentReports = computed(() =>
+    [...this.reports()]
+      .sort((a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+      )
+      .slice(0, 2)
+  )
+
+  //
+  constructor() {
+    this.loadReports()
+  }
+
 
   aceptarSolicitud(userId: number) {
     this.gestionarSolicitud(userId, 'aceptar');
@@ -156,48 +201,81 @@ export class PanelAdmin {
     }
     return predeterminado;
   }
-  readonly especialidadEnEdicion = signal<especialidad| null>(null);
+  readonly especialidadEnEdicion = signal<especialidad | null>(null);
   readonly modeloEdicion = signal<SpecialityDTO>({ name: '' });
   readonly formularioEdicion = form(this.modeloEdicion, (especialidad) => {
     required(especialidad.name, { message: 'La especialidad es requerida' });
   });
   readonly guardandoEdicion = signal(false);
-  editarEspecialidad(especialidad:especialidad){
+  editarEspecialidad(especialidad: especialidad) {
     this.accionError.set(null);
     this.accionMensaje.set(null);
     this.especialidadPorEliminar.set(null);
     this.especialidadEnEdicion.set(especialidad);
-    this.modeloEdicion.set({name:especialidad.name});
+    this.modeloEdicion.set({ name: especialidad.name });
   }
-  cancelarEdicion():void{
+  cancelarEdicion(): void {
     this.especialidadEnEdicion.set(null);
   }
-  guardarEdicion(evento:Event):void{
+  guardarEdicion(evento: Event): void {
     evento.preventDefault();
     const enEdicion = this.especialidadEnEdicion();
-    if(!enEdicion || this.guardandoEdicion()) return;
-    if(this.formularioEdicion().invalid()){
+    if (!enEdicion || this.guardandoEdicion()) return;
+    if (this.formularioEdicion().invalid()) {
       this.formularioEdicion.name().markAsTouched();
       return;
     }
     const nombre = this.modeloEdicion().name.trim();
-    if(nombre === enEdicion.name){
+    if (nombre === enEdicion.name) {
       this.cancelarEdicion();
       return;
     }
     this.guardandoEdicion.set(true);
-    this.userService.modificarEspecialidad(enEdicion.id,nombre).subscribe({
-      next:()=>{
+    this.userService.modificarEspecialidad(enEdicion.id, nombre).subscribe({
+      next: () => {
         this.guardandoEdicion.set(false);
         this.accionMensaje.set('Especialidad modificada correctamente');
         this.cancelarEdicion();
         this.specialities.reload();
       },
-      error:(err)=>{
+      error: (err) => {
         this.guardandoEdicion.set(false);
-        this.accionError.set(this.mensajeDeError(err,'No se pudo modificar la especialidad. Intenta nuevamente.'));
-        console.error('Error al modificar especialidad',err);
+        this.accionError.set(this.mensajeDeError(err, 'No se pudo modificar la especialidad. Intenta nuevamente.'));
+        console.error('Error al modificar especialidad', err);
       }
     });
+  }
+
+  loadReports(): void {
+    this.reportsLoading.set(true)
+    this.reportsError.set(null)
+
+    this.reportService.getAllReports().subscribe({
+      next: reports => {
+        this.reports.set(reports)
+        this.reportsLoading.set(false)
+      },
+      error: error => {
+        this.reportsError.set('No se pudieron cargar los reportes.')
+        this.reportsLoading.set(false)
+      }
+    });
+  }
+
+  markAsReviewed(reportId: number): void {
+    this.reportService.markAsReviewed(reportId).subscribe({
+      next: updatedReport => {
+        this.reports.update(reports =>
+          reports.map(report =>
+            report.reportId === updatedReport.reportId
+              ? updatedReport
+              : report
+          )
+        )
+      },
+      error: error => {
+        this.reportsError.set('No se pudo actualizar el reporte.')
+      }
+    })
   }
 }

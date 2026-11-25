@@ -1,4 +1,4 @@
-import { afterNextRender, Component, ElementRef, inject, Injector, input, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, inject, Injector, input, signal, viewChild } from '@angular/core';
 import { PostService } from '../../post-service/post-service';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { PostResponse } from '../../post-DTOs/post-response';
@@ -11,10 +11,13 @@ import { PostAttachments } from '../post-attachments/post-attachments';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { PostComment } from '../../../post-comment/post-comment-component/post-comment/post-comment';
+import { ReportedContentType } from '../../../report/report-DTOs/reported-content-type.type';
+import { ContentMenu } from '../../../content-menu/content-menu-component/content-menu/content-menu';
+import { ReportModal } from '../../../report/report-components/report-modal/report-modal';
 
 @Component({
   selector: 'app-post',
-  imports: [DatePipe, PostForm, PostAttachments, PostComment],
+  imports: [DatePipe, PostForm, PostAttachments, PostComment, ContentMenu, ReportModal],
   templateUrl: './post.html',
   styleUrl: './post.css',
 })
@@ -46,6 +49,10 @@ export class Post {
 
   formVisible = signal(false)
   editingPost = signal<PostResponse | null>(null)
+
+  showReportModal = signal(false)
+  reportContentId = signal<number | null>(null)
+  reportContentType = signal<ReportedContentType>('POST')
 
   ngOnInit(): void {
     if (this.isSharedPost) {
@@ -285,5 +292,34 @@ export class Post {
         }
       }
     })
+  }
+
+  openReportModal(postId: number): void {
+    this.reportContentId.set(postId)
+    this.reportContentType.set('POST')
+    this.showReportModal.set(true)
+  }
+
+  closeReportModal(): void {
+    this.showReportModal.set(false)
+  }
+
+  esAdmin(): boolean {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+      return usuario.role === 'ADMIN'
+    } catch {
+      return false
+    }
+  }
+
+  puedeReportar(post: PostResponse): boolean {
+    try {
+      const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}')
+
+      return usuario.role !== 'ADMIN' && usuario.id !== post.authorId
+    } catch {
+      return false
+    }
   }
 }

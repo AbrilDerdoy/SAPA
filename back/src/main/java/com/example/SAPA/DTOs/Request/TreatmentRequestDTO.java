@@ -1,3 +1,4 @@
+
 package com.example.SAPA.DTOs.Request;
 
 import com.example.SAPA.DTOs.TreatmentDurationDTO;
@@ -23,5 +24,10 @@ public record TreatmentRequestDTO(
 
         @NotNull(message = "La información de frecuencia es obligatoria.")
         @Valid
-        TreatmentFrequencyDTO frequency
+        TreatmentFrequencyDTO frequency,
+
+        @NotBlank(message = "La justificación del movimiento es obligatoria.")
+        @Size(max = 10000, message = "La justificación no puede superar los 10000 caracteres.")
+        String justification
+
 ) {}

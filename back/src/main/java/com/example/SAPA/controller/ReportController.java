@@ -6,8 +6,10 @@ import com.example.SAPA.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @RestController
@@ -20,19 +22,34 @@ public class ReportController {
 
 
     @PostMapping
-    public ResponseEntity<ReportResponseDTO> createReport(@RequestBody CreateReportRequestDTO request) {
+    public ResponseEntity<ReportResponseDTO> createReport(@RequestBody CreateReportRequestDTO request) throws AccessDeniedException {
         return ResponseEntity.status(HttpStatus.CREATED).body(reportService.createReport(request));
     }
 
 
     @GetMapping("/unreviewed")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReportResponseDTO>> getUnreviewed() {
         return ResponseEntity.ok(reportService.getUnreviewed());
     }
 
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReportResponseDTO>> getAllReports() {
+        return ResponseEntity.ok(reportService.getAllReports());
+    }
+
 
     @PatchMapping("/{reportId}/review")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportResponseDTO> markAsReviewed(@PathVariable Long reportId) {
         return ResponseEntity.ok(reportService.markAsReviewed(reportId));
+    }
+
+    @PatchMapping("/{reportId}/delete-post")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteReportedPost(@PathVariable Long reportId) {
+        reportService.deleteReportedPost(reportId);
+        return ResponseEntity.noContent().build();
     }
 }

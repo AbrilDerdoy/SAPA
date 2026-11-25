@@ -1,9 +1,11 @@
+
 <section class="tr">
   <header class="tr__header">
     <div>
       <h1 class="tr__title">{{ title }}</h1>
       <p class="tr__lead">{{ lead }}</p>
     </div>
+
     <a class="back" [routerLink]="backLink">{{ backLabel }}</a>
   </header>
 
@@ -20,7 +22,10 @@
   }
 
   <div class="toolbar">
-    <label class="sr-only" for="treatmentFilter">Buscar tratamiento</label>
+    <label class="sr-only" for="treatmentFilter">
+      Buscar tratamiento
+    </label>
+
     <input
       id="treatmentFilter"
       type="text"
@@ -28,6 +33,7 @@
       autocomplete="off"
       [formField]="filterForm.filter"
     />
+
     <button
       type="button"
       class="toolbar__filters"
@@ -35,16 +41,26 @@
       aria-controls="treatmentFilters"
       [attr.aria-expanded]="filtersOpen()"
       [class.toolbar__filters--active]="filtersOpen() || activeFilters() > 0"
-      (click)="toggleFilters()"
-    >
-      <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
+      (click)="toggleFilters()">
+
+      <span class="burger" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+
       @if (activeFilters() > 0) {
         <span class="toolbar__count">{{ activeFilters() }}</span>
       }
     </button>
-    <!-- Solo el médico puede ver el botón de crear -->
+
     @if (isDoctor && !formOpen()) {
-      <button type="button" class="toolbar__add" (click)="openCreate()">Nuevo tratamiento</button>
+      <button
+        type="button"
+        class="toolbar__add"
+        (click)="openCreate()">
+        Nuevo tratamiento
+      </button>
     }
   </div>
 
@@ -52,7 +68,12 @@
     <div class="filters" id="treatmentFilters">
       <div class="filters__field">
         <label for="sortBy">Ordenar por</label>
-        <select id="sortBy" [value]="sortBy()" (change)="sortBy.set($any($event.target).value)">
+
+        <select
+          id="sortBy"
+          [value]="sortBy()"
+          (change)="sortBy.set($any($event.target).value)">
+
           @for (o of sortOptions; track o.value) {
             <option [value]="o.value">{{ o.label }}</option>
           }
@@ -61,12 +82,14 @@
 
       <div class="filters__field">
         <label for="freqUnit">Frecuencia</label>
+
         <select
           id="freqUnit"
           [value]="frequencyUnitFilter()"
-          (change)="frequencyUnitFilter.set($any($event.target).value)"
-        >
+          (change)="frequencyUnitFilter.set($any($event.target).value)">
+
           <option value="ALL">Todas</option>
+
           @for (u of frequencyUnits; track u.value) {
             <option [value]="u.value">Cada ... {{ u.singular }}</option>
           }
@@ -75,12 +98,14 @@
 
       <div class="filters__field">
         <label for="durUnit">Duración</label>
+
         <select
           id="durUnit"
           [value]="durationUnitFilter()"
-          (change)="durationUnitFilter.set($any($event.target).value)"
-        >
+          (change)="durationUnitFilter.set($any($event.target).value)">
+
           <option value="ALL">Todas</option>
+
           @for (u of durationUnits; track u.value) {
             <option [value]="u.value">{{ u.label }}</option>
           }
@@ -91,8 +116,7 @@
         type="button"
         class="btn btn--outline"
         [disabled]="activeFilters() === 0"
-        (click)="clearFilters()"
-      >
+        (click)="clearFilters()">
         Limpiar
       </button>
     </div>
@@ -117,7 +141,13 @@
     <div class="notice notice--error" role="alert">
       <strong>{{ loadError() }}</strong>
       <p>Revisá tu conexión o volvé a intentar en unos minutos.</p>
-      <button type="button" class="btn btn--outline" (click)="retry()">Reintentar</button>
+
+      <button
+        type="button"
+        class="btn btn--outline"
+        (click)="retry()">
+        Reintentar
+      </button>
     </div>
   } @else {
     @if (visibleTreatments().length === 0) {
@@ -136,30 +166,75 @@
           <li class="card">
             <div class="card__main">
               <h2 class="card__name">{{ t.name }}</h2>
+
               <p class="card__desc">{{ t.description }}</p>
+
               <ul class="chips">
                 <li class="chip">{{ frequencyLabel(t.frequency) }}</li>
                 <li class="chip">{{ durationLabel(t.duration) }}</li>
+
+                @if (t.status === 'SUSPENDED') {
+                  <li class="chip">Suspendido</li>
+                } @else if (t.status === 'FINISHED') {
+                  <li class="chip">Finalizado</li>
+                } @else {
+                  <li class="chip">Activo</li>
+                }
               </ul>
             </div>
 
-            @if (isDoctor) {
+            @if (isDoctor && t.status === 'ACTIVE') {
               <div class="card__actions">
                 @if (confirmId() === t.treatmentId) {
-                  <span class="card__confirm">¿Eliminar?</span>
+                  <div class="card__suspend-confirm">
+                    <label [for]="'suspend-' + t.treatmentId">
+                      Justificación de la suspensión
+                    </label>
+
+                    <textarea
+                      [id]="'suspend-' + t.treatmentId"
+                      rows="3"
+                      placeholder="Explicá por qué se suspende este tratamiento..."
+                      [value]="suspendJustification()"
+                      (input)="suspendJustification.set($any($event.target).value)">
+                    </textarea>
+
+                    <span class="card__confirm">
+                      El tratamiento no se eliminará; quedará suspendido en el historial.
+                    </span>
+
+                    <button
+                      type="button"
+                      class="btn btn--danger"
+                      [disabled]="suspendingId() === t.treatmentId"
+                      (click)="confirmDelete(t)">
+
+                      {{ suspendingId() === t.treatmentId
+                        ? 'Suspendiendo…'
+                        : 'Confirmar suspensión' }}
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn btn--outline"
+                      [disabled]="suspendingId() === t.treatmentId"
+                      (click)="cancelDelete()">
+                      Cancelar
+                    </button>
+                  </div>
+                } @else {
                   <button
                     type="button"
-                    class="btn btn--danger"
-                    [disabled]="deletingId() === t.treatmentId"
-                    (click)="confirmDelete(t)"
-                  >
-                    {{ deletingId() === t.treatmentId ? 'Eliminando…' : 'Confirmar' }}
+                    class="btn btn--outline"
+                    (click)="openEdit(t)">
+                    Editar
                   </button>
-                  <button type="button" class="btn btn--outline" (click)="cancelDelete()">Cancelar</button>
-                } @else {
-                  <button type="button" class="btn btn--outline" (click)="openEdit(t)">Editar</button>
-                  <button type="button" class="btn btn--outline" (click)="askDelete(t.treatmentId)">
-                    Eliminar
+
+                  <button
+                    type="button"
+                    class="btn btn--outline"
+                    (click)="askDelete(t.treatmentId)">
+                    Suspender
                   </button>
                 }
               </div>

@@ -2,13 +2,20 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   ChangeDetectorRef,
   NgZone,
   effect,
   inject
 } from '@angular/core';
 
-import { RouterLink } from '@angular/router';
+import {
+  Router,
+  RouterLink,
+  NavigationEnd
+} from '@angular/router';
+
+import { filter, Subscription } from 'rxjs';
 
 import { ChatService } from '../../services/chat.service';
 import { ChatBubblePreferenceService } from '../../services/chat-bubble-preference.service';
@@ -22,15 +29,20 @@ import { ChatWindow } from '../chat-window/chat-window';
   templateUrl: './chat-bubble.html',
   styleUrl: './chat-bubble.css'
 })
-export class ChatBubble implements OnInit {
+export class ChatBubble implements OnInit, OnDestroy {
 
   private readonly chatService = inject(ChatService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly ngZone = inject(NgZone);
+  private readonly router = inject(Router);
+
+  private readonly subscriptions = new Subscription();
 
   readonly bubblePreference = inject(ChatBubblePreferenceService);
 
   isOpen = false;
+  isChatPage = false;
+
   loading = false;
   errorMessage = '';
 
@@ -40,6 +52,9 @@ export class ChatBubble implements OnInit {
   private loadingRequest = false;
 
   constructor() {
+    this.isChatPage =
+      this.router.url.split('?')[0] === '/chat';
+
     this.bubblePreference.loadPreference();
 
     effect(() => {
@@ -50,11 +65,26 @@ export class ChatBubble implements OnInit {
   }
 
   ngOnInit(): void {
-    // Las conversaciones se cargan al abrir la burbuja.
+    this.subscriptions.add(
+      this.router.events
+        .pipe(filter(event => event instanceof NavigationEnd))
+        .subscribe(event => {
+          const navigation = event as NavigationEnd;
+
+          this.isChatPage =
+            navigation.urlAfterRedirects.split('?')[0] === '/chat';
+
+          if (this.isChatPage) {
+            this.closeBubble();
+          }
+
+          this.cdr.detectChanges();
+        })
+    );
   }
 
   toggleBubble(): void {
-    if (!this.bubblePreference.enabled()) {
+    if (!this.bubblePreference.enabled() || this.isChatPage) {
       return;
     }
 
@@ -107,7 +137,9 @@ export class ChatBubble implements OnInit {
         this.ngZone.run(() => {
           console.error('Error al cargar conversaciones:', error);
 
-          this.errorMessage = 'No se pudieron cargar tus conversaciones.';
+          this.errorMessage =
+            'No se pudieron cargar tus conversaciones.';
+
           this.loading = false;
           this.loadingRequest = false;
 
@@ -167,5 +199,9 @@ export class ChatBubble implements OnInit {
       parts[0].charAt(0) +
       parts[parts.length - 1].charAt(0)
     ).toUpperCase();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 }

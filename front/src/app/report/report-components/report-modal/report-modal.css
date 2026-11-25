@@ -1,0 +1,82 @@
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.report-modal {
+    width: 100%;
+    max-width: 480px;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.report-modal h2 {
+    margin-top: 0;
+    color: #222;
+}
+
+.report-modal textarea {
+    width: 100%;
+    min-height: 150px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font: inherit;
+}
+
+.character-count {
+    display: block;
+    text-align: right;
+    color: #777;
+    font-size: 0.85rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.modal-actions button,
+.report-success button {
+    padding: 0.7rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.cancel-button {
+    background: #eee;
+    color: #333;
+}
+
+.submit-button,
+.report-success button {
+    background: #02968c;
+    color: white;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #c62828;
+    font-size: 0.9rem;
+}
+
+.report-success {
+    text-align: center;
+}

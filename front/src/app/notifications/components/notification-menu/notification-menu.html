@@ -1,6 +1,4 @@
-
 <div class="notification-menu">
-
   <button
     type="button"
     class="notification-trigger"
@@ -16,111 +14,90 @@
       aria-hidden="true">
 
     @if (unreadCount() > 0) {
-      <span class="unread-badge" aria-label="{{ unreadCount() }} sin leer">
+    <span class="unread-badge" aria-label="{{ unreadCount() }} sin leer">
         {{ unreadCount() > 99 ? '99+' : unreadCount() }}
       </span>
     }
-
   </button>
 
   @if (menuAbierto()) {
-    <section
-      class="notification-dropdown"
-      id="notification-dropdown"
-      aria-label="Notificaciones">
+  <section
+    class="notification-dropdown"
+    id="notification-dropdown"
+    aria-label="Notificaciones">
 
-      <div class="notification-header">
+    <div class="notification-header">
+      <h2>Notificaciones</h2>
 
-        <h2>Notificaciones</h2>
-
-        @if (unreadCount() > 0) {
-          <button
-            type="button"
-            class="retry-button mark-all-button"
-            [disabled]="markAllLoading()"
-            (click)="markAllAsRead()">
-
-            {{ markAllLoading() ? 'Marcando...' : 'Marcar todas como leídas' }}
-          </button>
-        }
-
-      </div>
-
-      @if (errorMessage()) {
-        <div class="notification-error" role="alert">
-
-          <span>{{ errorMessage() }}</span>
-
-          <button
-            type="button"
-            class="retry-button"
-            (click)="loadNotifications()">
-            Reintentar
-          </button>
-
-        </div>
+      @if (unreadCount() > 0) {
+      <button
+        type="button"
+        class="retry-button mark-all-button"
+        [disabled]="markAllLoading()"
+        (click)="markAllAsRead()">
+        {{ markAllLoading() ? 'Marcando...' : 'Marcar todas como leídas' }}
+      </button>
       }
+    </div>
 
-      @if (loading()) {
-        <p class="notification-status" role="status">
-          Cargando notificaciones...
-        </p>
-      } @else if (notifications().length === 0 && !errorMessage()) {
-        <p class="notification-status">
-          No tenés notificaciones.
-        </p>
-      } @else {
+    @if (errorMessage()) {
+    <div class="notification-error" role="alert">
+      <span>{{ errorMessage() }}</span>
+      <button
+        type="button"
+        class="retry-button"
+        (click)="loadNotifications()">
+        Reintentar
+      </button>
+    </div>
+    }
 
-        <ul>
-
-          @for (
-            notification of visibleNotifications();
-            track notification.notificationId
-          ) {
-            <li>
-
-              <button
-                type="button"
-                class="notification-item"
-                [class.unread]="!notification.readed"
-                [disabled]="processingIds().has(notification.notificationId)"
-                (click)="openNotification(notification)">
+    @if (loading()) {
+    <p class="notification-status" role="status">
+      Cargando notificaciones...
+    </p>
+    } @else if (notifications().length === 0 && !errorMessage()) {
+    <p class="notification-status">
+      No tenés notificaciones.
+    </p>
+    } @else {
+    <ul>
+      @for (
+      notification of visibleNotifications();
+      track notification.notificationId
+      ) {
+      <li>
+        <button
+          type="button"
+          class="notification-item"
+          [class.unread]="!notification.readed"
+          [disabled]="processingIds().has(notification.notificationId)"
+          (click)="openNotification(notification)">
 
                 <span class="notification-copy">
-
                   <strong>{{ notification.title }}</strong>
-
                   <span>{{ notification.msg }}</span>
-
                   <time>{{ notification.createdAt | date: 'short' }}</time>
-
                 </span>
 
-                @if (!notification.readed) {
-                  <span
-                    class="unread-indicator"
-                    aria-label="Sin leer">
+          @if (!notification.readed) {
+          <span
+            class="unread-indicator"
+            aria-label="Sin leer">
                   </span>
-                }
-
-              </button>
-
-            </li>
           }
-
-        </ul>
+        </button>
+      </li>
       }
+    </ul>
+    }
 
-      <a
-        class="notification-history-link"
-        routerLink="/historial-notificaciones"
-        (click)="toggleMenu()">
-
-        Ver historial completo
-
-      </a>
-
-    </section>
+    <a
+      class="notification-history-link"
+      routerLink="/historial-notificaciones"
+      (click)="toggleMenu()">
+      Ver historial completo
+    </a>
+  </section>
   }
-
 </div>

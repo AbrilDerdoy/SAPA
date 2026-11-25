@@ -1,7 +1,8 @@
+
 package com.example.SAPA.DTOs.Request;
 
 import com.example.SAPA.enums.MedicationStatus;
-import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -15,12 +16,18 @@ public record UpdateMedicationRequestDTO(
 
         LocalDate endDate,
 
-        MedicationStatus status
-) {
+        MedicationStatus status,
 
+        @NotBlank(message = "La justificación del movimiento es obligatoria.")
+        @Size(max = 10000, message = "La justificación no puede superar los 10000 caracteres.")
+        String justification
+
+) {
     public UpdateMedicationRequestDTO {
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("La fecha de finalización no puede ser anterior a la fecha de inicio.");
+            throw new IllegalArgumentException(
+                    "La fecha de finalización no puede ser anterior a la fecha de inicio."
+            );
         }
     }
 }

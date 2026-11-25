@@ -1,3 +1,4 @@
+
 <main class="chat-page">
 
   <section class="chat-container">
@@ -5,6 +6,7 @@
     <header class="chat-header">
 
       <div class="header-brand">
+
         <div class="brand-icon">
           <span>S</span>
         </div>
@@ -13,6 +15,7 @@
           <h1>SAPA</h1>
           <p>Mensajería</p>
         </div>
+
       </div>
 
       <div class="header-actions">
@@ -24,15 +27,144 @@
     <div class="chat-content">
 
       <aside class="chat-sidebar">
+
         <app-conversation-list
+          [requestedConversationId]="requestedConversationId"
+          [requestedMovementId]="requestedDoctorId === null ? requestedMovementId : null"
           (conversationSelected)="onConversationSelected($event)"
         />
+
       </aside>
 
       <section class="chat-main">
-        <app-chat-window
-          [conversation]="selectedConversation"
-        />
+
+        @if (resolvingDoctorChat || checkingFollowStatus) {
+
+          <div class="chat-access-wrapper">
+
+            <div class="access-card loading-card">
+
+              <div class="access-icon loading-icon">
+                <span>...</span>
+              </div>
+
+              <h2>Verificando acceso</h2>
+
+              <p>
+                Estamos comprobando tu seguimiento con
+                <strong>
+                  {{ requestedMovementDoctorName || 'el profesional' }}
+                </strong>.
+              </p>
+
+              <span class="loading-indicator"></span>
+
+            </div>
+
+          </div>
+
+        } @else if (doctorChatBlocked) {
+
+          <div class="chat-access-wrapper">
+
+            <div class="access-card">
+
+              <div class="access-icon">
+                @if (followStatus === 'pending') {
+                  <span>⌛</span>
+                } @else {
+                  <span>🔒</span>
+                }
+              </div>
+
+              <span class="access-eyebrow">
+                ACCESO AL CHAT
+              </span>
+
+              <h2>
+                @if (followStatus === 'pending') {
+                  Solicitud pendiente
+                } @else {
+                  Seguimiento necesario
+                }
+              </h2>
+
+              @if (requestedMovementDoctorName) {
+
+                <div class="doctor-reference">
+                  <span>Médico</span>
+                  <strong>
+                    {{ requestedMovementDoctorName }}
+                  </strong>
+                </div>
+
+              }
+
+              <p
+                class="access-description"
+                [class.access-error]="accessError">
+                {{ accessMessage }}
+              </p>
+
+              @if (followStatus === 'none' && !accessError) {
+
+                <button
+                  type="button"
+                  class="follow-doctor-button"
+                  [disabled]="requestingFollow"
+                  (click)="requestDoctorFollow()">
+
+                  @if (requestingFollow) {
+                    <span class="button-spinner"></span>
+                    Enviando solicitud...
+                  } @else {
+                    Enviar solicitud de seguimiento
+                  }
+
+                </button>
+
+                <span class="access-hint">
+                  Podrás ingresar al chat cuando el médico apruebe
+                  tu solicitud.
+                </span>
+
+              }
+
+              @if (followStatus === 'pending') {
+
+                <div class="pending-status">
+                  <span class="pending-dot"></span>
+                  Esperando aprobación del médico
+                </div>
+
+              }
+
+              @if (accessError) {
+
+                <button
+                  type="button"
+                  class="retry-button"
+                  (click)="retryDoctorChat()">
+                  Volver a intentar
+                </button>
+
+              }
+
+            </div>
+
+          </div>
+
+        } @else {
+
+          <app-chat-window
+            [conversation]="selectedConversation"
+            [requestedMovementId]="requestedMovementId"
+            [requestedMovementTitle]="requestedMovementTitle"
+            [requestedMovementComment]="requestedMovementComment"
+          />
+
+        }
+
       </section>
 
     </div>

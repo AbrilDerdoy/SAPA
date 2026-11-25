@@ -5,6 +5,7 @@ import {
   inject,
   signal
 } from '@angular/core';
+
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -16,7 +17,10 @@ import { ChatBubblePreferenceService } from '../../../Chat/services/chat-bubble-
 function readRole(): string {
   try {
     const usuario = JSON.parse(localStorage.getItem('usuario') ?? '{}');
-    return String(usuario.role ?? '').toUpperCase().replace('ROLE_', '');
+
+    return String(usuario.role ?? '')
+      .toUpperCase()
+      .replace('ROLE_', '');
   } catch {
     return '';
   }
@@ -67,11 +71,15 @@ export class UserMenu {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.menuAbierto()) return;
+    if (!this.menuAbierto()) {
+      return;
+    }
 
     const target = event.target as Node | null;
 
-    if (target && this.host.nativeElement.contains(target)) return;
+    if (target && this.host.nativeElement.contains(target)) {
+      return;
+    }
 
     this.menuAbierto.set(false);
     this.configuracionAbierta.set(false);

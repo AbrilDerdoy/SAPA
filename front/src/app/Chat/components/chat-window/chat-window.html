@@ -1,9 +1,7 @@
+
 @if (conversation) {
-
   <section class="chat-container">
-
     <header class="chat-header">
-
       <div class="participant-avatar">
         @if (conversation.otherParticipantProfileImageUrl) {
           <img
@@ -30,11 +28,9 @@
       <div class="header-label">
         Mensajería SAPA
       </div>
-
     </header>
 
     <div class="messages-container">
-
       @if (loading) {
         <div class="messages-feedback">
           <span class="loader"></span>
@@ -47,16 +43,13 @@
           <p>¡Podés iniciar la conversación!</p>
         </div>
       } @else {
-
         @for (message of messages; track message.messageId) {
-
           <div
             class="message-row"
             [class.own-message]="message.type !== 'SYSTEM' && isOwnMessage(message)"
             [class.system-message]="message.type === 'SYSTEM'">
 
             <div class="message-bubble">
-
               @if (message.type === 'SYSTEM') {
                 <span class="system-label">Aviso del sistema</span>
               } @else if (!isOwnMessage(message)) {
@@ -65,17 +58,30 @@
                 </span>
               }
 
+              @if (message.medicalRecordMovementId) {
+                <div class="movement-reference">
+                  <span class="movement-reference-label">
+                    Movimiento de ficha médica
+                  </span>
+
+                  <strong>
+                    {{ message.medicalRecordMovementTitle || 'Movimiento médico' }}
+                  </strong>
+
+                  <small>
+                    Referencia #{{ message.medicalRecordMovementId }}
+                  </small>
+                </div>
+              }
+
               @if (message.type === 'FILE') {
-
                 @for (attachment of message.attachments; track attachment.attachmentId) {
-
                   @if (attachment.type === 'IMAGE') {
                     <a
                       class="image-attachment"
                       [href]="getAttachmentUrl(attachment.fileUrl)"
                       target="_blank"
                       rel="noopener noreferrer">
-
                       <img
                         class="message-image"
                         [src]="getAttachmentUrl(attachment.fileUrl)"
@@ -87,17 +93,13 @@
                       [href]="getAttachmentUrl(attachment.fileUrl)"
                       target="_blank"
                       rel="noopener noreferrer">
-
                       <span class="file-icon">PDF</span>
-
                       <span class="file-name">
                         {{ attachment.fileName }}
                       </span>
                     </a>
                   }
-
                 }
-
               } @else {
                 <p>{{ message.content }}</p>
               }
@@ -105,15 +107,10 @@
               <span class="message-time">
                 {{ message.sentAt | date:'shortTime' }}
               </span>
-
             </div>
-
           </div>
-
         }
-
       }
-
     </div>
 
     @if (errorMessage) {
@@ -121,7 +118,6 @@
     }
 
     <form class="message-form" (ngSubmit)="sendMessage()">
-
       <label class="attachment-button" title="Adjuntar imagen o PDF">
         <span>📎</span>
 
@@ -148,15 +144,10 @@
         Enviar
         <span>➤</span>
       </button>
-
     </form>
-
   </section>
-
 } @else {
-
   <section class="welcome-chat">
-
     <div class="welcome-decoration">
       <div class="welcome-icon">
         <span>✉</span>
@@ -173,7 +164,5 @@
     <span class="welcome-caption">
       Mensajería para la comunidad SAPA
     </span>
-
   </section>
-
 }

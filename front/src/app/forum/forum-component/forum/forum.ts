@@ -6,10 +6,13 @@ import { FormsModule } from '@angular/forms';
 import { Auth } from '../../../Usuario/services/Auth/auth';
 import { Usuario } from '../../../Usuario/models/usuario';
 import { Router, RouterLink } from '@angular/router';
+import { ReportModal } from '../../../report/report-components/report-modal/report-modal';
+import { ReportedContentType } from '../../../report/report-DTOs/reported-content-type.type';
+import { ContentMenu } from '../../../content-menu/content-menu-component/content-menu/content-menu';
 
 @Component({
   selector: 'app-forum',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ReportModal, ContentMenu],
   templateUrl: './forum.html',
   styleUrl: './forum.css',
 })
@@ -47,6 +50,11 @@ export class Forum implements OnInit {
 
   // Formulario.
   formVisible = signal(false)
+
+  // Reportes
+  showReportModal = signal(false)
+  reportContentId = signal<number | null>(null)
+  reportContentType = signal<ReportedContentType>('FORUM')
 
   // Obtener todos los foros.
   loadForums(): void {
@@ -142,4 +150,18 @@ export class Forum implements OnInit {
       error: () => this.error.set('Error al eliminar el foro.')
     })
   }
+
+  openReportModal(forumId: number) {
+    this.reportContentId.set(forumId)
+    this.reportContentType.set('FORUM')
+    this.showReportModal.set(true)
+  }
+
+  closeReportModal() {
+    this.showReportModal.set(false)
+  }
+
+  navigateToEditForum(forum: ForumResponse): void {
+  this.router.navigate(['/forums/update', forum.title])
+}
 }

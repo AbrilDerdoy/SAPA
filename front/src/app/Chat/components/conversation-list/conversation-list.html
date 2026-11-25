@@ -1,6 +1,5 @@
 
 <section class="conversation-panel">
-
   <div class="panel-heading">
     <div>
       <h2>Conversaciones</h2>
@@ -67,8 +66,10 @@
 
   @if (!loading && !errorMessage && conversations.length > 0) {
     <div class="conversation-items">
-
-      @for (conversation of filteredConversations; track conversation.conversationId) {
+      @for (
+        conversation of filteredConversations;
+        track conversation.conversationId
+      ) {
         <button
           type="button"
           class="conversation-item"
@@ -86,7 +87,6 @@
           </div>
 
           <div class="conversation-info">
-
             <div class="conversation-top">
               <h3>{{ conversation.otherParticipantName }}</h3>
 
@@ -98,7 +98,6 @@
             <p class="last-message">
               {{ conversation.lastMessage || 'Sin mensajes aún' }}
             </p>
-
           </div>
         </button>
       }
@@ -110,8 +109,6 @@
           <p>No encontramos conversaciones con ese nombre.</p>
         </div>
       }
-
     </div>
   }
-
 </section>

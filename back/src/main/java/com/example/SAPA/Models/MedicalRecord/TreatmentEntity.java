@@ -1,5 +1,7 @@
+
 package com.example.SAPA.Models.MedicalRecord;
 
+import com.example.SAPA.enums.TreatmentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +18,7 @@ public class TreatmentEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="treatment_id")
+    @Column(name = "treatment_id")
     private Long id;
 
     private String name;
@@ -24,14 +26,19 @@ public class TreatmentEntity {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name="duration_id", nullable = false)
+    @JoinColumn(name = "duration_id", nullable = false)
     private DurationEntity duration;
 
     @ManyToOne
-    @JoinColumn(name="frecuency_id", nullable = false)
+    @JoinColumn(name = "frecuency_id", nullable = false)
     private FrequencyEntity frequency;
 
     @ManyToOne
     @JoinColumn(name = "medical_record_id", nullable = false)
     private MedicalRecordEntity medicalRecord;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private TreatmentStatus status = TreatmentStatus.ACTIVE;
 }
