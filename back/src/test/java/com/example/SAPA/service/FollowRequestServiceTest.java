@@ -198,7 +198,7 @@ class FollowRequestServiceTest {
     }
 
     @Test
-    void approvingTutorRequestCreatesTutorDoctorConversationAndPatientSystemMessage() {
+    void approvingAdultPatientFollowCreatesPatientAndTutorDoctorConversations() {
         UserEntity tutorUser = UserEntity.builder().id(30L).build();
         TutorEntity tutor = TutorEntity.builder()
                 .id(31L)
@@ -227,9 +227,15 @@ class FollowRequestServiceTest {
                 .doctor(doctor)
                 .status(FollowRequestStatus.PENDING)
                 .build();
-        com.example.SAPA.Models.Chat.ConversationEntity conversation =
+        com.example.SAPA.Models.Chat.ConversationEntity patientConversation =
                 com.example.SAPA.Models.Chat.ConversationEntity.builder()
                         .id(37L)
+                        .patient(patient)
+                        .doctor(doctor)
+                        .build();
+        com.example.SAPA.Models.Chat.ConversationEntity tutorConversation =
+                com.example.SAPA.Models.Chat.ConversationEntity.builder()
+                        .id(38L)
                         .tutor(tutor)
                         .doctor(doctor)
                         .build();
@@ -247,13 +253,80 @@ class FollowRequestServiceTest {
                 patient,
                 TutorLinkStatus.ACTIVE
         )).thenReturn(true);
-        when(conversationService.createTutorConversation(tutor, doctor)).thenReturn(conversation);
+        when(patientAccessService.requiresTutor(patient)).thenReturn(false);
+        when(conversationService.createConversation(patient, doctor))
+                .thenReturn(patientConversation);
+        when(conversationService.createTutorConversation(tutor, doctor))
+                .thenReturn(tutorConversation);
 
         followRequestService.approve(request.getId());
 
+        verify(conversationService).createConversation(patient, doctor);
         verify(conversationService).createTutorConversation(tutor, doctor);
         verify(messageService).sendSystemMessage(
-                eq(conversation),
+                eq(patientConversation),
+                eq("Se creó un seguimiento para Paz Paciente.")
+        );
+        verify(messageService).sendSystemMessage(
+                eq(tutorConversation),
+                eq("Se creó un seguimiento para Paz Paciente.")
+        );
+    }
+
+    @Test
+    void approvingMinorPatientFollowCreatesOnlyTutorDoctorConversation() {
+        UserEntity tutorUser = UserEntity.builder().id(40L).build();
+        TutorEntity tutor = TutorEntity.builder()
+                .id(41L)
+                .user(tutorUser)
+                .build();
+        PatientEntity patient = PatientEntity.builder()
+                .id(42L)
+                .user(UserEntity.builder().id(43L).build())
+                .firstName("Paz")
+                .lastName("Paciente")
+                .build();
+        DoctorEntity doctor = DoctorEntity.builder()
+                .id(44L)
+                .user(UserEntity.builder().id(45L).build())
+                .build();
+        FollowRequestEntity request = FollowRequestEntity.builder()
+                .id(46L)
+                .patient(patient)
+                .tutorFollower(tutor)
+                .doctor(doctor)
+                .status(FollowRequestStatus.PENDING)
+                .build();
+        com.example.SAPA.Models.Chat.ConversationEntity tutorConversation =
+                com.example.SAPA.Models.Chat.ConversationEntity.builder()
+                        .id(47L)
+                        .tutor(tutor)
+                        .doctor(doctor)
+                        .build();
+
+        when(userContextService.getAuthenticatedDoctor()).thenReturn(doctor);
+        when(followRequestRepository.findById(request.getId())).thenReturn(Optional.of(request));
+        when(followRequestRepository.existsByPatientAndDoctorAndStatusAndIdNot(
+                patient,
+                doctor,
+                FollowRequestStatus.APPROVED,
+                request.getId()
+        )).thenReturn(false);
+        when(tutorPatientRepository.existsByTutorAndPatientAndStatus(
+                tutor,
+                patient,
+                TutorLinkStatus.ACTIVE
+        )).thenReturn(true);
+        when(patientAccessService.requiresTutor(patient)).thenReturn(true);
+        when(conversationService.createConversation(patient, doctor))
+                .thenReturn(tutorConversation);
+
+        followRequestService.approve(request.getId());
+
+        verify(conversationService).createConversation(patient, doctor);
+        verify(conversationService, never()).createTutorConversation(tutor, doctor);
+        verify(messageService).sendSystemMessage(
+                eq(tutorConversation),
                 eq("Se creó un seguimiento para Paz Paciente.")
         );
     }

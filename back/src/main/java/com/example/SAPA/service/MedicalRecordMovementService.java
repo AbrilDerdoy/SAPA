@@ -5,16 +5,20 @@ import com.example.SAPA.DTOs.Response.MedicalRecordMovementResponseDTO;
 import com.example.SAPA.Models.Chat.ConversationEntity;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordAccessRequestEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordMovementEntity;
 import com.example.SAPA.Models.MedicalRecord.MedicalRecordMovementAttachmentEntity;
+import com.example.SAPA.Models.TutorPatientEntity;
 import com.example.SAPA.Repositories.ConversationRepository;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.MedicalRecordAccessRequestRepository;
 import com.example.SAPA.Repositories.MedicalRecordMovementRepository;
 import com.example.SAPA.Repositories.PatientRepository;
+import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.enums.MedicalRecordAccessStatus;
+import com.example.SAPA.enums.TutorLinkStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +40,7 @@ public class MedicalRecordMovementService {
     private final MedicalRecordAccessRequestRepository accessRequestRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final TutorPatientRepository tutorPatientRepository;
     private final ConversationRepository conversationRepository;
     private final ConversationService conversationService;
     private final UserContextService userContextService;
@@ -423,6 +428,7 @@ public class MedicalRecordMovementService {
         movement.getAttachments().add(attachment);
 
         movementRepository.save(movement);
+        notifyMovementRecipients(patient, doctor, movement);
 
         return toResponse(movement, patient);
     }
@@ -476,6 +482,27 @@ public class MedicalRecordMovementService {
                 title,
                 message
         );
+
+        if (patientAccessService.requiresTutor(patient)) {
+            tutorPatientRepository
+                    .findByPatientAndStatus(
+                            patient,
+                            TutorLinkStatus.ACTIVE
+                    )
+                    .map(TutorPatientEntity::getTutor)
+                    .map(TutorEntity::getUser)
+                    .ifPresent(tutorUser ->
+                            notificationService.notifyMedicalRecordEvent(
+                                    tutorUser,
+                                    title,
+                                    doctorName
+                                            + " registró un movimiento en la ficha médica de "
+                                            + patient.getFirstName()
+                                            + ": "
+                                            + movement.getTitle()
+                            )
+                    );
+        }
 
         // Obtener médicos con autorización aprobada vigente.
         List<MedicalRecordAccessRequestEntity> approvedRequests =

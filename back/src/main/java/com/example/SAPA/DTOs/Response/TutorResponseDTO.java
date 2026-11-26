@@ -17,5 +17,4 @@ public class TutorResponseDTO {
     private String email;
     private LocalDate birthDate;
     private String phoneNumber;
-    private String relationship;
 }

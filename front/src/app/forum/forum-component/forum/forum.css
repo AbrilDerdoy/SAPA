@@ -233,6 +233,7 @@
   }
 
   .forum-card {
+    background-color: var(--primary);
     padding: 18px;
   }
 }

@@ -30,6 +30,16 @@
   margin: 0 auto;
 }
 
+.home-layout--admin {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+}
+
+.home-layout--admin .welcome,
+.home-layout--admin .home-card {
+  text-align: center;
+}
+
 .home-sidebar,
 .home-main {
   min-width: 0;

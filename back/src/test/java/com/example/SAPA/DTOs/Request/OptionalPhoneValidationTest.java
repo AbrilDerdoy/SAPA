@@ -26,9 +26,7 @@ class OptionalPhoneValidationTest {
                     LocalDate.of(1990, 1, 1),
                     null,
                     null,
-                    null,
-                    null,
-                    "Madre"
+                    null
             );
             UpdateUserProfileRequestDTO profileUpdate = new UpdateUserProfileRequestDTO(
                     "Ana",

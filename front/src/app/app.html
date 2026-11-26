@@ -70,12 +70,13 @@
               Guardados
             </a>
           </li>
-
-          <li>
-            <a routerLink="/medicamentos">
-              Medicamentos
-            </a>
-          </li>
+          @if(role() !== 'ADMIN'){
+            <li>
+              <a routerLink="/medicamentos">
+                Medicamentos
+              </a>
+            </li>
+          }
 
           @if (role() === 'PATIENT' || role() === 'DOCTOR') {
             <li class="nav-search">

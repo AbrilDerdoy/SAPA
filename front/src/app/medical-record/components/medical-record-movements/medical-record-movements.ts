@@ -2,6 +2,7 @@
 import {
   Component,
   Input,
+  OnInit,
   OnChanges,
   SimpleChanges,
   inject,
@@ -14,6 +15,7 @@ import { Router, RouterLink } from '@angular/router';
 import { MedicalRecordService } from '../../services/medical-record-service';
 import { MedicalRecordMovement } from '../../interfaces/medical-record-movement';
 import { Auth } from '../../../Usuario/services/Auth/auth';
+import { DoctorService } from '../../../Doctor/service/doctor.service';
 
 @Component({
   selector: 'app-medical-record-movements',
@@ -22,7 +24,7 @@ import { Auth } from '../../../Usuario/services/Auth/auth';
   templateUrl: './medical-record-movements.html',
   styleUrl: './medical-record-movements.css',
 })
-export class MedicalRecordMovements implements OnChanges {
+export class MedicalRecordMovements implements OnChanges, OnInit {
 
   @Input({ required: true }) patientId = 0;
   @Input() readonly = true;
@@ -31,10 +33,23 @@ export class MedicalRecordMovements implements OnChanges {
   private readonly router = inject(Router);
 
   readonly auth = inject(Auth);
+  readonly doctorService = inject(DoctorService);
 
   readonly movimientos = signal<MedicalRecordMovement[]>([]);
   readonly cargando = signal(false);
   readonly error = signal<string | null>(null);
+
+  esMedicoResponsable(movimiento: MedicalRecordMovement): boolean {
+    return this.auth.isDoctor()
+      && this.doctorService.myId() !== null
+      && movimiento.doctorId === this.doctorService.myId();
+  }
+
+  ngOnInit(): void {
+    if (this.auth.isDoctor()) {
+      this.doctorService.loadMyId();
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
 
