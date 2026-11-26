@@ -14,6 +14,8 @@
   <section class="shared-post">
     <h2>{{ publication.title }}</h2>
     <p>{{ publication.content }}</p>
-    <!-- Después incorporamos los adjuntos y datos del autor -->
+
+    <app-post-comment [postId]="publication.postId"></app-post-comment>
+
   </section>
 }

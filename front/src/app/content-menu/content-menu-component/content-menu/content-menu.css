@@ -21,7 +21,7 @@
 }
 
 .menu-toggle:hover {
-    background: #dce9e7;
+    background: var(--border);
 }
 
 .menu-toggle img {
@@ -39,10 +39,10 @@
     flex-direction: column;
     min-width: 145px;
     padding: 5px;
-    background: #fff;
-    border: 1px solid #e5e5e5;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow);
 }
 
 .content-menu-dropdown button {
@@ -61,27 +61,27 @@
 }
 
 .report-option {
-    color: #b7791f;
+    color: var(--warning, #b7791f);
 }
 
 .report-option:hover {
-    background: #fff8e8;
+    background: var(--warning-light, #fff8e8);
 }
 
 .edit-option {
-    color: #02968c;
+    color: var(--primary);
 }
 
 .edit-option:hover {
-    background: #ecf8f6;
+    background: var(--primary-light);
 }
 
 .delete-option {
-    color: #c0392b;
+    color: var(--danger);
 }
 
 .delete-option:hover {
-    background: #fbeaea;
+    background: var(--danger-light);
 }
 
 @media (max-width: 480px) {

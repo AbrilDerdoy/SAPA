@@ -26,8 +26,11 @@
         <p>{{ comment.content }}</p>
 
         @if (sesionIniciada && esPropietario(comment)) {
-        <app-content-menu [canReport]="false" [canEdit]="esPropietario(comment)" [canDelete]="esPropietario(comment)"
-            (edit)="editComment(comment)" (delete)="deleteComment(comment.commentId)" />
+        <div class="comment-menu">
+            <app-content-menu [canReport]="false" [canEdit]="esPropietario(comment)"
+                [canDelete]="esPropietario(comment)" (edit)="editComment(comment)"
+                (delete)="deleteComment(comment.commentId)" />
+        </div>
         }
 
     </article>

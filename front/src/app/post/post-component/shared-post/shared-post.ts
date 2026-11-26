@@ -2,10 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { PostService } from '../../post-service/post-service';
 import { PostResponse } from '../../post-DTOs/post-response';
+import { PostComment } from '../../../post-comment/post-comment-component/post-comment/post-comment';
 
 @Component({
   selector: 'app-shared-post',
-  imports: [],
+  imports: [PostComment],
   templateUrl: './shared-post.html',
   styleUrl: './shared-post.css',
 })

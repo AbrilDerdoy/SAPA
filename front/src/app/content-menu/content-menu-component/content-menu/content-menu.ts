@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, HostListener, input, output, signal } from '@angular/core';
 
 @Component({
   selector: 'app-content-menu',
@@ -22,6 +22,11 @@ export class ContentMenu {
   }
 
   closeMenu() {
+    this.menuOpen.set(false)
+  }
+
+  @HostListener('document:click')
+  cerrarMenuAlHacerClickFuera(): void {
     this.menuOpen.set(false)
   }
 

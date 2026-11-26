@@ -241,6 +241,8 @@
 
   box-sizing: border-box;
   box-shadow: var(--shadow);
+
+  position: relative;
 }
 
 .forum-cover-content h1 {
@@ -258,12 +260,18 @@
 .forum-title-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
 }
 
 .forum-title-actions h1 {
   margin: 0;
+}
+
+.forum-menu {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 10;
 }
 
 .post-footer {
@@ -333,5 +341,14 @@ app-content-menu {
     align-items: stretch;
     flex-direction: column;
     justify-content: flex-end;
+  }
+
+  .forum-menu {
+    top: 12px;
+    right: 12px;
+  }
+
+  .forum-cover-content {
+    padding-right: 30px;
   }
 }

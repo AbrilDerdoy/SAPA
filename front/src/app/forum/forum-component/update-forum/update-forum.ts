@@ -33,10 +33,10 @@ export class UpdateForum implements OnInit {
   formulario = form(this.modelo, path => {
     required(path.title, { message: 'El título es obligatorio.' })
     minLength(path.title, 3, { message: 'El título debe tener al menos 3 caracteres.' })
-    maxLength(path.title, 50, { message: 'El título no puede tener más de 50 caracteres.' })
+    maxLength(path.title, 150, { message: 'El título no puede tener más de 150 caracteres.' })
     required(path.content, { message: 'El contenido es obligatorio.' })
     minLength(path.content, 10, { message: 'El contenido debe tener al menos 10 caracteres.' })
-    maxLength(path.content, 100, { message: 'El contenido no puede tener más de 100 caracteres.' })
+    maxLength(path.content, 5000, { message: 'El contenido no puede tener más de 5000 caracteres.' })
   })
 
   ngOnInit(): void {

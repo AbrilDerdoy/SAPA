@@ -85,13 +85,15 @@
     <div class="forum-cover-content">
       <div class="forum-title-actions">
         <h1>{{ currentForum.title }}</h1>
+      </div>
 
-        @if (sesionIniciada && !esAdmin()) {
+      @if (sesionIniciada && !esAdmin()) {
+      <div class="forum-menu">
         <app-content-menu [canReport]="puedeReportarForo()" [canEdit]="esPropietarioForo()"
           [canDelete]="esPropietarioForo()" (report)="openForumReportModal()" (edit)="editForum()"
           (delete)="deleteForum()" />
-        }
       </div>
+      }
 
       <p>{{ currentForum.content }}</p>
       <i>{{ currentForum.createdByName }}</i>
@@ -159,7 +161,7 @@
       </div>
 
       <div class="post-footer">
-        <app-post-comment [postId]="post.postId" />
+        <app-post-comment [postId]="post.postId"></app-post-comment>
 
         <button type="button" class="share-button" (click)="sharePost(post.postId)" title="Compartir publicación">
 
