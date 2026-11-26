@@ -6,21 +6,22 @@
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.55);
 }
 
 .report-modal {
     width: 100%;
     max-width: 480px;
     padding: 1.5rem;
-    background: white;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 16px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow);
 }
 
 .report-modal h2 {
     margin-top: 0;
-    color: #222;
+    color: var(--text);
 }
 
 .report-modal textarea {
@@ -29,15 +30,27 @@
     resize: vertical;
     box-sizing: border-box;
     padding: 12px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     border-radius: 10px;
+    background: var(--background);
+    color: var(--text);
     font: inherit;
+}
+
+.report-modal textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.report-modal textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(2, 150, 140, 0.12);
 }
 
 .character-count {
     display: block;
     text-align: right;
-    color: #777;
+    color: var(--text-muted);
     font-size: 0.85rem;
 }
 
@@ -54,29 +67,41 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .cancel-button {
-    background: #eee;
-    color: #333;
+    background: var(--background);
+    color: var(--text);
+    border: 1px solid var(--border) !important;
+}
+
+.cancel-button:hover {
+    background: var(--border);
 }
 
 .submit-button,
 .report-success button {
-    background: #02968c;
+    background: var(--primary);
     color: white;
 }
 
-button:disabled {
+.submit-button:hover:not(:disabled),
+.report-success button:hover {
+    background: var(--primary-dark);
+}
+
+.modal-actions button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
 .error-message {
-    color: #c62828;
+    color: var(--danger);
     font-size: 0.9rem;
 }
 
 .report-success {
     text-align: center;
+    color: var(--text);
 }
