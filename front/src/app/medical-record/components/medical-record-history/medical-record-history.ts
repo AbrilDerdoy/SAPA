@@ -69,6 +69,17 @@ export class MedicalRecordHistory implements OnInit {
 
   readonly isDoctor = computed(() => this.auth.isDoctor());
 
+  puedeIrAlChat(movement: MedicalRecordMovement): boolean {
+    if (this.auth.isDoctor()) {
+      const currentDoctorId = this.doctorService.myId();
+
+      return currentDoctorId !== null
+        && movement.doctorId !== currentDoctorId;
+    }
+
+    return movement.conversationId !== null;
+  }
+
   readonly showingFilters = computed(() =>
     !!(
       this.doctorId() ||
@@ -89,6 +100,10 @@ export class MedicalRecordHistory implements OnInit {
         'El identificador del paciente no es válido.'
       );
       return;
+    }
+
+    if (this.auth.isDoctor()) {
+      this.doctorService.loadMyId();
     }
 
     this.loadDoctorOptions();

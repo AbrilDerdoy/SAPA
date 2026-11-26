@@ -41,6 +41,7 @@ public class MessageService {
     private final MedicalRecordAccessRequestRepository accessRequestRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final PatientAccessService patientAccessService;
 
     @Transactional
     public ChatDTO.MessageResponse sendMessage(
@@ -73,13 +74,39 @@ public class MessageService {
             );
         }
 
+        boolean isSystemMovementReference =
+                movement != null
+                && conversation.getPatient() != null
+                && (conversation.getPatient().getUser().getId()
+                        .equals(sender.getId())
+                    || patientAccessService.isTutorOf(
+                            sender,
+                            conversation.getPatient()
+                    ));
+
+        if (request.type() == MessageType.SYSTEM
+                && !isSystemMovementReference) {
+            throw new AccessDeniedException(
+                    "Los mensajes de sistema solo pueden generarse al referenciar un movimiento médico."
+            );
+        }
+
+        MessageType messageType = isSystemMovementReference
+                ? MessageType.SYSTEM
+                : request.type() != null
+                        ? request.type()
+                        : MessageType.TEXT;
+
+        String content = isSystemMovementReference
+                ? "Se abrió una consulta sobre el movimiento de ficha médica #"
+                        + movement.getId() + "."
+                : request.content();
+
         MessageEntity message = MessageEntity.builder()
                 .conversation(conversation)
                 .sender(sender)
-                .content(request.content())
-                .type(request.type() != null
-                        ? request.type()
-                        : MessageType.TEXT)
+                .content(content)
+                .type(messageType)
                 .medicalRecordMovement(movement)
                 .build();
 
@@ -105,8 +132,12 @@ public class MessageService {
 
         notificationService.createNotification(
                 receiver,
-                "Nuevo mensaje",
-                senderName + " te envió un mensaje.",
+                isSystemMovementReference
+                        ? "Consulta sobre ficha médica"
+                        : "Nuevo mensaje",
+                isSystemMovementReference
+                        ? content
+                        : senderName + " te envió un mensaje.",
                 NotificationType.MESSAGE
         );
 
@@ -166,7 +197,11 @@ public class MessageService {
                 .getId()
                 .equals(sender.getId());
 
-        if (isPatient) {
+        if (isPatient
+                || patientAccessService.isTutorOf(
+                        sender,
+                        conversation.getPatient()
+                )) {
             return movement;
         }
 

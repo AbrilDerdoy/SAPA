@@ -11,11 +11,15 @@ describe('Home', () => {
   let component: Home;
   let fixture: ComponentFixture<Home>;
   let hasActiveTutor = false;
+  let patient = true;
+  let admin = false;
+  let restricted = true;
 
   const authMock = {
     sessionVersion: signal(0),
-    isPatient: () => true,
-    requiresTutor: () => true,
+    isPatient: () => patient,
+    isAdmin: () => admin,
+    requiresTutor: () => restricted,
     hasActiveTutor: () => hasActiveTutor,
     isAuthenticated: () => true,
   };
@@ -25,6 +29,9 @@ describe('Home', () => {
 
   beforeEach(async () => {
     hasActiveTutor = false;
+    patient = true;
+    admin = false;
+    restricted = true;
 
     await TestBed.configureTestingModule({
       imports: [Home],
@@ -76,5 +83,21 @@ describe('Home', () => {
     expect(fixture.nativeElement.textContent).toContain('Ver mi tutor');
     expect(fixture.nativeElement.querySelector('.home-sidebar')).toBeNull();
     expect(fixture.nativeElement.querySelector('.restriction-notice')).not.toBeNull();
+  });
+
+  it('centers the welcome and forums for admins without showing health tips', async () => {
+    patient = false;
+    admin = true;
+    restricted = false;
+    authMock.sessionVersion.update(version => version + 1);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const layout: HTMLElement = fixture.nativeElement.querySelector('.home-layout');
+
+    expect(fixture.nativeElement.textContent).toContain('¡Bienvenido a SAPA!');
+    expect(fixture.nativeElement.textContent).toContain('Foros de salud');
+    expect(layout.classList.contains('home-layout--admin')).toBe(true);
+    expect(fixture.nativeElement.querySelector('.home-sidebar')).toBeNull();
   });
 });

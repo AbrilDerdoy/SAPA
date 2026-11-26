@@ -10,6 +10,8 @@ import {
   PatientQuestionnaire,
   QuestionnaireResponseDTO
 } from '../../models/questionnaire.model';
+import { Auth } from '../../../Usuario/services/Auth/auth';
+import { TutorPatientSelector } from '../../../Tutor/components/tutor-patient-selector/tutor-patient-selector';
 
 interface ScalePoint {
   responseId: number;
@@ -33,7 +35,7 @@ interface ScaleGroup {
 @Component({
   selector: 'app-questionnaire-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TutorPatientSelector],
   templateUrl: './questionnaire-history.html',
   styleUrl: './questionnaire-history.css'
 })
@@ -41,6 +43,7 @@ export class QuestionnaireHistory implements OnInit {
 
   private readonly questionnaireService = inject(QuestionnaireService);
   private readonly route = inject(ActivatedRoute);
+  readonly auth = inject(Auth);
 
   mode = signal<'patient' | 'doctor'>('patient');
 
@@ -119,16 +122,37 @@ export class QuestionnaireHistory implements OnInit {
 
     if (this.mode() === 'doctor') {
       this.loadPatients();
+    } else if (this.auth.isTutor()) {
+      const patientId = Number(
+        this.route.snapshot.queryParamMap.get('patientId')
+      );
+
+      if (Number.isInteger(patientId) && patientId > 0) {
+        this.selectedPatientId.set(patientId);
+        this.loadMyHistory(patientId);
+      } else {
+        this.loading.set(false);
+      }
     } else {
       this.loadMyHistory();
     }
   }
 
-  loadMyHistory(): void {
+  loadMyHistory(patientId?: number): void {
+    const targetPatientId = this.auth.isTutor()
+      ? patientId ?? this.selectedPatientId()
+      : null;
+
+    if (this.auth.isTutor() && targetPatientId === null) {
+      this.responses.set([]);
+      this.loading.set(false);
+      return;
+    }
+
     this.loading.set(true);
     this.error.set('');
 
-    this.questionnaireService.getMyResponses().subscribe({
+    this.questionnaireService.getMyResponses(targetPatientId).subscribe({
       next: (responses: QuestionnaireResponseDTO[]) => {
         this.responses.set(responses ?? []);
         this.loading.set(false);
@@ -160,6 +184,11 @@ export class QuestionnaireHistory implements OnInit {
 
   selectPatient(patientId: number): void {
     this.selectedPatientId.set(patientId);
+
+    if (this.auth.isTutor()) {
+      this.loadMyHistory(patientId);
+      return;
+    }
 
     if (!patientId) {
       this.responses.set([]);

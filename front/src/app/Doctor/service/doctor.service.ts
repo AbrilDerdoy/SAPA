@@ -62,6 +62,8 @@ export class DoctorService {
       return;
     }
 
+    this.myId.set(null);
+
     this.http.get<DoctorSummary>(`${this.baseUrl}/me`).subscribe({
       next: (me) => this.myId.set(me.id),
       error: () => this.myId.set(null),

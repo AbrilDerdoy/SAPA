@@ -146,23 +146,6 @@
         </p>
       }
 
-      @if (modelo().role === 'ROLE_TUTOR') {
-        <label class="reg-field">
-          <span class="reg-label">Parentesco</span>
-          <select [formField]="formulario.relationship">
-            <option value="">Seleccioná el parentesco</option>
-            <option value="Madre">Madre</option>
-            <option value="Padre">Padre</option>
-            <option value="Tutor legal">Tutor legal</option>
-            <option value="Abuelo/a">Abuelo/a</option>
-            <option value="Hermano/a">Hermano/a</option>
-            <option value="Tío/a">Tío/a</option>
-            <option value="Otro familiar">Otro familiar</option>
-          </select>
-          <app-form-error [field]="formulario.relationship()" />
-        </label>
-      }
-
       <div class="reg-terms">
         <label class="reg-terms__check">
           <input type="checkbox" [formField]="formulario.acceptTerms">

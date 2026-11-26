@@ -88,8 +88,14 @@
 
           }
 
-          @if (auth.isDoctor() || movimiento.conversationId) {
-
+          @if (
+            (
+              auth.isDoctor() &&
+              doctorService.myId() !== null &&
+              !esMedicoResponsable(movimiento)
+            ) ||
+            (!auth.isDoctor() && movimiento.conversationId)
+          ) {
             <div class="movement-actions">
 
               <button
@@ -100,7 +106,6 @@
               </button>
 
             </div>
-
           }
 
         </article>

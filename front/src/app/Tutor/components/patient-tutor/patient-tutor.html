@@ -47,11 +47,7 @@
         <div class="tutor-card__info">
           <span class="badge">Tutor activo</span>
           <h3>{{ getTutorName(currentTutor) }}</h3>
-          <p>
-            {{ currentTutor.relationship }}
-            <span>·</span>
-            {{ currentTutor.email }}
-          </p>
+          <p>{{ currentTutor.email }}</p>
           <p>
             Teléfono:
             {{ currentTutor.phoneNumber || 'No registrado' }}

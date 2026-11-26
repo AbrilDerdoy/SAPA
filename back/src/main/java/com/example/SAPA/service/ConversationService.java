@@ -5,6 +5,7 @@ import com.example.SAPA.Models.Chat.ConversationEntity;
 import com.example.SAPA.Models.Chat.MessageEntity;
 import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
+import com.example.SAPA.Models.TutorPatientEntity;
 import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
 import com.example.SAPA.Models.FollowRequestEntity;
@@ -13,8 +14,10 @@ import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.FollowRequestRepository;
 import com.example.SAPA.Repositories.MessageRepository;
 import com.example.SAPA.Repositories.PatientRepository;
+import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.enums.MessageType;
+import com.example.SAPA.enums.TutorLinkStatus;
 import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.mappers.MessageMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,6 +38,7 @@ public class ConversationService {
     private final MessageRepository messageRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final TutorPatientRepository tutorPatientRepository;
     private final MessageMapper messageMapper;
     private final UserContextService userContextService;
     private final ChatPresenceService chatPresenceService;
@@ -45,6 +49,15 @@ public class ConversationService {
             PatientEntity patient,
             DoctorEntity doctor
     ) {
+        TutorEntity activeTutor = tutorPatientRepository
+                .findByPatientAndStatus(patient, TutorLinkStatus.ACTIVE)
+                .map(TutorPatientEntity::getTutor)
+                .orElse(null);
+
+        if (patientAccess.requiresTutor(patient) && activeTutor != null) {
+            return createTutorConversation(activeTutor, doctor);
+        }
+
         return conversationRepository.findByPatientAndDoctor(patient, doctor)
                 .orElseGet(() -> {
                     ConversationEntity conversation = ConversationEntity.builder()
@@ -127,6 +140,10 @@ public class ConversationService {
         return conversations.stream()
                 .filter(conversation -> {
                     if (conversation.getPatient() != null) {
+                        return !isMinorWithActiveTutor(conversation.getPatient());
+                    }
+
+                    if (conversation.getTutor() != null) {
                         return true;
                     }
 
@@ -157,6 +174,11 @@ public class ConversationService {
                                 + conversation.getDoctor().getFirstName()
                                 + " "
                                 + conversation.getDoctor().getLastName();
+                    } else if (conversation.getTutor() != null) {
+                        otherParticipant = conversation.getTutor().getUser();
+                        otherName = conversation.getTutor().getFirstName()
+                                + " "
+                                + conversation.getTutor().getLastName();
                     } else if (conversation.getPatient() != null) {
                         otherParticipant = conversation.getPatient().getUser();
 
@@ -376,11 +398,16 @@ public class ConversationService {
             ConversationEntity conversation
     ) {
 
-        boolean isPatient = conversation.getPatient() != null
+        boolean tutorManagedMinor = conversation.getPatient() != null
+                && isMinorWithActiveTutor(conversation.getPatient());
+
+        boolean isPatient = !tutorManagedMinor
+                && conversation.getPatient() != null
                 && conversation.getPatient().getUser().getId()
                 .equals(user.getId());
 
-        boolean isDoctor = conversation.getDoctor() != null
+        boolean isDoctor = !tutorManagedMinor
+                && conversation.getDoctor() != null
                 && conversation.getDoctor().getUser().getId()
                 .equals(user.getId());
 
@@ -392,22 +419,26 @@ public class ConversationService {
                 && conversation.getTutor().getUser().getId()
                 .equals(user.getId());
 
-        boolean isTutor = conversation.getPatient() != null
-                && patientAccess.isTutorOf(user, conversation.getPatient());
-
         if (!isPatient && !isDoctor && !isDoctorFollower
-                && !isConversationTutor && !isTutor) {
+                && !isConversationTutor) {
             throw new AccessDeniedException(
                     "No tenés permiso para acceder a esta conversación"
             );
         }
 
-        if (conversation.getPatient() == null) {
+        if (conversation.getPatient() == null && conversation.getTutor() == null) {
             validateApprovedDoctorFollow(
                     conversation.getDoctorFollower(),
                     conversation.getDoctor()
             );
         }
+    }
+
+    private boolean isMinorWithActiveTutor(PatientEntity patient) {
+        return patientAccess.requiresTutor(patient)
+                && tutorPatientRepository
+                        .findByPatientAndStatus(patient, TutorLinkStatus.ACTIVE)
+                        .isPresent();
     }
 
     private void validateApprovedDoctorFollow(

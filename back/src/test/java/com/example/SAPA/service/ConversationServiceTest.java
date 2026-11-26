@@ -7,16 +7,20 @@ import com.example.SAPA.Models.Entities.DoctorEntity;
 import com.example.SAPA.Models.Entities.PatientEntity;
 import com.example.SAPA.Models.Entities.TutorEntity;
 import com.example.SAPA.Models.Entities.UserEntity;
+import com.example.SAPA.Models.TutorPatientEntity;
 import com.example.SAPA.Models.FollowRequestEntity;
 import com.example.SAPA.Repositories.ConversationRepository;
 import com.example.SAPA.Repositories.DoctorRepository;
 import com.example.SAPA.Repositories.FollowRequestRepository;
 import com.example.SAPA.Repositories.MessageRepository;
 import com.example.SAPA.Repositories.PatientRepository;
+import com.example.SAPA.Repositories.TutorPatientRepository;
 import com.example.SAPA.enums.FollowRequestStatus;
 import com.example.SAPA.enums.MessageType;
+import com.example.SAPA.enums.TutorLinkStatus;
 import com.example.SAPA.enums.UserCategory;
 import com.example.SAPA.mappers.MessageMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,9 +31,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,6 +56,9 @@ class ConversationServiceTest {
     private PatientRepository patientRepository;
 
     @Mock
+    private TutorPatientRepository tutorPatientRepository;
+
+    @Mock
     private DoctorRepository doctorRepository;
 
     @Mock
@@ -65,6 +75,132 @@ class ConversationServiceTest {
 
     @InjectMocks
     private ConversationService conversationService;
+
+    @Test
+    void createsOnlyTutorConversationForMinorWithActiveTutor() {
+        PatientEntity patient = PatientEntity.builder().id(1L).build();
+        DoctorEntity doctor = DoctorEntity.builder().id(2L).build();
+        TutorEntity tutor = TutorEntity.builder().id(3L).build();
+        TutorPatientEntity activeLink = TutorPatientEntity.builder()
+                .patient(patient)
+                .tutor(tutor)
+                .status(TutorLinkStatus.ACTIVE)
+                .build();
+        ConversationEntity tutorConversation = ConversationEntity.builder()
+                .tutor(tutor)
+                .doctor(doctor)
+                .build();
+
+        when(patientAccess.requiresTutor(patient)).thenReturn(true);
+        when(tutorPatientRepository.findByPatientAndStatus(
+                patient,
+                TutorLinkStatus.ACTIVE
+        )).thenReturn(Optional.of(activeLink));
+        when(conversationRepository.findByTutorAndDoctor(tutor, doctor))
+                .thenReturn(Optional.of(tutorConversation));
+
+        ConversationEntity result = conversationService.createConversation(patient, doctor);
+
+        assertEquals(tutorConversation, result);
+        verify(conversationRepository, never()).findByPatientAndDoctor(patient, doctor);
+    }
+
+    @Test
+    void deniesOldPatientDoctorConversationForMinorWithActiveTutor() {
+        UserEntity patientUser = UserEntity.builder().id(10L).build();
+        UserEntity doctorUser = UserEntity.builder().id(11L).build();
+        PatientEntity patient = PatientEntity.builder()
+                .id(12L)
+                .user(patientUser)
+                .build();
+        TutorEntity tutor = TutorEntity.builder().id(13L).build();
+        TutorPatientEntity activeLink = TutorPatientEntity.builder()
+                .patient(patient)
+                .tutor(tutor)
+                .status(TutorLinkStatus.ACTIVE)
+                .build();
+        DoctorEntity doctor = DoctorEntity.builder()
+                .id(14L)
+                .user(doctorUser)
+                .build();
+        ConversationEntity oldConversation = ConversationEntity.builder()
+                .patient(patient)
+                .doctor(doctor)
+                .build();
+
+        when(patientAccess.requiresTutor(patient)).thenReturn(true);
+        when(tutorPatientRepository.findByPatientAndStatus(
+                patient,
+                TutorLinkStatus.ACTIVE
+        )).thenReturn(Optional.of(activeLink));
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> conversationService.validateParticipant(patientUser, oldConversation)
+        );
+        assertThrows(
+                AccessDeniedException.class,
+                () -> conversationService.validateParticipant(doctorUser, oldConversation)
+        );
+    }
+
+    @Test
+    void allowsTutorToAccessTutorDoctorConversation() {
+        UserEntity tutorUser = UserEntity.builder().id(20L).build();
+        TutorEntity tutor = TutorEntity.builder()
+                .id(21L)
+                .user(tutorUser)
+                .build();
+        UserEntity doctorUser = UserEntity.builder().id(23L).build();
+        ConversationEntity conversation = ConversationEntity.builder()
+                .tutor(tutor)
+                .doctor(DoctorEntity.builder().id(22L).user(doctorUser).build())
+                .build();
+
+        assertDoesNotThrow(
+                () -> conversationService.validateParticipant(tutorUser, conversation)
+        );
+    }
+
+    @Test
+    void hidesLegacyMinorPatientDoctorChatFromPatientAndDoctorLists() {
+        UserEntity patientUser = UserEntity.builder().id(30L).build();
+        UserEntity doctorUser = UserEntity.builder().id(31L).build();
+        PatientEntity patient = PatientEntity.builder()
+                .id(32L)
+                .user(patientUser)
+                .build();
+        DoctorEntity doctor = DoctorEntity.builder()
+                .id(33L)
+                .user(doctorUser)
+                .build();
+        TutorPatientEntity activeLink = TutorPatientEntity.builder()
+                .patient(patient)
+                .tutor(TutorEntity.builder().id(34L).build())
+                .status(TutorLinkStatus.ACTIVE)
+                .build();
+        ConversationEntity oldConversation = ConversationEntity.builder()
+                .patient(patient)
+                .doctor(doctor)
+                .build();
+
+        when(userContextService.getAuthenticatedUser())
+                .thenReturn(patientUser, doctorUser);
+        when(patientRepository.findByUser(patientUser)).thenReturn(Optional.of(patient));
+        when(conversationRepository.findByPatient(patient)).thenReturn(List.of(oldConversation));
+        when(patientRepository.findByUser(doctorUser)).thenReturn(Optional.empty());
+        when(doctorRepository.findByUser(doctorUser)).thenReturn(Optional.of(doctor));
+        when(conversationRepository.findByDoctorOrDoctorFollower(doctor, doctor))
+                .thenReturn(List.of(oldConversation));
+        when(patientAccess.requiresTutor(patient)).thenReturn(true);
+        when(tutorPatientRepository.findByPatientAndStatus(
+                patient,
+                TutorLinkStatus.ACTIVE
+        )).thenReturn(Optional.of(activeLink));
+
+        assertEquals(0, conversationService.getMyConversations().size());
+        assertEquals(0, conversationService.getMyConversations().size());
+    }
 
     @Test
     void tutorConversationListBackfillsApprovedFollowFromBeforeTutorChats() {
