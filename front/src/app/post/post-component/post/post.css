@@ -312,6 +312,15 @@ app-content-menu {
   object-fit: contain;
 }
 
+.post-menu {
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 10;
+  flex-shrink: 0;
+  display: block;
+}
+
 @media (max-width: 600px) {
   .posts-header {
     align-items: stretch;
